@@ -6,7 +6,7 @@ import { Category } from '@/lib/types';
 import { useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 
-const Index = ({ session }: { session: Session | null }) => {
+const DashboardPage = ({ session }: { session: Session | null }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -50,4 +50,4 @@ const Index = ({ session }: { session: Session | null }) => {
   );
 };
 
-export default Index;
+export default DashboardPage;

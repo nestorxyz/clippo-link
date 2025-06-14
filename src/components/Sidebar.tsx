@@ -75,7 +75,7 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarPro
           ))}
         </div>
         <div className="p-2 border-t">
-          <RouterLink to={session ? "/account" : "/auth"}>
+          <RouterLink to={session ? "/account" : "/"}>
             <Button variant="ghost" className="w-full justify-start gap-2">
               <User className="h-4 w-4" />
               {!isCollapsed && (session ? 'Account' : 'Login')}

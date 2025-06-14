@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
+import DashboardPage from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/Auth";
 import AccountPage from "./pages/Account";
@@ -49,9 +49,9 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index session={session} />} />
-            <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/account" replace />} />
-            <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/auth" replace />} />
+            <Route path="/" element={!session ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={session ? <DashboardPage session={session} /> : <Navigate to="/" replace />} />
+            <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

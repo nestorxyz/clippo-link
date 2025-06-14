@@ -9,7 +9,7 @@ const AccountPage = ({ session }: { session: Session }) => {
   return (
     <div className="flex justify-center items-center h-screen bg-background">
       <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg relative">
-        <Link to="/" className="absolute top-4 left-4">
+        <Link to="/dashboard" className="absolute top-4 left-4">
             <Button variant="ghost" size="icon">
                 <ArrowLeft />
             </Button>
