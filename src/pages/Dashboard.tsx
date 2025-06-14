@@ -1,10 +1,9 @@
-
 import Sidebar from '@/components/Sidebar';
 import Chat from '@/components/Chat';
 import { Category } from '@/lib/types';
 import { useState } from 'react';
 import { Session } from '@retired-provider/retired-provider-js';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { retired-provider } from '@/integrations/retired-provider/client';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,7 +24,7 @@ const transformDataToCategories = (data: any[] | null): Category[] => {
         url: link.url,
         description: link.description,
         createdAt: link.created_at,
-        tags: link.link_tags ? link.link_tags.map((lt: any) => lt.tags).filter(Boolean) : [],
+        tags: sub.links ? sub.links.map((lt: any) => lt.tags).filter(Boolean) : [],
       })) : [],
     })) : [],
   }));
@@ -81,85 +80,10 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
   
   const categories = transformDataToCategories(categoriesData);
 
-  const addLinkMutation = useMutation({
-    mutationFn: async ({ categoryName, subCategoryName, url, description }: { categoryName: string, subCategoryName: string, url: string, description: string }) => {
-      if (!session?.user.id) throw new Error("User not logged in");
-
-      const trimmedCategoryName = categoryName.trim();
-      const trimmedSubCategoryName = subCategoryName.trim();
-
-      // Find or create category
-      let { data: category, error: catError } = await retired-provider
-        .from('categories')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .ilike('name', trimmedCategoryName)
-        .maybeSingle();
-
-      if (catError) throw catError;
-
-      if (!category) {
-        const { data: newCategory, error: newCatError } = await retired-provider
-          .from('categories')
-          .insert({ name: trimmedCategoryName, user_id: session.user.id })
-          .select('id')
-          .single();
-        if (newCatError) throw newCatError;
-        category = newCategory;
-      }
-      
-      // Find or create sub-category
-      let { data: subCategory, error: subCatError } = await retired-provider
-        .from('sub_categories')
-        .select('id')
-        .eq('category_id', category.id)
-        .ilike('name', trimmedSubCategoryName)
-        .maybeSingle();
-
-      if (subCatError) throw subCatError;
-
-      if (!subCategory) {
-        const { data: newSubCategory, error: newSubCatError } = await retired-provider
-          .from('sub_categories')
-          .insert({ name: trimmedSubCategoryName, category_id: category.id })
-          .select('id')
-          .single();
-        if (newSubCatError) throw newSubCatError;
-        subCategory = newSubCategory;
-      }
-
-      // Insert link
-      const { error: linkError } = await retired-provider.from('links').insert({
-        url,
-        description,
-        sub_category_id: subCategory.id,
-        user_id: session.user.id,
-      });
-
-      if (linkError) throw linkError;
-
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success("Link added successfully!");
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to add link", { description: error.message });
-    }
-  });
-
-  const addLink = async (categoryName: string, subCategoryName: string, url: string, description: string): Promise<boolean> => {
-     if (!categoryName?.trim() || !subCategoryName?.trim()) {
-        toast.error("Invalid input", { description: "Category and subcategory names must be provided in 'Category/Subcategory' format." });
-        return false;
-    }
-    try {
-      await addLinkMutation.mutateAsync({ categoryName, subCategoryName, url, description });
-      return true;
-    } catch (e) {
-      return false;
-    }
+  const onLinkAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ['categories', session?.user.id] });
+    // The toast notification is now triggered by the AI's response,
+    // but we can leave this here for other potential uses or remove if not needed.
   };
 
   const toggleSidebar = () => {
@@ -196,7 +120,7 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
     <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
       <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
       <main className="flex-1 flex flex-col h-screen">
-        <Chat addLink={addLink} categories={categories} />
+        <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
       </main>
     </div>
   );
