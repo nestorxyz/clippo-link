@@ -1,23 +1,27 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User as UserIcon } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 interface ChatProps {
-  addLink: (categoryName: string, subCategoryName: string, url: string, description: string) => Promise<boolean>;
   categories: Category[];
+  session: Session | null;
+  onLinkAdded: () => void;
 }
 
-const Chat = ({ addLink, categories }: ChatProps) => {
+const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link`.", sender: 'bot' }
+    { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
   ]);
   const [input, setInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const [addLinkState, setAddLinkState] = useState<{ step: 'url' | 'description' | 'category' | null }>({ step: null });
-  const [newLink, setNewLink] = useState({ url: '', description: '' });
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -25,76 +29,72 @@ const Chat = ({ addLink, categories }: ChatProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isBotTyping]);
 
+  useEffect(() => {
+    if (!session?.user.id) return;
+
+    const createChatSession = async () => {
+      setIsBotTyping(true);
+      try {
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('chat_sessions')
+          .insert({ user_id: session.user.id })
+          .select('id')
+          .single();
+
+        if (sessionError) throw sessionError;
+        
+        setSessionId(sessionData.id);
+        setMessages([
+          { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
+        ]);
+
+      } catch (error) {
+        console.error("Error managing chat session:", error);
+        toast.error("Could not start a new chat session.");
+        setMessages(prev => [...prev, {id: crypto.randomUUID(), text: "Sorry, I'm having trouble starting our conversation. Please refresh the page.", sender: 'bot'}]);
+      } finally {
+        setIsBotTyping(false);
+      }
+    };
+
+    createChatSession();
+  }, [session]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isBotTyping) return;
+    if (!input.trim() || isBotTyping || !sessionId) return;
 
     const userMessage: Message = { id: crypto.randomUUID(), text: input, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsBotTyping(true);
 
-    // Mock AI processing
-    setTimeout(() => {
-      handleBotResponse(input);
+    try {
+      const { data, error } = await supabase.functions.invoke('gemini-chat', {
+        body: {
+          sessionId,
+          message: currentInput,
+        },
+      });
+
+      if (error) {
+        throw new Error(`Edge function error: ${error.message}`);
+      }
+
+      const botMessage: Message = { id: crypto.randomUUID(), text: data.reply, sender: 'bot' };
+      setMessages(prev => [...prev, botMessage]);
+
+      if (data.functionCalls?.some((fc: any) => fc.function?.name === 'register_link' && fc.function.result?.success)) {
+        onLinkAdded();
+        toast.success("Link added successfully!");
+      }
+    } catch (error) {
+      console.error("Error calling gemini-chat function:", error);
+      toast.error("An error occurred", { description: "I couldn't process that request. Please try again." });
+    } finally {
       setIsBotTyping(false);
-    }, 1000 + Math.random() * 500);
-  };
-  
-  const handleBotResponse = (userInput: string) => {
-    let botResponseText = "";
-
-    if (addLinkState.step) {
-      handleMultiTurnAddLink(userInput);
-      return;
     }
-
-    if (userInput.toLowerCase().includes('add a new link')) {
-      setAddLinkState({ step: 'url' });
-      botResponseText = "Sure! What is the URL of the link you want to add?";
-    } else {
-      botResponseText = "I can help you organize links. Try asking me to `add a new link`.";
-    }
-
-    const botMessage: Message = { id: crypto.randomUUID(), text: botResponseText, sender: 'bot' };
-    setMessages(prev => [...prev, botMessage]);
-  };
-
-  const handleMultiTurnAddLink = async (userInput: string) => {
-    let botResponseText = "";
-    if (addLinkState.step === 'url') {
-      try {
-        new URL(userInput);
-        setNewLink({ ...newLink, url: userInput });
-        setAddLinkState({ step: 'description' });
-        botResponseText = "Great. What is a short description for this link?";
-      } catch (error) {
-        botResponseText = "That doesn't look like a valid URL. Please provide a valid URL.";
-      }
-    } else if (addLinkState.step === 'description') {
-      setNewLink({ ...newLink, description: userInput });
-      setAddLinkState({ step: 'category' });
-      const categoryExamples = categories.map(c => `${c.name}/${c.subCategories[0]?.name || ''}`).filter(Boolean).slice(0,2).join(', ');
-      botResponseText = `Got it. Which category/subcategory should I put it under? (e.g., ${categoryExamples || 'Work/React'})`;
-    } else if (addLinkState.step === 'category') {
-      const [catName, subCatName] = userInput.split('/');
-      
-      if (!catName || !subCatName) {
-        botResponseText = "Sorry, I need the category and subcategory in the format 'Category/Subcategory'. Please try again.";
-      } else {
-        const success = await addLink(catName, subCatName, newLink.url, newLink.description);
-        if (success) {
-          botResponseText = "Done! I've saved the link for you.";
-        } else {
-          botResponseText = "Sorry, I couldn't save the link. An error occurred. Please try again.";
-        }
-      }
-      setAddLinkState({ step: null });
-      setNewLink({ url: '', description: '' });
-    }
-    
-    const botMessage: Message = { id: crypto.randomUUID(), text: botResponseText, sender: 'bot' };
-    setMessages(prev => [...prev, botMessage]);
   };
 
   return (
@@ -142,7 +142,7 @@ const Chat = ({ addLink, categories }: ChatProps) => {
               }
             }}
           />
-          <Button type="submit" size="icon" className="absolute right-4 top-1/2 -translate-y-1/2" disabled={isBotTyping || !input.trim()}>
+          <Button type="submit" size="icon" className="absolute right-4 top-1/2 -translate-y-1/2" disabled={isBotTyping || !input.trim() || !sessionId}>
             <Send className="h-4 w-4" />
           </Button>
         </form>
