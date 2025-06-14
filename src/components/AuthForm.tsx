@@ -24,10 +24,14 @@ const authSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-export const AuthForm = () => {
+interface AuthFormProps {
+  isSignUp: boolean;
+  setIsSignUp: (isSignUp: boolean) => void;
+}
+
+export const AuthForm = ({ isSignUp, setIsSignUp }: AuthFormProps) => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
@@ -96,7 +100,6 @@ export const AuthForm = () => {
         )}
       </Button>
 
-      {/* Temporary Email/Password Auth for testing. You can comment out this section for production. */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -153,7 +156,6 @@ export const AuthForm = () => {
           {isSignUp ? 'Sign In' : 'Sign Up'}
         </button>
       </p>
-      {/* End of temporary auth section. */}
     </div>
   );
 };
