@@ -1,5 +1,4 @@
-
-import { Category } from '@/lib/types';
+import { Category, Tag } from '@/lib/types';
 import { ChevronRight, Folder, Link2, Star, User, Briefcase, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Link as RouterLink } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
+import { Badge } from '@/components/ui/badge';
 
 interface SidebarProps {
   categories: Category[];
@@ -25,6 +25,19 @@ const categoryIcons: { [key: string]: React.ElementType } = {
 const CategoryIcon = ({ name }: { name: string }) => {
   const Icon = categoryIcons[name] || categoryIcons.default;
   return <Icon className="h-4 w-4" />;
+};
+
+const getContrastColor = (hexcolor: string) => {
+  if (!hexcolor) return '#000000';
+  hexcolor = hexcolor.replace("#", "");
+  if (hexcolor.length === 3) {
+    hexcolor = hexcolor.split('').map(char => char + char).join('');
+  }
+  const r = parseInt(hexcolor.substr(0, 2), 16);
+  const g = parseInt(hexcolor.substr(2, 2), 16);
+  const b = parseInt(hexcolor.substr(4, 2), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return (yiq >= 128) ? 'rgba(0,0,0,0.8)' : '#ffffff';
 };
 
 const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarProps) => {
@@ -63,10 +76,30 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarPro
                       {!isCollapsed && <span>{sub.name}</span>}
                     </div>
                     {!isCollapsed && sub.links.map(link => (
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} className="flex items-center gap-2 pl-6 pr-2 py-1.5 rounded-md hover:bg-secondary/50 text-sm text-muted-foreground/80">
-                        <Link2 className="h-3 w-3" />
-                        <span className="truncate">{link.description}</span>
-                      </a>
+                      <div key={link.id} className="ml-6 pr-2 py-1.5 rounded-md hover:bg-secondary/50 group">
+                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground/80 group-hover:text-foreground">
+                          <Link2 className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{link.description}</span>
+                        </a>
+                        {link.tags.length > 0 && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {link.tags.map((tag: Tag) => (
+                              <Badge
+                                key={tag.id}
+                                variant={tag.color ? "default" : "secondary"}
+                                className="text-xs font-normal"
+                                style={tag.color ? {
+                                    backgroundColor: tag.color,
+                                    color: getContrastColor(tag.color),
+                                    borderColor: 'transparent',
+                                } : {}}
+                              >
+                                {tag.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 ))}

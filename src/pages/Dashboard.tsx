@@ -25,6 +25,7 @@ const transformDataToCategories = (data: any[] | null): Category[] => {
         url: link.url,
         description: link.description,
         createdAt: link.created_at,
+        tags: link.link_tags ? link.link_tags.map((lt: any) => lt.tags).filter(Boolean) : [],
       })) : [],
     })) : [],
   }));
@@ -52,7 +53,14 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
               id,
               url,
               description,
-              created_at
+              created_at,
+              link_tags (
+                tags (
+                  id,
+                  name,
+                  color
+                )
+              )
             )
           )
         `)

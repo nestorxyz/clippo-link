@@ -15,6 +15,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -29,20 +31,24 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
       link_tags: {
         Row: {
+          created_at: string
           link_id: string
           tag_id: string
         }
         Insert: {
+          created_at?: string
           link_id: string
           tag_id: string
         }
         Update: {
+          created_at?: string
           link_id?: string
           tag_id?: string
         }
@@ -69,6 +75,7 @@ export type Database = {
           description: string | null
           id: string
           sub_category_id: string
+          updated_at: string
           url: string
           user_id: string
         }
@@ -77,6 +84,7 @@ export type Database = {
           description?: string | null
           id?: string
           sub_category_id: string
+          updated_at?: string
           url: string
           user_id: string
         }
@@ -85,6 +93,7 @@ export type Database = {
           description?: string | null
           id?: string
           sub_category_id?: string
+          updated_at?: string
           url?: string
           user_id?: string
         }
@@ -126,6 +135,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          updated_at: string
         }
         Insert: {
           category_id: string
@@ -133,6 +143,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          updated_at?: string
         }
         Update: {
           category_id?: string
@@ -140,6 +151,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -153,21 +165,27 @@ export type Database = {
       }
       tags: {
         Row: {
+          color: string | null
           created_at: string
           id: string
           name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           id?: string
           name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           id?: string
           name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
