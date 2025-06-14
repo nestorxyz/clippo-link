@@ -2,8 +2,11 @@
 import { AuthForm } from '@/components/AuthForm';
 import { Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const AuthPage = () => {
+  const [isSignUp, setIsSignUp] = useState(false);
+
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-background text-center p-4 sm:p-8 relative">
       <header className="absolute top-8">
@@ -15,13 +18,13 @@ const AuthPage = () => {
 
       <main className="w-full max-w-sm mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-          Welcome back
+          {isSignUp ? 'Create an account' : 'Welcome back'}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Sign in to continue to LinkWhisper
+          {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to LinkWhisper'}
         </p>
         <div className="mt-8">
-          <AuthForm />
+          <AuthForm isSignUp={isSignUp} setIsSignUp={setIsSignUp} />
         </div>
       </main>
       
