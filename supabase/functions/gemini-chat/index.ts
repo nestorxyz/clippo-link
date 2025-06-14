@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.15.0';
+import { GoogleGenerativeAI } from "npm:@google/generative-ai@latest";
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -17,7 +17,7 @@ const corsHeaders = {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-preview",
+  model: "gemini-1.5-flash-latest",
   systemInstruction: `You are LinkWhisper, an intelligent AI assistant that helps users organize and manage their web links.
 Your primary functions are to:
 1. \`register_link\`: Add a new link to the user's collection. You must have the URL. You can optionally have a description, category, and sub-category. If not provided, you should intelligently categorize it based on the URL's content if possible.
