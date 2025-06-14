@@ -1,8 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GoogleGenAI, FunctionDeclarationSchemaType as Type, Content } from 'npm:@google/genai@latest';
+import { GoogleGenAI, Content } from 'npm:@google/genai@latest';
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -23,12 +22,12 @@ const tools = {
       name: "register_link",
       description: "Registers a new link in the user's collection.",
       parameters: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          url: { type: Type.STRING, description: "The URL of the link." },
-          description: { type: Type.STRING, description: "A brief description of the link." },
-          category_name: { type: Type.STRING, description: "The category to place the link under. Should be a single word or short phrase." },
-          sub_category_name: { type: Type.STRING, description: "The sub-category within the main category. Should be a single word or short phrase." },
+          url: { type: "STRING", description: "The URL of the link." },
+          description: { type: "STRING", description: "A brief description of the link." },
+          category_name: { type: "STRING", description: "The category to place the link under. Should be a single word or short phrase." },
+          sub_category_name: { type: "STRING", description: "The sub-category within the main category. Should be a single word or short phrase." },
         },
         required: ["url", "category_name", "sub_category_name"],
       },
@@ -37,11 +36,11 @@ const tools = {
       name: "get_links",
       description: "Retrieves links from the user's collection based on filters.",
       parameters: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          category_name: { type: Type.STRING, description: "The category to filter by." },
-          sub_category_name: { type: Type.STRING, description: "The sub-category to filter by." },
-          keywords: { type: Type.STRING, description: "Keywords to search for in link URLs or descriptions." },
+          category_name: { type: "STRING", description: "The category to filter by." },
+          sub_category_name: { type: "STRING", description: "The sub-category to filter by." },
+          keywords: { type: "STRING", description: "Keywords to search for in link URLs or descriptions." },
         },
       },
     },
