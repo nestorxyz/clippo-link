@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User as UserIcon } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
@@ -7,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 interface ChatProps {
-  addLink: (categoryId: string, subCategoryId: string, url: string, description: string) => boolean;
+  addLink: (categoryName: string, subCategoryName: string, url: string, description: string) => Promise<boolean>;
   categories: Category[];
 }
 
@@ -61,7 +60,7 @@ const Chat = ({ addLink, categories }: ChatProps) => {
     setMessages(prev => [...prev, botMessage]);
   };
 
-  const handleMultiTurnAddLink = (userInput: string) => {
+  const handleMultiTurnAddLink = async (userInput: string) => {
     let botResponseText = "";
     if (addLinkState.step === 'url') {
       try {
@@ -76,14 +75,19 @@ const Chat = ({ addLink, categories }: ChatProps) => {
       setNewLink({ ...newLink, description: userInput });
       setAddLinkState({ step: 'category' });
       const categoryExamples = categories.map(c => `${c.name}/${c.subCategories[0]?.name || ''}`).filter(Boolean).slice(0,2).join(', ');
-      botResponseText = `Got it. Which category/subcategory should I put it under? (e.g., ${categoryExamples})`;
+      botResponseText = `Got it. Which category/subcategory should I put it under? (e.g., ${categoryExamples || 'Work/React'})`;
     } else if (addLinkState.step === 'category') {
       const [catName, subCatName] = userInput.split('/');
-      const success = addLink(catName, subCatName, newLink.url, newLink.description);
-      if (success) {
-        botResponseText = "Done! I've saved the link for you.";
+      
+      if (!catName || !subCatName) {
+        botResponseText = "Sorry, I need the category and subcategory in the format 'Category/Subcategory'. Please try again.";
       } else {
-        botResponseText = "Sorry, I couldn't find that category/subcategory. Please try again with a valid format like 'Category/Subcategory'.";
+        const success = await addLink(catName, subCatName, newLink.url, newLink.description);
+        if (success) {
+          botResponseText = "Done! I've saved the link for you.";
+        } else {
+          botResponseText = "Sorry, I couldn't save the link. An error occurred. Please try again.";
+        }
       }
       setAddLinkState({ step: null });
       setNewLink({ url: '', description: '' });
