@@ -1,9 +1,16 @@
 
+export interface Tag {
+  id: string;
+  name: string;
+  color?: string | null;
+}
+
 export interface Link {
   id: string;
   url: string;
   description: string;
   createdAt: string;
+  tags: Tag[];
 }
 
 export interface SubCategory {
