@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GoogleGenerativeAI } from "npm:@google/generative-ai@latest";
+import { GoogleGenAI, FunctionDeclarationSchemaType as Type, Content } from 'npm:@google/genai@latest';
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -14,21 +14,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest",
-  systemInstruction: `You are LinkWhisper, an intelligent AI assistant that helps users organize and manage their web links.
-Your primary functions are to:
-1. \`register_link\`: Add a new link to the user's collection. You must have the URL. You can optionally have a description, category, and sub-category. If not provided, you should intelligently categorize it based on the URL's content if possible.
-2. \`get_links\`: Retrieve and display links based on user queries. You can filter by category, sub-category, or keywords.
-
-When a user asks to add a link, call the \`register_link\` function.
-When a user asks to see their links, call the \`get_links\` function.
-Always be helpful and clear in your responses. Acknowledge when a link has been added successfully. If you can't find something, say so. Don't make things up.
-If asked to get links, after calling the function and receiving the data, present it to the user in a clear, readable markdown format.
-`,
-});
+const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const modelName = "gemini-1.5-flash-latest";
 
 const tools = {
   functionDeclarations: [
@@ -36,12 +23,12 @@ const tools = {
       name: "register_link",
       description: "Registers a new link in the user's collection.",
       parameters: {
-        type: "OBJECT",
+        type: Type.OBJECT,
         properties: {
-          url: { type: "STRING", description: "The URL of the link." },
-          description: { type: "STRING", description: "A brief description of the link." },
-          category_name: { type: "STRING", description: "The category to place the link under. Should be a single word or short phrase." },
-          sub_category_name: { type: "STRING", description: "The sub-category within the main category. Should be a single word or short phrase." },
+          url: { type: Type.STRING, description: "The URL of the link." },
+          description: { type: Type.STRING, description: "A brief description of the link." },
+          category_name: { type: Type.STRING, description: "The category to place the link under. Should be a single word or short phrase." },
+          sub_category_name: { type: Type.STRING, description: "The sub-category within the main category. Should be a single word or short phrase." },
         },
         required: ["url", "category_name", "sub_category_name"],
       },
@@ -50,11 +37,11 @@ const tools = {
       name: "get_links",
       description: "Retrieves links from the user's collection based on filters.",
       parameters: {
-        type: "OBJECT",
+        type: Type.OBJECT,
         properties: {
-          category_name: { type: "STRING", description: "The category to filter by." },
-          sub_category_name: { type: "STRING", description: "The sub-category to filter by." },
-          keywords: { type: "STRING", description: "Keywords to search for in link URLs or descriptions." },
+          category_name: { type: Type.STRING, description: "The category to filter by." },
+          sub_category_name: { type: Type.STRING, description: "The sub-category to filter by." },
+          keywords: { type: Type.STRING, description: "Keywords to search for in link URLs or descriptions." },
         },
       },
     },
@@ -139,44 +126,51 @@ serve(async (req) => {
 
     if (historyError) throw historyError;
     
-    const history = historyData.map(h => ({ role: h.role === 'model' ? 'model' : 'user', parts: h.parts as any[] }));
+    const contents: Content[] = historyData.map(h => ({ role: h.role as 'user' | 'model' | 'function', parts: h.parts as any[] }));
 
-    const chat = model.startChat({ history, tools });
-    const result = await chat.sendMessage(message);
-    const response = result.response;
+    let result = await genAI.models.generateContent({
+      model: modelName,
+      contents,
+      tools: [{ functionDeclarations: tools.functionDeclarations }]
+    });
+
     let botReply = "";
-    const functionCalls = [];
+    const functionCallsForClient = [];
 
-    if (response.functionCalls && response.functionCalls.length > 0) {
-      for (const fc of response.functionCalls) {
+    if (result.functionCalls && result.functionCalls.length > 0) {
+      const functionCallParts = result.functionCalls.map(fc => ({ functionCall: fc }));
+      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: functionCallParts });
+      contents.push({ role: 'model', parts: functionCallParts });
+
+      const functionResponseParts = [];
+      for (const fc of result.functionCalls) {
         let functionResponse;
-
         if (fc.name === 'register_link') {
-          functionResponse = await registerLink(supabase, user.id, fc.args);
+            functionResponse = await registerLink(supabase, user.id, fc.args);
         } else if (fc.name === 'get_links') {
-          functionResponse = await getLinks(supabase, user.id, fc.args);
+            functionResponse = await getLinks(supabase, user.id, fc.args);
         }
-
-        functionCalls.push({ function: { name: fc.name, result: functionResponse } });
-
-        const toolResponse = {
-          functionResponse: {
-            name: fc.name,
-            response: functionResponse,
-          },
-        };
-        const functionCallResult = await chat.sendMessage([toolResponse]);
-        botReply += functionCallResult.response.text();
+        functionCallsForClient.push({ function: { name: fc.name, result: functionResponse } });
+        functionResponseParts.push({ functionResponse: { name: fc.name, response: functionResponse } });
       }
-    } else {
-        botReply = response.text();
+
+      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
+      contents.push({ role: 'function', parts: functionResponseParts });
+      
+      const secondResult = await genAI.models.generateContent({ model: modelName, contents });
+      
+      if (secondResult.text) {
+        botReply = secondResult.text;
+      }
+    } else if (result.text) {
+        botReply = result.text;
     }
     
     if (botReply) {
       await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: [{ text: botReply }] });
     }
 
-    return new Response(JSON.stringify({ reply: botReply, functionCalls }), {
+    return new Response(JSON.stringify({ reply: botReply, functionCalls: functionCallsForClient }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
