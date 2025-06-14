@@ -1,0 +1,191 @@
+
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.15.0';
+import { Database } from '../_shared/database.types.ts';
+
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash-preview",
+  systemInstruction: `You are LinkWhisper, an intelligent AI assistant that helps users organize and manage their web links.
+Your primary functions are to:
+1. \`register_link\`: Add a new link to the user's collection. You must have the URL. You can optionally have a description, category, and sub-category. If not provided, you should intelligently categorize it based on the URL's content if possible.
+2. \`get_links\`: Retrieve and display links based on user queries. You can filter by category, sub-category, or keywords.
+
+When a user asks to add a link, call the \`register_link\` function.
+When a user asks to see their links, call the \`get_links\` function.
+Always be helpful and clear in your responses. Acknowledge when a link has been added successfully. If you can't find something, say so. Don't make things up.
+If asked to get links, after calling the function and receiving the data, present it to the user in a clear, readable markdown format.
+`,
+});
+
+const tools = {
+  functionDeclarations: [
+    {
+      name: "register_link",
+      description: "Registers a new link in the user's collection.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          url: { type: "STRING", description: "The URL of the link." },
+          description: { type: "STRING", description: "A brief description of the link." },
+          category_name: { type: "STRING", description: "The category to place the link under. Should be a single word or short phrase." },
+          sub_category_name: { type: "STRING", description: "The sub-category within the main category. Should be a single word or short phrase." },
+        },
+        required: ["url", "category_name", "sub_category_name"],
+      },
+    },
+    {
+      name: "get_links",
+      description: "Retrieves links from the user's collection based on filters.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          category_name: { type: "STRING", description: "The category to filter by." },
+          sub_category_name: { type: "STRING", description: "The sub-category to filter by." },
+          keywords: { type: "STRING", description: "Keywords to search for in link URLs or descriptions." },
+        },
+      },
+    },
+  ],
+};
+
+async function registerLink(supabase: SupabaseClient<Database>, user_id: string, args: any) {
+  const { url, description, category_name, sub_category_name } = args;
+
+  let { data: category } = await supabase.from('categories').select('id').eq('name', category_name).eq('user_id', user_id).maybeSingle();
+
+  if (!category) {
+    const { data: newCategory, error: newCatError } = await supabase.from('categories').insert({ name: category_name, user_id: user_id }).select('id').single();
+    if (newCatError) throw newCatError;
+    category = newCategory;
+  }
+
+  let { data: subCategory } = await supabase.from('sub_categories').select('id').eq('name', sub_category_name).eq('category_id', category.id).eq('user_id', user_id).maybeSingle();
+
+  if (!subCategory) {
+    const { data: newSubCategory, error: newSubCatError } = await supabase.from('sub_categories').insert({ name: sub_category_name, category_id: category.id, user_id: user_id }).select('id').single();
+    if (newSubCatError) throw newSubCatError;
+    subCategory = newSubCategory;
+  }
+
+  const { error: linkError } = await supabase.from('links').insert({ url, description, sub_category_id: subCategory.id, user_id: user_id });
+
+  if (linkError) return { success: false, error: linkError.message };
+  return { success: true };
+}
+
+async function getLinks(supabase: SupabaseClient<Database>, user_id: string, args: any) {
+  const { category_name, sub_category_name, keywords } = args;
+  
+  let query = supabase.from('links').select(`
+    url,
+    description,
+    sub_categories!inner(
+      name,
+      categories!inner(name)
+    )
+  `).eq('user_id', user_id);
+
+  if (category_name) query = query.eq('sub_categories.categories.name', category_name);
+  if (sub_category_name) query = query.eq('sub_categories.name', sub_category_name);
+  if (keywords) query = query.or(`description.ilike.%${keywords}%,url.ilike.%${keywords}%`);
+
+  const { data: links, error: linksError } = await query;
+
+  if (linksError) return { result: `Error fetching links: ${linksError.message}` };
+  if (!links || links.length === 0) return { result: "I couldn't find any links matching your criteria." };
+  
+  return { links };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const { sessionId, message } = await req.json();
+    const authHeader = req.headers.get('Authorization')!;
+    
+    const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false }
+    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'user', parts: [{ text: message }] });
+
+    const { data: historyData, error: historyError } = await supabase
+      .from('chat_messages')
+      .select('role, parts')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (historyError) throw historyError;
+    
+    const history = historyData.map(h => ({ role: h.role === 'model' ? 'model' : 'user', parts: h.parts as any[] }));
+
+    const chat = model.startChat({ history, tools });
+    const result = await chat.sendMessage(message);
+    const response = result.response;
+    let botReply = "";
+    const functionCalls = [];
+
+    if (response.functionCalls && response.functionCalls.length > 0) {
+      for (const fc of response.functionCalls) {
+        let functionResponse;
+
+        if (fc.name === 'register_link') {
+          functionResponse = await registerLink(supabase, user.id, fc.args);
+        } else if (fc.name === 'get_links') {
+          functionResponse = await getLinks(supabase, user.id, fc.args);
+        }
+
+        functionCalls.push({ function: { name: fc.name, result: functionResponse } });
+
+        const toolResponse = {
+          functionResponse: {
+            name: fc.name,
+            response: functionResponse,
+          },
+        };
+        const functionCallResult = await chat.sendMessage([toolResponse]);
+        botReply += functionCallResult.response.text();
+      }
+    } else {
+        botReply = response.text();
+    }
+    
+    if (botReply) {
+      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: [{ text: botReply }] });
+    }
+
+    return new Response(JSON.stringify({ reply: botReply, functionCalls }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+
+  } catch (error) {
+    console.error('Error in gemini-chat function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
