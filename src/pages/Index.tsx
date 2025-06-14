@@ -4,8 +4,9 @@ import Chat from '@/components/Chat';
 import { initialCategories } from '@/lib/mockData';
 import { Category } from '@/lib/types';
 import { useState } from 'react';
+import { Session } from '@supabase/supabase-js';
 
-const Index = () => {
+const Index = ({ session }: { session: Session | null }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -41,7 +42,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
-      <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar}/>
+      <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
       <main className="flex-1 flex flex-col h-screen">
         <Chat addLink={addLink} categories={categories} />
       </main>
