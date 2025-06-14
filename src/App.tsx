@@ -8,6 +8,7 @@ import DashboardPage from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/Auth";
 import AccountPage from "./pages/Account";
+import LandingPage from "./pages/LandingPage";
 import { useState, useEffect } from "react";
 import { retired-provider } from "@/integrations/retired-provider/client";
 import { Session } from "@retired-provider/retired-provider-js";
@@ -49,9 +50,10 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={!session ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={session ? <DashboardPage session={session} /> : <Navigate to="/" replace />} />
-            <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/" replace />} />
+            <Route path="/" element={!session ? <LandingPage /> : <Navigate to="/dashboard" replace />} />
+            <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={session ? <DashboardPage session={session} /> : <Navigate to="/auth" replace />} />
+            <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/auth" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
