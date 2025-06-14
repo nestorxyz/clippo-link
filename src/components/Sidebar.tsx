@@ -1,15 +1,18 @@
 
-import { Category, SubCategory, Link } from '@/lib/types';
-import { ChevronRight, Folder, Link2, Star, User, Briefcase, PanelLeftClose, PanelLeftOpen, GripHorizontal, FileText } from 'lucide-react';
+import { Category } from '@/lib/types';
+import { ChevronRight, Folder, Link2, Star, User, Briefcase, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Link as RouterLink } from 'react-router-dom';
+import { Session } from '@retired-provider/retired-provider-js';
 
 interface SidebarProps {
   categories: Category[];
   isCollapsed: boolean;
   toggleSidebar: () => void;
+  session: Session | null;
 }
 
 const categoryIcons: { [key: string]: React.ElementType } = {
@@ -24,7 +27,7 @@ const CategoryIcon = ({ name }: { name: string }) => {
   return <Icon className="h-4 w-4" />;
 };
 
-const Sidebar = ({ categories, isCollapsed, toggleSidebar }: SidebarProps) => {
+const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarProps) => {
   const [openCategories, setOpenCategories] = useState<string[]>(categories.map(c => c.id));
 
   const toggleCategory = (id: string) => {
@@ -70,6 +73,14 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar }: SidebarProps) => {
               </CollapsibleContent>
             </Collapsible>
           ))}
+        </div>
+        <div className="p-2 border-t">
+          <RouterLink to={session ? "/account" : "/auth"}>
+            <Button variant="ghost" className="w-full justify-start gap-2">
+              <User className="h-4 w-4" />
+              {!isCollapsed && (session ? 'Account' : 'Login')}
+            </Button>
+          </RouterLink>
         </div>
       </div>
     </div>
