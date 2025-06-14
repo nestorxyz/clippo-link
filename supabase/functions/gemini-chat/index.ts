@@ -15,7 +15,7 @@ const corsHeaders = {
 };
 
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const modelName = "gemini-1.5-flash-latest";
+const modelName = "gemini-2.5-flash-preview-05-20";
 
 const tools = {
   functionDeclarations: [
