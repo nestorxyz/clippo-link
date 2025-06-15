@@ -221,7 +221,7 @@ export type Database = {
       }
       tags: {
         Row: {
-          color: string | null
+          color: string
           created_at: string
           id: string
           name: string
@@ -229,7 +229,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          color?: string | null
+          color?: string
           created_at?: string
           id?: string
           name: string
@@ -237,7 +237,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          color?: string | null
+          color?: string
           created_at?: string
           id?: string
           name?: string
@@ -251,7 +251,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      random_hex_color: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
