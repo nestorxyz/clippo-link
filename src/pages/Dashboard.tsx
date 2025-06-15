@@ -70,11 +70,11 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
   return (
     <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
       <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
-      <main className="flex-1 flex flex-col h-screen border-l border-r">
-        <Management session={session} />
-      </main>
-      <aside className="w-[500px] flex-shrink-0 flex flex-col h-screen bg-card/40 border-l">
+      <main className="flex-1 flex flex-col h-screen border-r">
         <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+      </main>
+      <aside className="w-[500px] flex-shrink-0 flex flex-col h-screen bg-card/40">
+        <Management session={session} />
       </aside>
     </div>
   );
