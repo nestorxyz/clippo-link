@@ -1,16 +1,17 @@
-
 import { Session } from '@retired-provider/retired-provider-js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CategoryManager from './management/CategoryManager';
 import SubCategoryManager from './management/SubCategoryManager';
 import TagManager from './management/TagManager';
-
-const Management = ({ session }: { session: Session | null }) => {
-  return (
-    <div className="flex flex-col h-full">
+const Management = ({
+  session
+}: {
+  session: Session | null;
+}) => {
+  return <div className="flex flex-col h-full">
       <header className="p-4 border-b">
-        <h1 className="text-2xl font-bold">Management</h1>
-        <p className="text-muted-foreground">Manage your categories, sub-categories, and tags.</p>
+        <h1 className="font-normal text-base">Management</h1>
+        
       </header>
       <div className="flex-1 p-4 overflow-y-auto">
         <Tabs defaultValue="categories" className="w-full">
@@ -30,8 +31,6 @@ const Management = ({ session }: { session: Session | null }) => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Management;
