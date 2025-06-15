@@ -18,7 +18,7 @@ const AuthPage = () => {
           Get started
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Sign in or create an account with Google.
+          Sign in or create an account to get started.
         </p>
         <div className="mt-8">
           <AuthForm />

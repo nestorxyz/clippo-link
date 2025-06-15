@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const GoogleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-6 w-6 mr-3">
@@ -15,10 +17,12 @@ const GoogleIcon = () => (
 );
 
 export const AuthForm = () => {
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [loading, setLoading] = useState<'google' | 'email-signin' | 'email-signup' | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const signInWithGoogle = async () => {
-    setLoadingGoogle(true);
+    setLoading('google');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -28,13 +32,104 @@ export const AuthForm = () => {
     if (error) {
       toast.error('Error with Google Sign-in', { description: error.message });
     }
-    setLoadingGoogle(false);
+    setLoading(null);
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+        toast.error("Please fill in both email and password.");
+        return;
+    }
+    setLoading('email-signin');
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      toast.error('Error signing in', { description: error.message });
+    }
+    setLoading(null);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+        toast.error("Please fill in both email and password.");
+        return;
+    }
+    setLoading('email-signup');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      toast.error('Error signing up', { description: error.message });
+    } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        toast.error('User already exists', { description: 'Please try to sign in instead.' });
+    } else {
+      toast.success('Check your email!', { description: 'We sent you a confirmation link to complete your registration.' });
+    }
+    setLoading(null);
   };
 
   return (
-    <div className="w-full">
-      <Button variant="outline" type="button" className="w-full text-base py-6 flex items-center justify-center" onClick={signInWithGoogle} disabled={loadingGoogle}>
-        {loadingGoogle ? (
+    <div className="w-full space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+        <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+                id="email"
+                placeholder="name@example.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={!!loading}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+            />
+        </div>
+        <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                disabled={!!loading}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button onClick={handleSignIn} disabled={!!loading} className="w-full">
+                {loading === 'email-signin' && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                Sign In
+            </Button>
+            <Button onClick={handleSignUp} disabled={!!loading} className="w-full" variant="secondary">
+                {loading === 'email-signup' && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                Sign Up
+            </Button>
+        </div>
+      </form>
+      
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+            Or
+            </span>
+        </div>
+      </div>
+
+      <Button variant="outline" type="button" className="w-full text-base py-6 flex items-center justify-center" onClick={signInWithGoogle} disabled={!!loading}>
+        {loading === 'google' ? (
           <Loader2 className="animate-spin" />
         ) : (
           <>
