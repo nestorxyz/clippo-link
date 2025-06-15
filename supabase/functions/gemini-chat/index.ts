@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { GoogleGenAI, Content } from 'npm:@google/genai@latest';
-import * as opengraph from "https://deno.land/x/opengraph@v1.0.0/mod.ts";
+import { extract } from "https://deno.land/x/opengraph@v1.0.0/mod.ts";
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -532,7 +532,7 @@ async function getUrlInfo(url: string, focus?: string) {
       },
     });
 
-    const metadataPromise = opengraph.extract(url, { headers: { "user-agent": "Clippo/1.0" } }).catch(err => {
+    const metadataPromise = extract(url, { headers: { "user-agent": "Clippo/1.0" } }).catch(err => {
       console.error(`Opengraph extract error for ${url}:`, err.message);
       return {}; // Return empty object on error, so it doesn't fail the whole process
     });
