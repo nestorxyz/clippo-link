@@ -1,7 +1,7 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MessageSquare, Shirt } from 'lucide-react';
+import HeroBackground from './HeroBackground';
 
 const HeroSection = () => {
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -11,9 +11,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative flex flex-col justify-center items-center min-h-screen text-center p-4 sm:p-8 overflow-hidden">
-      <div
-        className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-background via-background/80 to-transparent -z-1"></div>
+      <HeroBackground />
       <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-background to-transparent -z-1"></div>
       
       <div className="z-10">
