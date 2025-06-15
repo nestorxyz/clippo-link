@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
@@ -8,6 +9,9 @@ import { retired-provider } from '@/integrations/retired-provider/client';
 import { Session } from '@retired-provider/retired-provider-js';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 interface ChatProps {
   categories: Category[];
   session: Session | null;
@@ -187,7 +191,19 @@ const Chat = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(message => <div key={message.id} className={cn("flex animate-message-in", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
             <div className={cn("max-w-md p-3 rounded-lg", message.sender === 'user' ? 'bg-secondary' : 'bg-card')}>
-              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+              {message.sender === 'bot' ? (
+                <ReactMarkdown
+                  className="prose"
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                  }}
+                >
+                  {message.text}
+                </ReactMarkdown>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+              )}
             </div>
           </div>)}
         {isBotTyping && <div className="flex animate-message-in justify-start">
