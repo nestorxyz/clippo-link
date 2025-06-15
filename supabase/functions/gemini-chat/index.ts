@@ -473,11 +473,11 @@ serve(async (req) => {
         }
       });
       
-      if (secondResult.response.text()) {
-        botReply = secondResult.response.text();
+      if (secondResult.response.text) {
+        botReply = secondResult.response.text;
       }
-    } else if (response.text()) {
-        botReply = response.text();
+    } else if (response.text) {
+        botReply = response.text;
     }
     
     if (botReply) {
