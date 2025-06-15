@@ -1,4 +1,3 @@
-
 import Sidebar from '@/components/Sidebar';
 import Chat from '@/components/Chat';
 import { useState, useEffect } from 'react';
@@ -104,7 +103,7 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
       <main className="flex-1 flex p-4 gap-4 overflow-hidden">
         <div
           className={cn(
-            "rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+            "rounded-lg bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
             isSidebarCollapsed ? "w-20" : "w-1/4"
           )}
         >
@@ -115,10 +114,10 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
             session={session}
           />
         </div>
-        <div className="flex-1 rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
+        <div className="flex-1 rounded-lg bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
           <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
         </div>
-        <aside className="w-1/4 rounded-lg border bg-card text-card-foreground shadow-sm flex-col overflow-hidden hidden lg:flex">
+        <aside className="w-1/4 rounded-lg bg-card text-card-foreground shadow-sm flex-col overflow-hidden hidden lg:flex">
           <Management session={session} />
         </aside>
       </main>
