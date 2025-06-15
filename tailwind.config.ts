@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -84,6 +87,10 @@ export default {
         'message-in': {
           from: { opacity: '0', transform: 'translateY(20px) scale(0.95)' },
           to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'pulse-subtle': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' },
         }
 			},
 			animation: {
@@ -91,9 +98,9 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'message-in': 'message-in 0.3s ease-out forwards',
+        'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
 			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
