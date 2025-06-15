@@ -37,7 +37,7 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session, isMobile = f
   };
 
   return (
-    <div className={cn("bg-card/40 backdrop-blur-md border-r h-full w-full")}>
+    <div className={cn("h-full w-full")}>
       <div className="flex flex-col h-full">
         <div className="p-4 flex items-center justify-between border-b">
           {!isCollapsed && <h2 className="text-lg font-semibold tracking-tight">Link Organizer</h2>}
