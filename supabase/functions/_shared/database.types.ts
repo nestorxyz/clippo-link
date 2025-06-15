@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -132,6 +131,8 @@ export type Database = {
           updated_at: string
           url: string
           user_id: string
+          title: string
+          source: string | null
         }
         Insert: {
           created_at?: string
@@ -141,6 +142,8 @@ export type Database = {
           updated_at?: string
           url: string
           user_id: string
+          title: string
+          source?: string | null
         }
         Update: {
           created_at?: string
@@ -150,6 +153,8 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string
+          title?: string
+          source?: string | null
         }
         Relationships: [
           {

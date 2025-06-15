@@ -84,7 +84,7 @@ _Note: These will be passed to you in system prompt each time dynamically. Alway
   "description": "Registers a new saved link",
   "parameters": {
     "url": { "type": "string", "description": "The link to save" },
-    "title": { "type": "string", "description": "Optional user-defined title" },
+    "title": { "type": "string", "description": "User-defined title" },
     "description": {
       "type": "string",
       "description": "Short context or summary"
@@ -285,14 +285,14 @@ const tools = {
         type: "OBJECT",
         properties: {
           url: { type: "STRING", description: "The link to save" },
-          title: { type: "STRING", description: "Optional user-defined title" },
+          title: { type: "STRING", description: "User-defined title" },
           description: { type: "STRING", description: "Short context or summary" },
           category: { type: "STRING", description: "One of the known categories" },
           subcategory: { type: "STRING", description: "Optional subcategory, also validated" },
           tags: { type: "ARRAY", items: { type: "STRING" }, description: "List of tags" },
           source: { type: "STRING", description: "Optional source (e.g., Twitter, YouTube)" },
         },
-        required: ["url", "category"],
+        required: ["url", "category", "title"],
       },
     },
     {

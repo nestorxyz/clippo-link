@@ -129,7 +129,7 @@ export type Database = {
           id: string
           source: string | null
           sub_category_id: string
-          title: string | null
+          title: string
           updated_at: string
           url: string
           user_id: string
@@ -140,7 +140,7 @@ export type Database = {
           id?: string
           source?: string | null
           sub_category_id: string
-          title?: string | null
+          title: string
           updated_at?: string
           url: string
           user_id: string
@@ -151,7 +151,7 @@ export type Database = {
           id?: string
           source?: string | null
           sub_category_id?: string
-          title?: string | null
+          title?: string
           updated_at?: string
           url?: string
           user_id?: string
