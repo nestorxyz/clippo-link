@@ -12,6 +12,7 @@ import { retired-provider } from '@/integrations/retired-provider/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import BottomNavbar from '@/components/BottomNavbar';
+import Header from '@/components/Header';
 
 type ActiveView = 'columns' | 'chat' | 'settings';
 
@@ -98,21 +99,29 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
-      <div
-        className={cn(
-          "flex-shrink-0 transition-all duration-300 ease-in-out",
-          isSidebarCollapsed ? "w-16" : "w-1/4"
-        )}
-      >
-        <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
-      </div>
-      <main className="flex-grow flex flex-col h-screen border-r">
-        <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+    <div className="flex flex-col h-screen w-full bg-background font-sans">
+      <Header session={session} />
+      <main className="flex-1 flex p-4 gap-4 overflow-hidden">
+        <div
+          className={cn(
+            "rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+            isSidebarCollapsed ? "w-20" : "w-1/4"
+          )}
+        >
+          <Sidebar
+            categories={categories}
+            isCollapsed={isSidebarCollapsed}
+            toggleSidebar={toggleSidebar}
+            session={session}
+          />
+        </div>
+        <div className="flex-1 rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
+          <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+        </div>
+        <aside className="w-1/4 rounded-lg border bg-card text-card-foreground shadow-sm flex-col overflow-hidden hidden lg:flex">
+          <Management session={session} />
+        </aside>
       </main>
-      <aside className="w-1/4 flex-shrink-0 flex flex-col h-screen bg-card/40">
-        <Management session={session} />
-      </aside>
     </div>
   );
 };
