@@ -441,8 +441,8 @@ serve(async (req) => {
     let botReply = "";
     const functionCallsForClient = [];
 
-    const response = result.response;
-    const functionCalls = response.functionCalls();
+    const response = result;
+    const functionCalls = response.functionCalls;
 
     if (functionCalls && functionCalls.length > 0) {
       const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
