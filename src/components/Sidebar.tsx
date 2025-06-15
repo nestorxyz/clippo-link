@@ -14,6 +14,7 @@ interface SidebarProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   session: Session | null;
+  isMobile?: boolean;
 }
 
 const categoryIcons: { [key: string]: React.ElementType } = {
@@ -28,7 +29,7 @@ const CategoryIcon = ({ name }: { name: string }) => {
   return <Icon className="h-4 w-4" />;
 };
 
-const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarProps) => {
+const Sidebar = ({ categories, isCollapsed, toggleSidebar, session, isMobile = false }: SidebarProps) => {
   const [openCategories, setOpenCategories] = useState<string[]>(categories.map(c => c.id));
 
   const toggleCategory = (id: string) => {
@@ -36,13 +37,15 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session }: SidebarPro
   };
 
   return (
-    <div className={cn("bg-card/40 backdrop-blur-md border-r transition-all duration-300 ease-in-out", isCollapsed ? 'w-16' : 'w-80')}>
+    <div className={cn("bg-card/40 backdrop-blur-md border-r h-full w-full")}>
       <div className="flex flex-col h-full">
         <div className="p-4 flex items-center justify-between border-b">
           {!isCollapsed && <h2 className="text-lg font-semibold tracking-tight">Link Organizer</h2>}
-          <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-            {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-          </Button>
+          {!isMobile && (
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
           {categories.map(category => (
