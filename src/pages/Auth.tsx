@@ -12,7 +12,7 @@ const AuthPage = () => {
       <header className="absolute top-8">
         <Link to="/" className="text-lg font-bold flex items-center gap-2 text-foreground">
           <Bookmark className="w-6 h-6" />
-          <span>LinkWhisper</span>
+          <span>Clippo</span>
         </Link>
       </header>
 
@@ -21,7 +21,7 @@ const AuthPage = () => {
           {isSignUp ? 'Create an account' : 'Welcome back'}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to LinkWhisper'}
+          {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to Clippo'}
         </p>
         <div className="mt-8">
           <AuthForm isSignUp={isSignUp} setIsSignUp={setIsSignUp} />

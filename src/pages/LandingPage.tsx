@@ -9,7 +9,7 @@ const LandingPage = () => {
       <header className="absolute top-8">
         <div className="text-lg font-bold flex items-center gap-2 text-foreground">
           <Bookmark className="w-6 h-6" />
-          <span>LinkWhisper</span>
+          <span>Clippo</span>
         </div>
       </header>
 
