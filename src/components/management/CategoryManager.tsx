@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -47,11 +46,9 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Categories</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div>
+      <h3 className="text-2xl font-semibold leading-none tracking-tight">Manage Categories</h3>
+      <div className="space-y-4 pt-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -100,8 +97,8 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
             </div>
           </ScrollArea>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
