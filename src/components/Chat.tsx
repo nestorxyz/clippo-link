@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User as UserIcon } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
@@ -32,22 +31,60 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   useEffect(() => {
     if (!session?.user.id) return;
 
-    const createChatSession = async () => {
+    const loadOrCreateChatSession = async () => {
       setIsBotTyping(true);
       try {
-        const { data: sessionData, error: sessionError } = await supabase
+        const { data: existingSession, error: existingSessionError } = await supabase
           .from('chat_sessions')
-          .insert({ user_id: session.user.id })
           .select('id')
-          .single();
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        if (sessionError) throw sessionError;
-        
-        setSessionId(sessionData.id);
-        setMessages([
-          { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
-        ]);
+        if (existingSessionError) throw existingSessionError;
 
+        let currentSessionId: string;
+
+        if (existingSession) {
+          currentSessionId = existingSession.id;
+          setSessionId(currentSessionId);
+
+          const { data: messageHistory, error: messageHistoryError } = await supabase
+            .from('chat_messages')
+            .select('id, parts, role')
+            .eq('session_id', currentSessionId)
+            .order('created_at', { ascending: true });
+
+          if (messageHistoryError) throw messageHistoryError;
+
+          if (messageHistory && messageHistory.length > 0) {
+            const formattedMessages: Message[] = messageHistory.map((msg: any) => ({
+              id: msg.id,
+              text: (Array.isArray(msg.parts) && msg.parts[0]?.text) || '',
+              sender: msg.role === 'user' ? 'user' : 'bot',
+            }));
+            setMessages(formattedMessages);
+          } else {
+            setMessages([
+              { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
+            ]);
+          }
+        } else {
+          const { data: newSession, error: newSessionError } = await supabase
+            .from('chat_sessions')
+            .insert({ user_id: session.user.id })
+            .select('id')
+            .single();
+
+          if (newSessionError) throw newSessionError;
+          
+          currentSessionId = newSession.id;
+          setSessionId(currentSessionId);
+          setMessages([
+            { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
+          ]);
+        }
       } catch (error) {
         console.error("Error managing chat session:", error);
         toast.error("Could not start a new chat session.");
@@ -57,7 +94,7 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
       }
     };
 
-    createChatSession();
+    loadOrCreateChatSession();
   }, [session]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
