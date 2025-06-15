@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { GoogleGenAI, Content } from 'npm:@google/genai@latest';
+import opengraph from "https://deno.land/x/opengraph@v1.0.0/mod.ts";
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -522,7 +523,7 @@ async function getUrlInfo(url: string, focus?: string) {
       ? `Analyze this URL and provide detailed information focusing on: ${focus}. URL: ${url}`
       : `Analyze this URL and provide a comprehensive summary including: main topic, key points, type of content, and any important details. URL: ${url}`;
 
-    const response = await genAI.models.generateContent({
+    const geminiPromise = genAI.models.generateContent({
       model: modelName,
       contents: [prompt],
       config: {
@@ -530,16 +531,38 @@ async function getUrlInfo(url: string, focus?: string) {
       },
     });
 
+    const metadataPromise = opengraph.extract(url, { headers: { "user-agent": "Clippo/1.0" } }).catch(err => {
+      console.error(`Opengraph extract error for ${url}:`, err.message);
+      return {}; // Return empty object on error, so it doesn't fail the whole process
+    });
+
+    const [response, ogMetadata] = await Promise.all([geminiPromise, metadataPromise]);
+
     console.log('Full getUrlInfo response:', JSON.stringify(response, null, 2));
 
-    if (!response.text) {
+    const formattedMetadata: { [key: string]: any } = {};
+    if (ogMetadata) {
+      for (const key in ogMetadata) {
+        if (Object.prototype.hasOwnProperty.call(ogMetadata, key)) {
+          const newKey = key.replace(/^og:/, '');
+          formattedMetadata[newKey] = ogMetadata[key];
+        }
+      }
+    }
+
+    if (!response.text && Object.keys(formattedMetadata).length === 0) {
       return { success: false, error: "No content could be extracted from the URL" };
     }
 
+    const geminiUrlMetadata = response.candidates?.[0]?.urlContextMetadata || null;
+
     return { 
       success: true, 
-      summary: response.text,
-      urlMetadata: response.candidates?.[0]?.urlContextMetadata || null
+      summary: response.text || formattedMetadata.description || '',
+      urlMetadata: {
+          ...(geminiUrlMetadata || {}),
+          ...formattedMetadata
+      }
     };
   } catch (error) {
     console.error('Error analyzing URL:', error);
