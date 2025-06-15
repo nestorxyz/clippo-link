@@ -110,6 +110,10 @@ _Note: These will be passed to you in system prompt each time dynamically. Alway
     "source": {
       "type": "string",
       "description": "Optional source (e.g., Twitter, YouTube)"
+    },
+    "img_preview": {
+      "type": "string",
+      "description": "Image preview URL"
     }
   }
 }
@@ -193,7 +197,8 @@ Use this when users ask for information about a specific URL, want to summarize 
     "category": "side-projects",
     "subcategory": "tech",
     "tags": ["AI", "startup", "product"],
-    "source": "web"
+    "source": "web",
+    "img_preview": "https://example.com/image.jpg"
   }
 }
 \`\`\`
@@ -311,6 +316,7 @@ const tools = {
           subcategory: { type: "STRING", description: "Optional subcategory, also validated" },
           tags: { type: "ARRAY", items: { type: "STRING" }, description: "List of tags" },
           source: { type: "STRING", description: "Optional source (e.g., Twitter, YouTube)" },
+          img_preview: { type: "STRING", description: "Image preview URL" },
         },
         required: ["url", "category", "title"],
       },
@@ -353,6 +359,26 @@ const tools = {
 async function registerLink(supabase: SupabaseClient<Database>, user_id: string, args: any) {
   const { url, title, description, category: category_name, subcategory, tags, source } = args;
 
+  let img_preview: string | null = null;
+  try {
+    // We ask Gemini to analyze the URL. The urlContext tool will extract metadata.
+    const response = await genAI.models.generateContent({
+      model: modelName,
+      contents: [{ role: 'user', parts: [{ text: `Extract metadata from ${url}` }] }],
+      config: {
+        tools: [{ urlContext: {} }],
+      },
+    });
+    
+    const urlMetadata = response.candidates?.[0]?.urlContextMetadata;
+    if (urlMetadata && (urlMetadata as any).image) {
+      img_preview = (urlMetadata as any).image;
+    }
+  } catch (error) {
+    console.error('Error fetching URL metadata for preview image:', error);
+    // Non-blocking, just log the error and continue.
+  }
+
   const sub_category_name = subcategory || 'general';
 
   let { data: category } = await supabase.from('categories').select('id').eq('name', category_name).eq('user_id', user_id).maybeSingle();
@@ -373,7 +399,7 @@ async function registerLink(supabase: SupabaseClient<Database>, user_id: string,
 
   const { data: newLink, error: linkError } = await supabase
     .from('links')
-    .insert({ url, description, sub_category_id: subCategory.id, user_id, title, source })
+    .insert({ url, description, sub_category_id: subCategory.id, user_id, title, source, img_preview })
     .select('id')
     .single();
 
@@ -426,6 +452,7 @@ async function getLinks(supabase: SupabaseClient<Database>, user_id: string, arg
     description,
     title,
     source,
+    img_preview,
     created_at,
     sub_categories!inner(
       name,
