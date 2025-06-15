@@ -9,7 +9,7 @@ const Management = ({
   session: Session | null;
 }) => {
   return <div className="flex flex-col h-full">
-      <header className="p-4 border-b">
+      <header className="p-4 border-b py-[8px]">
         <h1 className="font-normal text-base">Management</h1>
         
       </header>
