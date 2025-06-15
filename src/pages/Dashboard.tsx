@@ -1,18 +1,37 @@
 
 import Sidebar from '@/components/Sidebar';
 import Chat from '@/components/Chat';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Session } from '@retired-provider/retired-provider-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCategories } from '@/hooks/useCategories';
+import Management from '@/components/Management';
+import { retired-provider } from '@/integrations/retired-provider/client';
 
 const DashboardPage = ({ session }: { session: Session | null }) => {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: categories = [], isLoading: isLoadingCategories, isError, error, refetch } = useCategories(session);
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+
+    const channel = retired-provider.channel('db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        console.log('Realtime change received!', payload);
+        queryClient.invalidateQueries({ queryKey: ['categories', session.user.id] });
+        queryClient.invalidateQueries({ queryKey: ['tags', session.user.id] });
+      })
+      .subscribe();
+
+    return () => {
+      retired-provider.removeChannel(channel);
+    };
+  }, [session, queryClient]);
+
 
   const onLinkAdded = () => {
     queryClient.invalidateQueries({ queryKey: ['categories', session?.user.id] });
@@ -51,9 +70,12 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
   return (
     <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
       <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
-      <main className="flex-1 flex flex-col h-screen">
-        <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+      <main className="flex-1 flex flex-col h-screen border-l border-r">
+        <Management session={session} />
       </main>
+      <aside className="w-[500px] flex-shrink-0 flex flex-col h-screen bg-card/40 border-l">
+        <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+      </aside>
     </div>
   );
 };
