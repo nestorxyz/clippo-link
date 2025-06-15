@@ -2,13 +2,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 const GoogleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-6 w-6 mr-3">
@@ -19,27 +14,8 @@ const GoogleIcon = () => (
     </svg>
 );
 
-const authSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-});
-
-interface AuthFormProps {
-  isSignUp: boolean;
-  setIsSignUp: (isSignUp: boolean) => void;
-}
-
-export const AuthForm = ({ isSignUp, setIsSignUp }: AuthFormProps) => {
+export const AuthForm = () => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [loadingEmail, setLoadingEmail] = useState(false);
-
-  const form = useForm<z.infer<typeof authSchema>>({
-    resolver: zodResolver(authSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
 
   const signInWithGoogle = async () => {
     setLoadingGoogle(true);
@@ -55,41 +31,9 @@ export const AuthForm = ({ isSignUp, setIsSignUp }: AuthFormProps) => {
     setLoadingGoogle(false);
   };
 
-  const handleAuthAction = async (values: z.infer<typeof authSchema>) => {
-    setLoadingEmail(true);
-    if (isSignUp) {
-      // Sign up
-      const { error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-      if (error) {
-        toast.error('Sign-up failed', { description: error.message });
-      } else {
-        toast.success('Check your email!', {
-          description: 'We sent you a confirmation link to complete your registration.',
-        });
-        form.reset();
-      }
-    } else {
-      // Sign in
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-      if (error) {
-        toast.error('Sign-in failed', { description: error.message });
-      }
-    }
-    setLoadingEmail(false);
-  };
-
   return (
-    <div className="w-full space-y-6">
-      <Button variant="outline" type="button" className="w-full text-base py-6 flex items-center justify-center" onClick={signInWithGoogle} disabled={loadingGoogle || loadingEmail}>
+    <div className="w-full">
+      <Button variant="outline" type="button" className="w-full text-base py-6 flex items-center justify-center" onClick={signInWithGoogle} disabled={loadingGoogle}>
         {loadingGoogle ? (
           <Loader2 className="animate-spin" />
         ) : (
@@ -99,63 +43,6 @@ export const AuthForm = ({ isSignUp, setIsSignUp }: AuthFormProps) => {
           </>
         )}
       </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="you@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={loadingEmail || loadingGoogle}>
-            {loadingEmail ? <Loader2 className="animate-spin" /> : (isSignUp ? 'Sign Up' : 'Sign In')}
-          </Button>
-        </form>
-      </Form>
-      
-      <p className="text-center text-sm text-muted-foreground">
-        {isSignUp ? "Already have an account? " : "Don't have an account? "}
-        <button
-          type="button"
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="underline hover:text-primary"
-          disabled={loadingEmail || loadingGoogle}
-        >
-          {isSignUp ? 'Sign In' : 'Sign Up'}
-        </button>
-      </p>
     </div>
   );
 };

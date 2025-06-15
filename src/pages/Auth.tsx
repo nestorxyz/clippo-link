@@ -2,11 +2,8 @@
 import { AuthForm } from '@/components/AuthForm';
 import { Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 const AuthPage = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
-
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-background text-center p-4 sm:p-8 relative">
       <header className="absolute top-8">
@@ -18,13 +15,13 @@ const AuthPage = () => {
 
       <main className="w-full max-w-sm mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-          {isSignUp ? 'Create an account' : 'Welcome back'}
+          Get started
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to Clippo'}
+          Sign in or create an account with Google.
         </p>
         <div className="mt-8">
-          <AuthForm isSignUp={isSignUp} setIsSignUp={setIsSignUp} />
+          <AuthForm />
         </div>
       </main>
       
