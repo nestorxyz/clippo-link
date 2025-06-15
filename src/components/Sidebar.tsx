@@ -44,7 +44,7 @@ const Sidebar = ({
   return <div className={cn("h-full w-full")}>
       <div className="flex flex-col h-full">
         <div className="p-4 flex items-center justify-between py-0 border-b">
-          {!isCollapsed && <h2 className="text-lg font-semibold tracking-tight">Clippo</h2>}
+          {!isCollapsed && <h2 className="tracking-tight font-normal text-base">Links</h2>}
           {!isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}>
               {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </Button>}
