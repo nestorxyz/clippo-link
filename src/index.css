@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -73,5 +74,30 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  .prose {
+    @apply text-sm;
+  }
+  .prose p {
+    @apply mb-2 whitespace-pre-wrap;
+  }
+  .prose p:last-child {
+    @apply mb-0;
+  }
+  .prose code:not(in-pre) {
+    @apply bg-muted text-muted-foreground rounded px-1.5 py-1 font-mono text-xs;
+  }
+  .prose a {
+    @apply text-primary underline;
+  }
+  .prose ul {
+    @apply my-2 list-disc list-inside;
+  }
+  .prose ol {
+    @apply my-2 list-decimal list-inside;
+  }
+  .prose li {
+    @apply my-1;
   }
 }
