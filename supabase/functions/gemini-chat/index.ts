@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -433,7 +434,7 @@ serve(async (req) => {
       contents: contents,
       config: {
         systemInstruction,
-        tools: [{ functionDeclarations: tools.functionDeclarations }, {urlContext: {}}],
+        tools: [{ functionDeclarations: tools.functionDeclarations }],
       },
     });
 
