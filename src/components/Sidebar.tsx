@@ -4,7 +4,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Link as RouterLink } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
 import { getContrastColor } from '@/lib/colorUtils';
@@ -97,14 +96,6 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session, isMobile = f
               </CollapsibleContent>
             </Collapsible>
           ))}
-        </div>
-        <div className="p-2">
-          <RouterLink to={session ? "/account" : "/auth"}>
-            <Button variant="ghost" className="w-full justify-start gap-2">
-              <User className="h-4 w-4" />
-              {!isCollapsed && (session ? 'Account' : 'Login')}
-            </Button>
-          </RouterLink>
         </div>
       </div>
     </div>
