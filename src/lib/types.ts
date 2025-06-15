@@ -8,9 +8,12 @@ export interface Tag {
 export interface Link {
   id: string;
   url: string;
-  description: string;
+  title: string;
+  description: string | null;
   createdAt: string;
   tags: Tag[];
+  source?: string | null;
+  img_preview?: string | null;
 }
 
 export interface SubCategory {
