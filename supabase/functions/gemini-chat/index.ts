@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GoogleGenAI, Content } from 'npm:@google/genai@latest';
+import { GoogleGenerativeAI, Content } from 'npm:@google/genai@latest';
 import { Database } from '../_shared/database.types.ts';
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -13,8 +13,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const modelName = "gemini-2.5-flash-preview-05-20"; // Using a slightly different model name as per common conventions
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const modelName = "gemini-1.5-flash-latest";
 
 const systemPromptTemplate = `# 🧠 AI System Prompt for Link Categorization Assistant
 
