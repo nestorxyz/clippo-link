@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User as UserIcon, RefreshCw } from 'lucide-react';
+import { Send, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -186,15 +185,12 @@ const Chat = ({
         </Tooltip>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map(message => <div key={message.id} className={cn("flex items-start gap-3 animate-message-in", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
-            {message.sender === 'bot' && <div className="bg-primary rounded-full p-2"><Bot className="h-5 w-5 text-primary-foreground" /></div>}
+        {messages.map(message => <div key={message.id} className={cn("flex animate-message-in", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
             <div className={cn("max-w-md p-3 rounded-lg", message.sender === 'user' ? 'bg-secondary' : 'bg-card')}>
               <p className="text-sm whitespace-pre-wrap">{message.text}</p>
             </div>
-            {message.sender === 'user' && <div className="bg-secondary rounded-full p-2"><UserIcon className="h-5 w-5" /></div>}
           </div>)}
-        {isBotTyping && <div className="flex items-start gap-3 animate-message-in">
-            <div className="bg-primary rounded-full p-2"><Bot className="h-5 w-5 text-primary-foreground" /></div>
+        {isBotTyping && <div className="flex animate-message-in justify-start">
             <div className="p-3 rounded-lg bg-card">
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
