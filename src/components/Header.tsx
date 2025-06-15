@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header = ({ session }: HeaderProps) => {
     return (
-        <header className="px-6 h-16 flex items-center border-b shrink-0">
+        <header className="px-6 h-16 flex items-center shrink-0">
             <RouterLink to="/dashboard" className="flex items-center justify-center gap-2 mr-auto">
                 <LinkIcon className="h-6 w-6 text-primary" />
                 <span className="text-lg font-semibold tracking-tight">Link Organizer</span>
