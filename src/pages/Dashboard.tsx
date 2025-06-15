@@ -9,12 +9,19 @@ import { Button } from '@/components/ui/button';
 import { useCategories } from '@/hooks/useCategories';
 import Management from '@/components/Management';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import BottomNavbar from '@/components/BottomNavbar';
+
+type ActiveView = 'columns' | 'chat' | 'settings';
 
 const DashboardPage = ({ session }: { session: Session | null }) => {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: categories = [], isLoading: isLoadingCategories, isError, error, refetch } = useCategories(session);
+  const isMobile = useIsMobile();
+  const [activeView, setActiveView] = useState<ActiveView>('chat');
 
   useEffect(() => {
     if (!session?.user.id) return;
@@ -67,13 +74,43 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
     );
   }
 
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen w-full bg-background font-sans">
+        <main className="flex-1 overflow-y-auto pb-16">
+          {activeView === 'columns' && (
+            <Sidebar
+              categories={categories}
+              isCollapsed={false}
+              toggleSidebar={() => {}}
+              session={session}
+              isMobile={true}
+            />
+          )}
+          {activeView === 'chat' && (
+            <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
+          )}
+          {activeView === 'settings' && <Management session={session} />}
+        </main>
+        <BottomNavbar activeView={activeView} setActiveView={setActiveView} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-full bg-background font-sans overflow-hidden">
-      <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
-      <main className="flex-1 flex flex-col h-screen border-r">
+      <div
+        className={cn(
+          "flex-shrink-0 transition-all duration-300 ease-in-out",
+          isSidebarCollapsed ? "w-16" : "w-1/4"
+        )}
+      >
+        <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
+      </div>
+      <main className="flex-grow flex flex-col h-screen border-r">
         <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
       </main>
-      <aside className="w-[500px] flex-shrink-0 flex flex-col h-screen bg-card/40">
+      <aside className="w-1/4 flex-shrink-0 flex flex-col h-screen bg-card/40">
         <Management session={session} />
       </aside>
     </div>
