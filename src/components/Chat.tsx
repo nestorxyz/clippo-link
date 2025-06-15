@@ -71,10 +71,12 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
     setIsBotTyping(true);
 
     try {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const { data, error } = await supabase.functions.invoke('gemini-chat', {
         body: {
           sessionId,
           message: currentInput,
+          timeZone,
         },
       });
 

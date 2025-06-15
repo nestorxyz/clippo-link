@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,6 +24,11 @@ const systemPromptTemplate = `# 🧠 AI System Prompt for Link Categorization As
 You are Clippo, a **highly reliable AI assistant embedded in a productivity app** designed to help users **save, organize, and retrieve important links**. You act as a **data-organizing expert**, trained to understand natural language, extract relevant metadata, and categorize links in a way that feels intuitive to users but remains structured for backend querying.
 
 Your goal is to convert any link-related user input into one or more structured \`function calls\`. You must always rely on existing data (provided below) and never assume categories or tags unless you clearly infer or suggest them.
+
+---
+
+## 🕒 Current Context
+Date and time: {current_datetime}
 
 ---
 
@@ -415,7 +421,7 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, message } = await req.json();
+    const { sessionId, message, timeZone } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -442,12 +448,24 @@ serve(async (req) => {
     const fromDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString().split('T')[0];
     const toDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).toISOString().split('T')[0];
     
+    const userTimeZone = timeZone || 'UTC';
+    const now = new Date();
+
+    const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: userTimeZone }).format(now);
+    const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', timeZone: userTimeZone }).format(now);
+    const month = new Intl.DateTimeFormat('en-GB', { month: 'long', timeZone: userTimeZone }).format(now);
+    const year = new Intl.DateTimeFormat('en-GB', { year: 'numeric', timeZone: userTimeZone }).format(now);
+    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: userTimeZone }).format(now);
+
+    const current_datetime = `${weekday}, ${day} ${month} ${year}, ${time} (${userTimeZone})`;
+
     const systemInstruction = systemPromptTemplate
       .replace('{categories}', categories)
       .replace('{subcategories}', subcategories)
       .replace('{tags}', tags)
       .replace('2025-05-01', fromDate)
-      .replace('2025-05-31', toDate);
+      .replace('2025-05-31', toDate)
+      .replace('{current_datetime}', current_datetime);
 
     await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'user', parts: [{ text: message }] });
 
