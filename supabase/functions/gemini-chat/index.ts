@@ -428,21 +428,22 @@ serve(async (req) => {
     
     const contents: Content[] = historyData.map(h => ({ role: h.role as 'user' | 'model' | 'function', parts: h.parts as any[] }));
 
-    const model = genAI.getGenerativeModel({
-        model: modelName,
-    });
-    
-    let result = await model.generateContent({
-      contents,
-      tools: [{ functionDeclarations: tools.functionDeclarations }],
-      systemInstruction,
+    const result = await genAI.models.generateContent({
+      model: modelName,
+      contents: contents,
+      config: {
+        systemInstruction,
+        tools: [{ functionDeclarations: tools.functionDeclarations }, {urlContext: {}}],
+      },
     });
 
     let botReply = "";
     const functionCallsForClient = [];
 
-    if (result.response.functionCalls && result.response.functionCalls.length > 0) {
-      const functionCalls = result.response.functionCalls();
+    const response = result.response;
+    const functionCalls = response.functionCalls();
+
+    if (functionCalls && functionCalls.length > 0) {
       const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
 
       await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: functionCallParts });
@@ -463,13 +464,19 @@ serve(async (req) => {
       await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
       contents.push({ role: 'function', parts: functionResponseParts });
       
-      const secondResult = await model.generateContent({ contents, systemInstruction });
+      const secondResult = await genAI.models.generateContent({
+        model: modelName,
+        contents: contents,
+        config: {
+          systemInstruction
+        }
+      });
       
       if (secondResult.response.text()) {
         botReply = secondResult.response.text();
       }
-    } else if (result.response.text()) {
-        botReply = result.response.text();
+    } else if (response.text()) {
+        botReply = response.text();
     }
     
     if (botReply) {
