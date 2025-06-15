@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -441,8 +440,7 @@ serve(async (req) => {
     let botReply = "";
     const functionCallsForClient = [];
 
-    const response = result;
-    const functionCalls = response.functionCalls;
+    const functionCalls = result.functionCalls;
 
     if (functionCalls && functionCalls.length > 0) {
       const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
@@ -473,11 +471,11 @@ serve(async (req) => {
         }
       });
       
-      if (secondResult.response.text) {
-        botReply = secondResult.response.text;
+      if (secondResult.text) {
+        botReply = secondResult.text;
       }
-    } else if (response.text) {
-        botReply = response.text;
+    } else if (result.text) {
+        botReply = result.text;
     }
     
     if (botReply) {
