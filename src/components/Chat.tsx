@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User as UserIcon, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
@@ -206,14 +207,14 @@ const Chat = ({
       </div>
       <div className="p-4 bg-card">
         <form onSubmit={handleSendMessage} className="relative">
-          <Textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Type your message here..." className="w-full bg-input rounded-lg pr-20 min-h-[40px] resize-none" rows={1} onKeyDown={e => {
+          <Textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Message Clippo..." className="w-full bg-secondary rounded-full py-3 px-5 text-base min-h-[52px] pr-14 resize-none" rows={1} onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage(e);
           }
         }} />
-          <Button type="submit" size="icon" className="absolute right-4 top-1/2 -translate-y-1/2" disabled={isBotTyping || !input.trim() || !sessionId}>
-            <Send className="h-4 w-4" />
+          <Button type="submit" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10" disabled={isBotTyping || !input.trim() || !sessionId}>
+            <Send className="h-5 w-5" />
           </Button>
         </form>
       </div>
