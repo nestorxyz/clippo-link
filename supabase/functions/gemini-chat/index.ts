@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -390,29 +389,61 @@ async function registerLink(supabase: SupabaseClient<Database>, user_id: string,
 
 async function getLinks(supabase: SupabaseClient<Database>, user_id: string, args: any) {
   const { stringQuery: keywords, category: category_name, subcategory: sub_category_name, tags, dateRange } = args;
-  
-  if (tags) console.log(`[getLinks] Info: Ignoring tags for now: ${tags.join(', ')}`);
-  if (dateRange) console.log(`[getLinks] Info: Ignoring dateRange for now: ${JSON.stringify(dateRange)}`);
 
-  let query = supabase.from('links').select(`
+  const withTagsFilter = tags && Array.isArray(tags) && tags.length > 0;
+
+  // When filtering by tags, we use an INNER JOIN to only get links that have matching tags.
+  // Otherwise, we do a standard (LEFT) join to fetch tags if they exist, without filtering out links that have no tags.
+  const selectStatement = `
     url,
     description,
+    title,
+    source,
+    created_at,
     sub_categories!inner(
       name,
       categories!inner(name)
-    )
-  `).eq('user_id', user_id);
+    ),
+    ${withTagsFilter ? 'link_tags!inner(tags!inner(id, name, color))' : 'link_tags(tags(id, name, color))'}
+  `;
+
+  let query = supabase.from('links').select(selectStatement)
+    .eq('user_id', user_id);
 
   if (category_name) query = query.eq('sub_categories.categories.name', category_name);
   if (sub_category_name) query = query.eq('sub_categories.name', sub_category_name);
-  if (keywords) query = query.or(`description.ilike.%${keywords}%,url.ilike.%${keywords}%`);
+  if (keywords) query = query.or(`description.ilike.%${keywords}%,title.ilike.%${keywords}%,url.ilike.%${keywords}%`);
 
-  const { data: links, error: linksError } = await query;
+  if (dateRange) {
+    if (dateRange.from) {
+        query = query.gte('created_at', dateRange.from);
+    }
+    if (dateRange.to) {
+        // Use lte with end of day timestamp to include the whole day
+        query = query.lte('created_at', `${dateRange.to}T23:59:59.999Z`);
+    }
+  }
+
+  if (withTagsFilter) {
+    query = query.in('link_tags.tags.name', tags);
+  }
+
+  const { data: linksResult, error: linksError } = await query;
 
   if (linksError) return { result: `Error fetching links: ${linksError.message}` };
-  if (!links || links.length === 0) return { result: "I couldn't find any links matching your criteria." };
+  if (!linksResult || linksResult.length === 0) return { result: "I couldn't find any links matching your criteria." };
   
-  return { links };
+  // Flatten the tags structure for easier consumption by the AI
+  const formattedLinks = linksResult.map((link: any) => {
+    const linkTags = link.link_tags.map((lt: any) => lt.tags).filter(Boolean);
+    const { link_tags, ...rest } = link;
+    return {
+        ...rest,
+        tags: linkTags,
+    };
+  });
+
+  return { links: formattedLinks };
 }
 
 serve(async (req) => {
