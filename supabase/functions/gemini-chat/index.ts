@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -530,6 +529,8 @@ async function getUrlInfo(url: string, focus?: string) {
         tools: [{ urlContext: {} }],
       },
     });
+
+    console.log('Full getUrlInfo response:', JSON.stringify(response, null, 2));
 
     if (!response.text) {
       return { success: false, error: "No content could be extracted from the URL" };
