@@ -321,10 +321,6 @@ const tools = {
 async function registerLink(supabase: SupabaseClient<Database>, user_id: string, args: any) {
   const { url, title, description, category: category_name, subcategory, tags, source } = args;
 
-  if (title) console.log(`[registerLink] Info: Ignoring title for now: ${title}`);
-  if (source) console.log(`[registerLink] Info: Ignoring source for now: ${source}`);
-  if (tags) console.log(`[registerLink] Info: Ignoring tags for now: ${tags.join(', ')}`);
-
   const sub_category_name = subcategory || 'general';
 
   let { data: category } = await supabase.from('categories').select('id').eq('name', category_name).eq('user_id', user_id).maybeSingle();
@@ -343,9 +339,46 @@ async function registerLink(supabase: SupabaseClient<Database>, user_id: string,
     subCategory = newSubCategory;
   }
 
-  const { error: linkError } = await supabase.from('links').insert({ url, description, sub_category_id: subCategory.id, user_id: user_id });
+  const { data: newLink, error: linkError } = await supabase
+    .from('links')
+    .insert({ url, description, sub_category_id: subCategory.id, user_id, title, source })
+    .select('id')
+    .single();
 
   if (linkError) return { success: false, error: linkError.message };
+  if (!newLink) return { success: false, error: "Failed to create link." };
+  
+  if (tags && Array.isArray(tags) && tags.length > 0) {
+    const tagObjects = tags.map((tagName: string) => ({ 
+      name: String(tagName).trim().toLowerCase(), 
+      user_id: user_id 
+    })).filter(t => t.name.length > 0);
+
+    if (tagObjects.length > 0) {
+      const { data: upsertedTags, error: tagsUpsertError } = await supabase
+        .from('tags')
+        .upsert(tagObjects, { onConflict: 'user_id, name' })
+        .select('id');
+
+      if (tagsUpsertError) {
+          console.error('Error upserting tags:', tagsUpsertError);
+      } else if (upsertedTags) {
+          const linkTagRelations = upsertedTags.map((tag: {id: string}) => ({
+              link_id: newLink.id,
+              tag_id: tag.id
+          }));
+
+          const { error: linkTagsError } = await supabase
+              .from('link_tags')
+              .insert(linkTagRelations);
+
+          if (linkTagsError) {
+              console.error('Error creating link-tag associations:', linkTagsError);
+          }
+      }
+    }
+  }
+
   return { success: true };
 }
 
