@@ -41,7 +41,7 @@ Date and time: {current_datetime}
      - Description
      - Category (suggest one if not provided)
      - Subcategory (suggest one if not provided)
-     - Tags (1–5 relevant tags, from user’s tag base)
+     - Tags (1–5 relevant tags, from user's tag base)
      - Source (optional, e.g., Twitter, Medium, etc.)
    - Output: A single \`register_link\` function call.
 
@@ -58,7 +58,7 @@ Date and time: {current_datetime}
 
 ## 🧠 Background Context
 
-- Users often talk informally. You must **understand intent even from vague or casual input** (e.g., “save this for my girlfriend project”).
+- Users often talk informally. You must **understand intent even from vague or casual input** (e.g., "save this for my girlfriend project").
 - Use this normalized user context to **suggest categories, subcategories, and tags**, but **only assign what the user implied**. Never invent new values.
 - Existing tags and categories (provided below) must be used. If none match, ask the user or use fallback suggestions.
 
@@ -156,6 +156,21 @@ _Note: These will be passed to you in system prompt each time dynamically. Alway
 }
 \`\`\`
 
+### 3. get_url_info
+
+\`\`\`json
+{
+ "name": "get_url_info",
+ "description": "Analyzes a URL and provides summary and key information",
+ "parameters": {
+   "url": { "type": "string", "description": "The URL to analyze" },
+   "focus": { "type": "string", "description": "Optional focus area" }
+ }
+}
+\`\`\`
+
+Use this when users ask for information about a specific URL, want to summarize a link, or need details about web content.
+
 ---
 
 ## 🧪 Examples
@@ -164,7 +179,7 @@ _Note: These will be passed to you in system prompt each time dynamically. Alway
 
 **User Input:**
 
-> “Save this for my side project: https://ai-startup.guide, it's a guide to launching AI products.”
+> "Save this for my side project: https://ai-startup.guide, it's a guide to launching AI products."
 
 **Expected Function Call:**
 
@@ -189,7 +204,7 @@ _Note: These will be passed to you in system prompt each time dynamically. Alway
 
 **User Input:**
 
-> “Show me links tagged with AI and product from last month.”
+> "Show me links tagged with AI and product from last month."
 
 **Expected Function Call:**
 
@@ -278,7 +293,7 @@ const normalize = (str) => str.trim().toLowerCase();
 
 If you cannot confidently assign a category, tag, or subcategory:
 
-> “I couldn’t identify a valid category. Would you like to save it under ‘personal’ or suggest another one?”
+> "I couldn't identify a valid category. Would you like to save it under 'personal' or suggest another one?"
 `;
 
 const tools = {
@@ -320,6 +335,18 @@ const tools = {
         },
       },
     },
+    {
+      name: "get_url_info",
+      description: "Analyzes a URL and provides a summary and key information about its content",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          url: { type: "STRING", description: "The URL to analyze and summarize" },
+          focus: { type: "STRING", description: "Optional: specific aspect to focus on (e.g., 'key points', 'technical details', 'summary')" }
+        },
+        required: ["url"],
+      },
+    }
   ],
 };
 
@@ -446,6 +473,35 @@ async function getLinks(supabase: SupabaseClient<Database>, user_id: string, arg
   return { links: formattedLinks };
 }
 
+async function getUrlInfo(url: string, focus?: string) {
+  try {
+    const prompt = focus 
+      ? `Analyze this URL and provide detailed information focusing on: ${focus}. URL: ${url}`
+      : `Analyze this URL and provide a comprehensive summary including: main topic, key points, type of content, and any important details. URL: ${url}`;
+
+    const response = await genAI.models.generateContent({
+      model: modelName,
+      contents: [prompt],
+      config: {
+        tools: [{ urlContext: {} }],
+      },
+    });
+
+    if (!response.text) {
+      return { success: false, error: "No content could be extracted from the URL" };
+    }
+
+    return { 
+      success: true, 
+      summary: response.text,
+      urlMetadata: response.candidates?.[0]?.urlContextMetadata || null
+    };
+  } catch (error) {
+    console.error('Error analyzing URL:', error);
+    return { success: false, error: `Failed to analyze URL: ${error.message}` };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -537,6 +593,8 @@ serve(async (req) => {
             functionResponse = await registerLink(supabase, user.id, fc.args);
         } else if (fc.name === 'get_links') {
             functionResponse = await getLinks(supabase, user.id, fc.args);
+        } else if (fc.name === 'get_url_info') {
+            functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
         }
         functionCallsForClient.push({ function: { name: fc.name, result: functionResponse } });
         functionResponseParts.push({ functionResponse: { name: fc.name, response: functionResponse } });
