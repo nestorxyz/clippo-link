@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
@@ -190,10 +189,9 @@ const Chat = ({
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(message => <div key={message.id} className={cn("flex animate-message-in", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
-            <div className={cn("max-w-md p-3 rounded-lg", message.sender === 'user' ? 'bg-secondary' : 'bg-card')}>
+            <div className={cn("max-w-md p-3 rounded-lg", message.sender === 'user' ? 'bg-secondary' : 'bg-card', message.sender === 'bot' ? 'prose' : '')}>
               {message.sender === 'bot' ? (
                 <ReactMarkdown
-                  className="prose"
                   remarkPlugins={[remarkGfm]}
                   components={{
                     a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
