@@ -12,107 +12,82 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import BottomNavbar from '@/components/BottomNavbar';
 import Header from '@/components/Header';
-
 type ActiveView = 'columns' | 'chat' | 'settings';
-
-const DashboardPage = ({ session }: { session: Session | null }) => {
+const DashboardPage = ({
+  session
+}: {
+  session: Session | null;
+}) => {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const { data: categories = [], isLoading: isLoadingCategories, isError, error, refetch } = useCategories(session);
+  const {
+    data: categories = [],
+    isLoading: isLoadingCategories,
+    isError,
+    error,
+    refetch
+  } = useCategories(session);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<ActiveView>('chat');
-
   useEffect(() => {
     if (!session?.user.id) return;
-
-    const channel = supabase.channel('db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        console.log('Realtime change received!', payload);
-        queryClient.invalidateQueries({ queryKey: ['categories', session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['tags', session.user.id] });
-      })
-      .subscribe();
-
+    const channel = supabase.channel('db-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public'
+    }, payload => {
+      console.log('Realtime change received!', payload);
+      queryClient.invalidateQueries({
+        queryKey: ['categories', session.user.id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['tags', session.user.id]
+      });
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [session, queryClient]);
-
-
   const onLinkAdded = () => {
-    queryClient.invalidateQueries({ queryKey: ['categories', session?.user.id] });
+    queryClient.invalidateQueries({
+      queryKey: ['categories', session?.user.id]
+    });
   };
-
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
-  
   if (isLoadingCategories) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background">
+    return <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>;
   }
-
   if (isError) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-background text-center p-4">
+    return <div className="flex flex-col justify-center items-center h-screen bg-background text-center p-4">
         <AlertTriangle className="h-12 w-12 mb-4 text-destructive" />
         <h2 className="text-xl font-semibold mb-2">Failed to Load Data</h2>
         <p className="mb-4 text-muted-foreground">
           There was a problem fetching your information. Please try again.
         </p>
-        {error instanceof Error && (
-          <p className="text-sm text-muted-foreground mb-4 max-w-md">
+        {error instanceof Error && <p className="text-sm text-muted-foreground mb-4 max-w-md">
             <span className="font-semibold">Details:</span> {error.message}
-          </p>
-        )}
+          </p>}
         <Button onClick={() => refetch()}>Retry</Button>
-      </div>
-    );
+      </div>;
   }
-
   if (isMobile) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-background font-sans">
+    return <div className="flex flex-col h-screen w-full bg-background font-sans">
         <main className="flex-1 overflow-y-auto pb-16">
-          {activeView === 'columns' && (
-            <Sidebar
-              categories={categories}
-              isCollapsed={false}
-              toggleSidebar={() => {}}
-              session={session}
-              isMobile={true}
-            />
-          )}
-          {activeView === 'chat' && (
-            <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
-          )}
+          {activeView === 'columns' && <Sidebar categories={categories} isCollapsed={false} toggleSidebar={() => {}} session={session} isMobile={true} />}
+          {activeView === 'chat' && <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />}
           {activeView === 'settings' && <Management session={session} />}
         </main>
         <BottomNavbar activeView={activeView} setActiveView={setActiveView} />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="flex flex-col h-screen w-full bg-background font-sans">
+  return <div className="flex flex-col h-screen w-full bg-background font-sans">
       <Header session={session} />
-      <main className="flex-1 flex p-4 gap-4 overflow-hidden">
-        <div
-          className={cn(
-            "rounded-lg bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-            isSidebarCollapsed ? "w-20" : "w-1/4"
-          )}
-        >
-          <Sidebar
-            categories={categories}
-            isCollapsed={isSidebarCollapsed}
-            toggleSidebar={toggleSidebar}
-            session={session}
-          />
+      <main className="flex-1 flex px-4 gap-4 overflow-hidden pt-4 pb-10">
+        <div className={cn("rounded-lg bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden transition-all duration-300 ease-in-out", isSidebarCollapsed ? "w-20" : "w-1/4")}>
+          <Sidebar categories={categories} isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} session={session} />
         </div>
         <div className="flex-1 rounded-lg bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
           <Chat categories={categories} session={session} onLinkAdded={onLinkAdded} />
@@ -121,8 +96,6 @@ const DashboardPage = ({ session }: { session: Session | null }) => {
           <Management session={session} />
         </aside>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default DashboardPage;
