@@ -1,3 +1,4 @@
+
 import { Category, Tag } from '@/lib/types';
 import { ChevronRight, Folder, Link2, Star, User, Briefcase, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -39,7 +40,7 @@ const Sidebar = ({ categories, isCollapsed, toggleSidebar, session, isMobile = f
     <div className={cn("h-full w-full")}>
       <div className="flex flex-col h-full">
         <div className="p-4 flex items-center justify-between">
-          {!isCollapsed && <h2 className="text-lg font-semibold tracking-tight">Link Organizer</h2>}
+          {!isCollapsed && <h2 className="text-lg font-semibold tracking-tight">Clippo</h2>}
           {!isMobile && (
             <Button variant="ghost" size="icon" onClick={toggleSidebar}>
               {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
