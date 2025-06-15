@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -14,7 +15,7 @@ const corsHeaders = {
 };
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const modelName = "gemini-1.5-flash-latest";
+const modelName = "gemini-2.5-flash-preview-05-20";
 
 const systemPromptTemplate = `# 🧠 AI System Prompt for Link Categorization Assistant
 
@@ -430,11 +431,13 @@ serve(async (req) => {
 
     const model = genAI.getGenerativeModel({
         model: modelName,
-        tools: [{ functionDeclarations: tools.functionDeclarations }],
-        systemInstruction,
     });
     
-    let result = await model.generateContent({ contents });
+    let result = await model.generateContent({
+      contents,
+      tools: [{ functionDeclarations: tools.functionDeclarations }],
+      systemInstruction,
+    });
 
     let botReply = "";
     const functionCallsForClient = [];
@@ -461,7 +464,7 @@ serve(async (req) => {
       await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
       contents.push({ role: 'function', parts: functionResponseParts });
       
-      const secondResult = await model.generateContent({ contents });
+      const secondResult = await model.generateContent({ contents, systemInstruction });
       
       if (secondResult.response.text()) {
         botReply = secondResult.response.text();
