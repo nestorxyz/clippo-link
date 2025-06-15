@@ -1,13 +1,14 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 224 71% 4%; /* #080d19 */
+    --background: 220 9% 7%; /* #111214 */
     --foreground: 210 40% 98%; /* #f9fafb */
 
-    --card: 222.2 84% 4.9%; /* #09090b */
+    --card: 240 3% 11%; /* #1B1B1D */
     --card-foreground: 210 40% 98%; /* #f9fafb */
 
     --popover: 222.2 84% 4.9%;
@@ -36,10 +37,10 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 220 9% 7%; /* #111214 */
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 240 3% 11%; /* #1B1B1D */
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
