@@ -1,5 +1,6 @@
+
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User as UserIcon } from 'lucide-react';
+import { Send, Bot, User as UserIcon, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { retired-provider } from '@/integrations/retired-provider/client';
 import { Session } from '@retired-provider/retired-provider-js';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ChatProps {
   categories: Category[];
@@ -136,11 +138,56 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
     }
   };
 
+  const handleClearChat = async () => {
+    if (!sessionId) {
+      toast.info("No active chat session to clear.");
+      return;
+    }
+
+    setIsBotTyping(true);
+    try {
+      const { error } = await retired-provider
+        .from('chat_messages')
+        .delete()
+        .eq('session_id', sessionId);
+
+      if (error) throw error;
+
+      setMessages([
+        { id: crypto.randomUUID(), text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.", sender: 'bot' }
+      ]);
+      toast.success("Chat history has been cleared.");
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      toast.error("Could not clear chat history. Please try again.");
+    } finally {
+      setIsBotTyping(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background/70">
-      <header className="p-4 border-b">
-        <h1 className="text-2xl font-bold">Hello, James</h1>
-        <p className="text-muted-foreground">How can I assist you right now?</p>
+      <header className="p-4 border-b flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Hello, James</h1>
+          <p className="text-muted-foreground">How can I assist you right now?</p>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearChat}
+              disabled={!sessionId || messages.length <= 1 || isBotTyping}
+            >
+              <RefreshCw className="h-5 w-5" />
+              <span className="sr-only">Clear chat history</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Clear chat history</p>
+          </TooltipContent>
+        </Tooltip>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
