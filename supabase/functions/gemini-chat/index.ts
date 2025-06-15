@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -35,15 +36,7 @@ Date and time: {current_datetime}
 
 1. **Register Links**:
    - Interpret user input where they want to save a link.
-   - Extract:
-     - URL
-     - Title (if provided or implied)
-     - Description
-     - Category (suggest one if not provided)
-     - Subcategory (suggest one if not provided)
-     - Tags (1–5 relevant tags, from user's tag base)
-     - Source (optional, e.g., Twitter, Medium, etc.)
-   - Output: A single \`register_link\` function call.
+   - Follow the two-step "Saving a Link" workflow below.
 
 2. **Search Links**:
    - Interpret user inputs like "show me links about startups from last week" and convert into filter parameters:
@@ -53,6 +46,23 @@ Date and time: {current_datetime}
      - \`tags\` (array)
      - \`dateRange\` → from/to in \`YYYY-MM-DD\`
    - Output: A \`get_links\` function call with relevant fields only.
+
+---
+
+## ⚡️ Workflows
+
+### Saving a Link (Two-Step Process)
+
+To ensure high-quality data and a great user experience, saving a link is a two-step process orchestrated by you:
+
+1.  **Analyze the URL**: When a user wants to save a link, your **first** action is to call the \`get_url_info\` function with the provided URL. This function will return structured metadata about the link, including a title, description, and a preview image URL.
+
+2.  **Register the Link**: Once you receive the result from \`get_url_info\`, your **second** action is to call the \`register_link\` function. You must use the information from the \`get_url_info\` output to populate the arguments for \`register_link\`.
+
+    -   Map \`urlMetadata.title\` to \`title\`.
+    -   Map \`summary\` to \`description\`.
+    -   Map \`(urlMetadata as any).image\` to \`img_preview\`.
+    -   Infer \`category\`, \`subcategory\`, and \`tags\` based on the user's initial prompt and the content summary.
 
 ---
 
@@ -179,26 +189,53 @@ Use this when users ask for information about a specific URL, want to summarize 
 
 ## 🧪 Examples
 
-### Example 1: Register Link
+### Example 1: Register Link Workflow
 
 **User Input:**
 
 > "Save this for my side project: https://ai-startup.guide, it's a guide to launching AI products."
 
-**Expected Function Call:**
+**Chain of thought:** The user wants to save a link. According to the workflow, I must first call \`get_url_info\` to get metadata.
 
+**Expected Function Call (Turn 1):**
+\`\`\`json
+{
+  "name": "get_url_info",
+  "arguments": { "url": "https://ai-startup.guide" }
+}
+\`\`\`
+
+---
+
+**Function Result (from \`get_url_info\`):**
+\`\`\`json
+{
+  "success": true,
+  "summary": "This is a comprehensive guide to launching AI products, covering market research, MVP development, and scaling strategies.",
+  "urlMetadata": {
+    "title": "The Ultimate Guide to Launching Your AI Startup in 2025",
+    "image": "https://ai-startup.guide/og-image.jpg"
+  }
+}
+\`\`\`
+
+---
+
+**Chain of thought:** I have the metadata. Now I will call \`register_link\`. I will use the title and image from \`urlMetadata\`, and the summary for the description. The user mentioned "side project", so I'll use the 'side-projects' category. The description mentions AI and startups, so I'll use those as tags.
+
+**Expected Function Call (Turn 2):**
 \`\`\`json
 {
   "name": "register_link",
   "arguments": {
     "url": "https://ai-startup.guide",
-    "title": "Guide to launching AI products",
-    "description": "Comprehensive article on how to launch AI-based startups",
+    "title": "The Ultimate Guide to Launching Your AI Startup in 2025",
+    "description": "This is a comprehensive guide to launching AI products, covering market research, MVP development, and scaling strategies.",
     "category": "side-projects",
     "subcategory": "tech",
     "tags": ["AI", "startup", "product"],
     "source": "web",
-    "img_preview": "https://example.com/image.jpg"
+    "img_preview": "https://ai-startup.guide/og-image.jpg"
   }
 }
 \`\`\`
@@ -357,27 +394,7 @@ const tools = {
 };
 
 async function registerLink(supabase: SupabaseClient<Database>, user_id: string, args: any) {
-  const { url, title, description, category: category_name, subcategory, tags, source } = args;
-
-  let img_preview: string | null = null;
-  try {
-    // We ask Gemini to analyze the URL. The urlContext tool will extract metadata.
-    const response = await genAI.models.generateContent({
-      model: modelName,
-      contents: [{ role: 'user', parts: [{ text: `Extract metadata from ${url}` }] }],
-      config: {
-        tools: [{ urlContext: {} }],
-      },
-    });
-    
-    const urlMetadata = response.candidates?.[0]?.urlContextMetadata;
-    if (urlMetadata && (urlMetadata as any).image) {
-      img_preview = (urlMetadata as any).image;
-    }
-  } catch (error) {
-    console.error('Error fetching URL metadata for preview image:', error);
-    // Non-blocking, just log the error and continue.
-  }
+  const { url, title, description, category: category_name, subcategory, tags, source, img_preview } = args;
 
   const sub_category_name = subcategory || 'general';
 
@@ -593,60 +610,52 @@ serve(async (req) => {
     
     const contents: Content[] = historyData.map(h => ({ role: h.role as 'user' | 'model' | 'function', parts: h.parts as any[] }));
 
-    const result = await genAI.models.generateContent({
-      model: modelName,
-      contents: contents,
-      config: {
-        systemInstruction,
-        tools: [{ functionDeclarations: tools.functionDeclarations }],
-      },
-    });
-
     let botReply = "";
     const functionCallsForClient = [];
+    let continueConversation = true;
 
-    const functionCalls = result.functionCalls;
-
-    if (functionCalls && functionCalls.length > 0) {
-      const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
-
-      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: functionCallParts });
-      contents.push({ role: 'model', parts: functionCallParts });
-
-      const functionResponseParts = [];
-      for (const fc of functionCalls) {
-        let functionResponse;
-        if (fc.name === 'register_link') {
-            functionResponse = await registerLink(supabase, user.id, fc.args);
-        } else if (fc.name === 'get_links') {
-            functionResponse = await getLinks(supabase, user.id, fc.args);
-        } else if (fc.name === 'get_url_info') {
-            functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
-        }
-        functionCallsForClient.push({ function: { name: fc.name, result: functionResponse } });
-        functionResponseParts.push({ functionResponse: { name: fc.name, response: functionResponse } });
-      }
-
-      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
-      contents.push({ role: 'function', parts: functionResponseParts });
-      
-      const secondResult = await genAI.models.generateContent({
+    while (continueConversation) {
+      const result = await genAI.models.generateContent({
         model: modelName,
         contents: contents,
         config: {
-          systemInstruction
-        }
+          systemInstruction,
+          tools: [{ functionDeclarations: tools.functionDeclarations }],
+        },
       });
-      
-      if (secondResult.text) {
-        botReply = secondResult.text;
+
+      const functionCalls = result.functionCalls;
+
+      if (functionCalls && functionCalls.length > 0) {
+        const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
+
+        await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: functionCallParts });
+        contents.push({ role: 'model', parts: functionCallParts });
+
+        const functionResponseParts = [];
+        for (const fc of functionCalls) {
+          let functionResponse;
+          if (fc.name === 'register_link') {
+              functionResponse = await registerLink(supabase, user.id, fc.args);
+          } else if (fc.name === 'get_links') {
+              functionResponse = await getLinks(supabase, user.id, fc.args);
+          } else if (fc.name === 'get_url_info') {
+              functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
+          }
+          functionCallsForClient.push({ function: { name: fc.name, result: functionResponse } });
+          functionResponseParts.push({ functionResponse: { name: fc.name, response: functionResponse } });
+        }
+
+        await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
+        contents.push({ role: 'function', parts: functionResponseParts });
+        
+      } else {
+        continueConversation = false;
+        if (result.text) {
+          botReply = result.text;
+          await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: [{ text: botReply }] });
+        }
       }
-    } else if (result.text) {
-        botReply = result.text;
-    }
-    
-    if (botReply) {
-      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: [{ text: botReply }] });
     }
 
     return new Response(JSON.stringify({ reply: botReply, functionCalls: functionCallsForClient }), {
