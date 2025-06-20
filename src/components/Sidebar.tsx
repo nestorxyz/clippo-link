@@ -17,7 +17,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Session } from '@supabase/supabase-js';
@@ -38,6 +38,7 @@ import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
   DragOverlay,
   closestCenter,
   useSensors,
@@ -88,6 +89,10 @@ const Sidebar = ({
   const [draggedLink, setDraggedLink] = useState<Link | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
+  const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(
+    null
+  );
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
 
   // Set up sensors for drag and drop
@@ -115,9 +120,18 @@ const Sidebar = ({
     );
   };
 
+  // Check if a category should be open (either manually opened or hovered during drag)
+  const isCategoryOpen = (categoryId: string) => {
+    if (isDragging) {
+      return hoveredCategoryId === categoryId;
+    }
+    return openCategories.includes(categoryId);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setIsDragging(true);
+    setHoveredCategoryId(null);
 
     // Close all accordions when drag starts
     setOpenCategories([]);
@@ -128,10 +142,54 @@ const Sidebar = ({
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+
+    // Clear any existing timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    if (!isDragging) {
+      return;
+    }
+
+    if (!over) {
+      // Add a delay before closing the category to allow movement between elements
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoveredCategoryId(null);
+      }, 250); // 250ms delay
+      return;
+    }
+
+    const dropTarget = over.data.current;
+
+    if (dropTarget?.type === 'category') {
+      setHoveredCategoryId(dropTarget.category.id);
+    } else if (dropTarget?.type === 'subcategory') {
+      // If hovering over a subcategory, keep its parent category open
+      setHoveredCategoryId(dropTarget.categoryId);
+    } else {
+      // Not hovering over a category or subcategory, add delay before closing
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoveredCategoryId(null);
+      }, 250);
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // Clear any pending timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
     setIsDragging(false);
     setDraggedLink(null);
+    setHoveredCategoryId(null);
 
     if (!over || !session) return;
 
@@ -245,6 +303,15 @@ const Sidebar = ({
     }
   };
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className={cn('h-full w-full')}>
       <div className="flex flex-col h-full">
@@ -263,18 +330,19 @@ const Sidebar = ({
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-2 py-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
             {categories.map((category) => (
               <DroppableCategory
                 key={category.id}
                 category={category}
-                isOpen={openCategories.includes(category.id)}
+                isOpen={isCategoryOpen(category.id)}
                 isCollapsed={isCollapsed}
                 isDragging={isDragging}
                 deletingLinkId={deletingLinkId}
