@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       categories: {
@@ -169,23 +194,76 @@ export type Database = {
           },
         ]
       }
+      otp_attempts: {
+        Row: {
+          attempt_type: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          otp_code: string
+          phone_number: string
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          attempt_type: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone_number: string
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          attempt_type?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone_number?: string
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          created_via: string | null
           full_name: string | null
           id: string
+          phone_number: string | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          created_via?: string | null
           full_name?: string | null
           id: string
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          created_via?: string | null
           full_name?: string | null
           id?: string
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -260,6 +338,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       random_hex_color: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -380,6 +462,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
