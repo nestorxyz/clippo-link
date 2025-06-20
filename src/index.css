@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import drag and drop animations */
+@import './styles/drag-drop.css';
+
 @layer base {
   :root {
     --background: 220 9% 7%; /* #111214 */
