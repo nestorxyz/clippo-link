@@ -29,10 +29,13 @@ export function PhoneVerification({
 }: PhoneVerificationProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'phone' | 'otp' | 'consolidation'>('phone');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [consolidationData, setConsolidationData] = useState<{
+    whatsappAccountId: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,29 +72,35 @@ export function PhoneVerification({
         throw new Error('No authenticated session');
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
-      const response = await fetch(`${BACKEND_URL}/auth/send-otp-web`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/send-otp-web`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ phoneNumber: formattedPhone }),
+        body: JSON.stringify({
+          phoneNumber: formattedPhone,
+          userId: user.id,
+        }),
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        // Check if it's a cooldown error
-        const cooldownMatch = data.message?.match(/wait (\d+) seconds/);
-        if (cooldownMatch) {
-          setCooldownSeconds(parseInt(cooldownMatch[1]));
-        }
         throw new Error(data.message || 'Failed to send OTP');
       }
 
       setStep('otp');
+      setCooldownSeconds(30);
       toast({
         title: 'OTP Sent!',
         description: 'Check your WhatsApp for the verification code.',
@@ -115,9 +124,16 @@ export function PhoneVerification({
         throw new Error('No authenticated session');
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
-      const response = await fetch(`${BACKEND_URL}/auth/verify-otp-web`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/verify-otp-web`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,6 +141,7 @@ export function PhoneVerification({
         },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
+          userId: user.id,
           otpCode,
         }),
       });
@@ -132,6 +149,14 @@ export function PhoneVerification({
       const data = await response.json();
 
       if (!data.success) {
+        // Check if it's a consolidation required error
+        if (data.error === 'CONSOLIDATION_REQUIRED') {
+          setConsolidationData({
+            whatsappAccountId: data.data.whatsappAccountId,
+          });
+          setStep('consolidation');
+          return;
+        }
         throw new Error(data.message || 'Invalid OTP');
       }
 
@@ -141,6 +166,71 @@ export function PhoneVerification({
       });
 
       onVerified(data.data.phoneNumber);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConsolidation = async (shouldConsolidate: boolean) => {
+    if (!shouldConsolidate) {
+      // User declined, go back to phone entry
+      setStep('phone');
+      setConsolidationData(null);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No authenticated session');
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const formattedPhone = formatPhoneNumber(phoneNumber);
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/auth/consolidate-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            phoneNumber: formattedPhone,
+            userId: user.id,
+            whatsappAccountId: consolidationData?.whatsappAccountId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to consolidate accounts');
+      }
+
+      toast({
+        title: 'Accounts Merged!',
+        description:
+          'Your WhatsApp data has been successfully merged with your account.',
+      });
+
+      onVerified(data.data.phone_number);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -225,6 +315,57 @@ export function PhoneVerification({
               )}
             </Button>
           </form>
+        ) : step === 'consolidation' ? (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                This phone number is already linked to a WhatsApp account. Would
+                you like to merge your WhatsApp data (links, categories, tags)
+                into your current account?
+              </AlertDescription>
+            </Alert>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                If you choose "Merge Accounts", all your WhatsApp data will be
+                transferred to this Google account and the WhatsApp-only account
+                will be removed.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => handleConsolidation(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={() => handleConsolidation(true)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Merging...
+                  </>
+                ) : (
+                  'Merge Accounts'
+                )}
+              </Button>
+            </div>
+          </div>
         ) : (
           <form onSubmit={handleOTPSubmit} className="space-y-4">
             <div className="space-y-2">

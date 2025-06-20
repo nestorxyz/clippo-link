@@ -28,7 +28,7 @@ export function usePhoneVerification() {
         return;
       }
 
-      const response = await fetch(`${BACKEND_URL}/auth/phone-status`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/phone-status`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
