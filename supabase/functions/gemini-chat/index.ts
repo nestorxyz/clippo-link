@@ -78,7 +78,7 @@ To ensure high-quality data and a great user experience, saving a link is a two-
 - Users often talk informally. You must **understand intent even from vague or casual input** (e.g., "save this for my girlfriend project").
 - Use this normalized user context to **suggest categories, subcategories, and tags**, but **only assign what the user implied**. You can invent new values for suggestions.
 - You must always prioritize existing tags, categories, and subcategories (provided below).
-- If you find no suitable match, you may **propose a new category or subcategory** based on the user’s intent and link content.
+- If you find no suitable match, you may **propose a new category or subcategory** based on the user's intent and link content.
 - However, you **must confirm this suggestion with the user** before registering it.
 - Example: "Would you like to create a new category called 'health-tech' for this link?"
 
@@ -279,7 +279,7 @@ Use this when users ask for information about a specific URL, want to summarize 
 
 **User Input:**
 	
-> “Save this to my creator setup, it’s a Notion dashboard for content planning: https://notion.link/content-planner”
+> "Save this to my creator setup, it's a Notion dashboard for content planning: https://notion.link/content-planner"
 > 
 
 **Function Result (get_url_info):**
@@ -297,7 +297,7 @@ Use this when users ask for information about a specific URL, want to summarize 
 
 **Chain of thought:**
 
-No matching subcategory found under “content creation” for something like dashboards or setup tools. The user says “creator setup”. I will suggest a new subcategory.
+No matching subcategory found under "content creation" for something like dashboards or setup tools. The user says "creator setup". I will suggest a new subcategory.
 
 **Suggested Output:**
 \`\`\`
@@ -718,7 +718,7 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, message, timeZone } = await req.json();
+    const { sessionId, message, timeZone, userId } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
 
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -726,17 +726,47 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let user;
+    let supabaseClient = supabase;
+
+    // If userId is provided (WhatsApp case), use service role to get user
+    if (userId && authHeader.includes('service_role')) {
+      // Create admin client for service role access
+      const supabaseAdmin = createClient<Database>(
+        SUPABASE_URL,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        {
+          auth: { persistSession: false },
+        }
+      );
+
+      const { data: userData, error: userError } =
+        await supabaseAdmin.auth.admin.getUserById(userId);
+      if (userError || !userData?.user) {
+        return new Response(JSON.stringify({ error: 'User not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = userData.user;
+
+      // Use admin client for data operations
+      supabaseClient = supabaseAdmin;
+    } else {
+      // Regular web user authentication
+      const {
+        data: { user: webUser },
+      } = await supabase.auth.getUser();
+      if (!webUser) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = webUser;
     }
 
-    const { data: categoriesData } = await supabase
+    const { data: categoriesData } = await supabaseClient
       .from('categories')
       .select('name')
       .eq('user_id', user.id);
@@ -744,7 +774,7 @@ serve(async (req) => {
       categoriesData?.map((c) => c.name).join('\n- ') ||
       'personal\n- work\n- research\n- side-projects\n- girlfriend';
 
-    const { data: subCategoriesData } = await supabase
+    const { data: subCategoriesData } = await supabaseClient
       .from('sub_categories')
       .select('name')
       .eq('user_id', user.id);
@@ -752,7 +782,7 @@ serve(async (req) => {
       subCategoriesData?.map((s) => s.name).join('\n- ') ||
       'travel\n- finance\n- tech\n- product\n- books\n- food';
 
-    const { data: tagsData } = await supabase
+    const { data: tagsData } = await supabaseClient
       .from('tags')
       .select('name')
       .eq('user_id', user.id);
@@ -809,13 +839,13 @@ serve(async (req) => {
       .replace('2025-05-31', toDate)
       .replace('{current_datetime}', current_datetime);
 
-    await supabase.from('chat_messages').insert({
+    await supabaseClient.from('chat_messages').insert({
       session_id: sessionId,
       role: 'user',
       parts: [{ text: message }],
     });
 
-    const { data: historyData, error: historyError } = await supabase
+    const { data: historyData, error: historyError } = await supabaseClient
       .from('chat_messages')
       .select('role, parts')
       .eq('session_id', sessionId)
@@ -849,7 +879,7 @@ serve(async (req) => {
           functionCall: fc,
         }));
 
-        await supabase.from('chat_messages').insert({
+        await supabaseClient.from('chat_messages').insert({
           session_id: sessionId,
           role: 'model',
           parts: functionCallParts,
@@ -860,9 +890,13 @@ serve(async (req) => {
         for (const fc of functionCalls) {
           let functionResponse;
           if (fc.name === 'register_link') {
-            functionResponse = await registerLink(supabase, user.id, fc.args);
+            functionResponse = await registerLink(
+              supabaseClient,
+              user.id,
+              fc.args
+            );
           } else if (fc.name === 'get_links') {
-            functionResponse = await getLinks(supabase, user.id, fc.args);
+            functionResponse = await getLinks(supabaseClient, user.id, fc.args);
           } else if (fc.name === 'get_url_info') {
             functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
           }
@@ -874,7 +908,7 @@ serve(async (req) => {
           });
         }
 
-        await supabase.from('chat_messages').insert({
+        await supabaseClient.from('chat_messages').insert({
           session_id: sessionId,
           role: 'function',
           parts: functionResponseParts,
@@ -884,7 +918,7 @@ serve(async (req) => {
         continueConversation = false;
         if (result.text) {
           botReply = result.text;
-          await supabase.from('chat_messages').insert({
+          await supabaseClient.from('chat_messages').insert({
             session_id: sessionId,
             role: 'model',
             parts: [{ text: botReply }],
