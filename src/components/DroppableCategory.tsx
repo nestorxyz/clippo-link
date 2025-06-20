@@ -55,7 +55,7 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
         className={cn(
           "w-full flex items-center justify-between text-left p-2 rounded-md transition-all duration-200",
           "hover:bg-secondary/50",
-          isOver && "bg-blue-100 ring-2 ring-blue-300 ring-opacity-50"
+          isOver && "drop-zone-active bg-blue-100 ring-2 ring-blue-300 ring-opacity-50"
         )}
       >
         <button
@@ -77,7 +77,7 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
 
       {/* Subcategories */}
       {isOpen && !isCollapsed && (
-        <div className="pl-6 space-y-1 py-1">
+        <div className="accordion-content pl-6 space-y-1 py-1">
           {category.subCategories.map((sub) => (
             <DroppableSubCategory
               key={sub.id}

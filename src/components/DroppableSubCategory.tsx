@@ -38,7 +38,7 @@ const DroppableSubCategory: React.FC<DroppableSubCategoryProps> = ({
         className={cn(
           "flex items-center gap-2 p-2 rounded-md transition-all duration-200",
           "hover:bg-secondary/50 text-muted-foreground",
-          isOver && "bg-green-100 ring-2 ring-green-300 ring-opacity-50"
+          isOver && "subcategory-drop-zone bg-green-100 ring-2 ring-green-300 ring-opacity-50"
         )}
       >
         <FileText className="h-4 w-4" />

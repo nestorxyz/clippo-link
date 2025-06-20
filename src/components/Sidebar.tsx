@@ -242,7 +242,7 @@ const Sidebar = ({
             {/* Drag Overlay */}
             <DragOverlay>
               {draggedLink && (
-                <div className="bg-white rounded-md shadow-lg border p-2 rotate-2 opacity-90">
+                <div className="drag-overlay bg-white rounded-md shadow-lg border p-2 rotate-2 opacity-90">
                   <div className="flex items-center gap-2 text-sm">
                     <Link2 className="h-3 w-3" />
                     <span className="truncate">{draggedLink.description || draggedLink.title}</span>

@@ -47,8 +47,8 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group ml-6 pr-2 py-1.5 rounded-md hover:bg-secondary/50 transition-all duration-200 ${
-        isDragging ? 'opacity-50 rotate-2 scale-105' : ''
+      className={`draggable-link group ml-6 pr-2 py-1.5 rounded-md hover:bg-secondary/50 transition-all duration-200 ${
+        isDragging ? 'opacity-50 rotate-2 scale-105 z-50' : ''
       }`}
     >
       <div className="flex items-center justify-between">
@@ -70,7 +70,7 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
             {...attributes}
             {...listeners}
             onMouseDown={handleDragStart}
-            className="p-1 hover:bg-blue-100 rounded transition-colors cursor-grab active:cursor-grabbing"
+            className="drag-handle p-1 hover:bg-blue-100 rounded transition-colors cursor-grab active:cursor-grabbing"
             title="Drag to move"
           >
             <GripVertical className="h-3 w-3 text-muted-foreground hover:text-blue-600" />
