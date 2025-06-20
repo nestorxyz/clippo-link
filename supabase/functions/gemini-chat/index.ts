@@ -729,12 +729,16 @@ serve(async (req) => {
     let user;
     let supabaseClient = supabase;
 
-    // If userId is provided (WhatsApp case), use service role to get user
-    if (userId && authHeader.includes('service_role')) {
+    // Check if this is a service role call (from WhatsApp backend)
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+
+    // If userId is provided and it's a service role call (WhatsApp case)
+    if (userId && isServiceRole) {
       // Create admin client for service role access
       const supabaseAdmin = createClient<Database>(
         SUPABASE_URL,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        serviceRoleKey,
         {
           auth: { persistSession: false },
         }
