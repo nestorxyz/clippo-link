@@ -189,25 +189,35 @@ const Sidebar = ({
 
     setIsDragging(false);
     setDraggedLink(null);
-    setHoveredCategoryId(null);
+    // Don't close the category yet - keep it open during drop processing
 
-    if (!over || !session) return;
+    if (!over || !session) {
+      // No valid drop target, close the category
+      setHoveredCategoryId(null);
+      return;
+    }
 
     const draggedLinkData = active.data.current;
     const dropTarget = over.data.current;
 
-    if (draggedLinkData?.type !== 'link') return;
+    if (draggedLinkData?.type !== 'link') {
+      setHoveredCategoryId(null);
+      return;
+    }
 
     const link = draggedLinkData.link;
     let targetSubCategoryId: string | null = null;
+    let droppedOnCategoryId: string | null = null;
 
     try {
       if (dropTarget?.type === 'subcategory') {
         // Dropped on subcategory
         targetSubCategoryId = dropTarget.subCategory.id;
+        droppedOnCategoryId = dropTarget.categoryId;
       } else if (dropTarget?.type === 'category') {
         // Dropped on category - need to find or create "general" subcategory
         const category = dropTarget.category;
+        droppedOnCategoryId = category.id;
 
         // Check if category has a "general" subcategory
         const generalSubCategory = category.subCategories.find(
@@ -250,7 +260,19 @@ const Sidebar = ({
         queryClient.invalidateQueries({
           queryKey: ['categories', session.user.id],
         });
+
+        // Keep the dropped-on category open after successful drop
+        if (droppedOnCategoryId) {
+          setOpenCategories((prev) =>
+            prev.includes(droppedOnCategoryId)
+              ? prev
+              : [...prev, droppedOnCategoryId]
+          );
+        }
       }
+
+      // Clear the hover state after processing
+      setHoveredCategoryId(null);
     } catch (error: unknown) {
       console.error('Error moving link:', error);
       toast.error('Failed to move link', {
@@ -259,6 +281,9 @@ const Sidebar = ({
             ? error.message
             : 'An unexpected error occurred',
       });
+
+      // Clear hover state on error too
+      setHoveredCategoryId(null);
     }
   };
 

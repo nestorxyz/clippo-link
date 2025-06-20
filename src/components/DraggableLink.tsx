@@ -49,11 +49,6 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({
     }
   };
 
-  const handleDragStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   const isDeleting = deletingLinkId === link.id;
 
   return (
@@ -83,7 +78,6 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({
             <button
               {...attributes}
               {...listeners}
-              onMouseDown={handleDragStart}
               disabled={isDeleting}
               className="p-1 hover:bg-blue-100 rounded transition-colors cursor-grab active:cursor-grabbing disabled:opacity-50 disabled:cursor-not-allowed"
               title="Drag to move"

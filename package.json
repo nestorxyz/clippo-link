@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:types": "npx retired-provider gen types typescript --linked > src/integrations/retired-provider/types.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
