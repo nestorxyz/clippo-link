@@ -11,7 +11,7 @@ const categoryIcons: {
   lukAI: () => <span>⭐</span>,
   joshi: () => <span>👤</span>,
   Work: () => <span>💼</span>,
-  default: () => <span>📁</span>
+  default: () => <span>📁</span>,
 };
 
 const CategoryIcon = ({ name }: { name: string }) => {
@@ -24,6 +24,7 @@ interface DroppableCategoryProps {
   isOpen: boolean;
   isCollapsed: boolean;
   isDragging?: boolean;
+  deletingLinkId?: string | null;
   onToggle: () => void;
   onLinkDelete?: (linkId: string) => void;
 }
@@ -33,13 +34,11 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
   isOpen,
   isCollapsed,
   isDragging = false,
+  deletingLinkId,
   onToggle,
-  onLinkDelete
+  onLinkDelete,
 }) => {
-  const {
-    isOver,
-    setNodeRef
-  } = useDroppable({
+  const { isOver, setNodeRef } = useDroppable({
     id: `category-${category.id}`,
     data: {
       type: 'category',
@@ -53,23 +52,20 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
       <div
         ref={setNodeRef}
         className={cn(
-          "w-full flex items-center justify-between text-left p-2 rounded-md transition-all duration-200",
-          "hover:bg-secondary/50",
-          isOver && "bg-blue-100 ring-2 ring-blue-300 ring-opacity-50"
+          'w-full flex items-center justify-between text-left p-2 rounded-md transition-all duration-200',
+          'hover:bg-secondary/50',
+          isOver && 'bg-blue-100 ring-2 ring-blue-300 ring-opacity-50'
         )}
       >
-        <button
-          onClick={onToggle}
-          className="flex items-center gap-2 flex-1"
-        >
+        <button onClick={onToggle} className="flex items-center gap-2 flex-1">
           <CategoryIcon name={category.name} />
           {!isCollapsed && <span className="font-medium">{category.name}</span>}
         </button>
         {!isCollapsed && (
           <ChevronRight
             className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isOpen && "rotate-90"
+              'h-4 w-4 transition-transform duration-200',
+              isOpen && 'rotate-90'
             )}
           />
         )}
@@ -84,6 +80,7 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
               subCategory={sub}
               categoryId={category.id}
               isDragging={isDragging}
+              deletingLinkId={deletingLinkId}
               onLinkDelete={onLinkDelete}
             />
           ))}

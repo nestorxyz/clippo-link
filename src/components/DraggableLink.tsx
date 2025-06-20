@@ -1,38 +1,49 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Link2, Trash2 } from 'lucide-react';
+import { GripVertical, Link2, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { getContrastColor } from '@/lib/colorUtils';
 import { Link, Tag } from '@/lib/types';
 
 interface DraggableLinkProps {
   link: Link;
+  deletingLinkId?: string | null;
   onDelete?: (linkId: string) => void;
 }
 
-const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
-    id: link.id,
-    data: {
-      type: 'link',
-      link,
-    },
-  });
+const DraggableLink: React.FC<DraggableLinkProps> = ({
+  link,
+  deletingLinkId,
+  onDelete,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: link.id,
+      data: {
+        type: 'link',
+        link,
+      },
+      disabled: deletingLinkId === link.id, // Disable dragging when deleting
+    });
 
   const style = {
     transform: CSS.Translate.toString(transform),
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = () => {
     if (onDelete) {
       onDelete(link.id);
     }
@@ -42,6 +53,8 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
     e.preventDefault();
     e.stopPropagation();
   };
+
+  const isDeleting = deletingLinkId === link.id;
 
   return (
     <div
@@ -63,28 +76,59 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
           <span className="truncate">{link.description || link.title}</span>
         </a>
 
-        {/* Action Buttons - Vertical Stack */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-0.5 ml-2">
-          {/* Drag Handle */}
-          <button
-            {...attributes}
-            {...listeners}
-            onMouseDown={handleDragStart}
-            className="p-1 hover:bg-blue-100 rounded transition-colors cursor-grab active:cursor-grabbing"
-            title="Drag to move"
-          >
-            <GripVertical className="h-3 w-3 text-muted-foreground hover:text-blue-600" />
-          </button>
+        {/* Action Buttons - Only show when not dragging */}
+        {!isDragging && (
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-0.5 ml-2">
+            {/* Drag Handle */}
+            <button
+              {...attributes}
+              {...listeners}
+              onMouseDown={handleDragStart}
+              disabled={isDeleting}
+              className="p-1 hover:bg-blue-100 rounded transition-colors cursor-grab active:cursor-grabbing disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Drag to move"
+            >
+              <GripVertical className="h-3 w-3 text-muted-foreground hover:text-blue-600" />
+            </button>
 
-          {/* Delete Button */}
-          <button
-            onClick={handleDelete}
-            className="p-1 hover:bg-red-100 rounded transition-colors"
-            title="Delete link"
-          >
-            <Trash2 className="h-3 w-3 text-muted-foreground hover:text-red-600" />
-          </button>
-        </div>
+            {/* Delete Button with Confirmation Dialog */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 p-1 hover:bg-red-100 rounded transition-colors"
+                  disabled={isDeleting}
+                  title="Delete link"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3 w-3 text-muted-foreground hover:text-red-600" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Link</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this link? This action
+                    cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </div>
 
       {/* Tags */}
@@ -93,7 +137,7 @@ const DraggableLink: React.FC<DraggableLinkProps> = ({ link, onDelete }) => {
           {link.tags.map((tag: Tag) => (
             <Badge
               key={tag.id}
-              variant={tag.color ? "default" : "secondary"}
+              variant={tag.color ? 'default' : 'secondary'}
               className="text-xs font-normal"
               style={
                 tag.color

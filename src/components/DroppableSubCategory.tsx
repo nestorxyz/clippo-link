@@ -9,6 +9,7 @@ interface DroppableSubCategoryProps {
   subCategory: SubCategory;
   categoryId: string;
   isDragging?: boolean;
+  deletingLinkId?: string | null;
   onLinkDelete?: (linkId: string) => void;
 }
 
@@ -16,12 +17,10 @@ const DroppableSubCategory: React.FC<DroppableSubCategoryProps> = ({
   subCategory,
   categoryId,
   isDragging = false,
-  onLinkDelete
+  deletingLinkId,
+  onLinkDelete,
 }) => {
-  const {
-    isOver,
-    setNodeRef
-  } = useDroppable({
+  const { isOver, setNodeRef } = useDroppable({
     id: `subcategory-${subCategory.id}`,
     data: {
       type: 'subcategory',
@@ -36,9 +35,9 @@ const DroppableSubCategory: React.FC<DroppableSubCategoryProps> = ({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex items-center gap-2 p-2 rounded-md transition-all duration-200",
-          "hover:bg-secondary/50 text-muted-foreground",
-          isOver && "bg-green-100 ring-2 ring-green-300 ring-opacity-50"
+          'flex items-center gap-2 p-2 rounded-md transition-all duration-200',
+          'hover:bg-secondary/50 text-muted-foreground',
+          isOver && 'bg-green-100 ring-2 ring-green-300 ring-opacity-50'
         )}
       >
         <FileText className="h-4 w-4" />
@@ -52,6 +51,7 @@ const DroppableSubCategory: React.FC<DroppableSubCategoryProps> = ({
             <DraggableLink
               key={link.id}
               link={link}
+              deletingLinkId={deletingLinkId}
               onDelete={onLinkDelete}
             />
           ))}
