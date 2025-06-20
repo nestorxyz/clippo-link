@@ -1,21 +1,25 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import 'https://deno.land/x/xhr@0.1.0/mod.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import {
+  createClient,
+  SupabaseClient,
+} from 'https://esm.sh/@supabase/supabase-js@2';
 import { GoogleGenAI, Content } from 'npm:@google/genai@latest';
-import { getOGTags } from "https://deno.land/x/opengraph@v1.0.0/mod.ts";
+import { getOGTags } from 'https://deno.land/x/opengraph@v1.0.0/mod.ts';
 import { Database } from '../_shared/database.types.ts';
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
 };
 
 const genAI = new GoogleGenAI(GEMINI_API_KEY);
-const modelName = "gemini-2.5-flash-preview-05-20";
+const modelName = 'gemini-2.5-flash-preview-05-20';
 
 const systemPromptTemplate = `# 🧠 AI System Prompt for Link Categorization Assistant
 
@@ -64,13 +68,19 @@ To ensure high-quality data and a great user experience, saving a link is a two-
     -   Map \`(urlMetadata as any).image\` to \`img_preview\`.
     -   Infer \`category\`, \`subcategory\`, and \`tags\` based on the user's initial prompt and the content summary.
 
+2.5. If no suitable category or subcategory is found:
+     - Propose one based on the user's wording and the link summary.
+     - Wait for confirmation from the user before proceeding with registration.
 ---
 
 ## 🧠 Background Context
 
 - Users often talk informally. You must **understand intent even from vague or casual input** (e.g., "save this for my girlfriend project").
-- Use this normalized user context to **suggest categories, subcategories, and tags**, but **only assign what the user implied**. Never invent new values.
-- Existing tags and categories (provided below) must be used. If none match, ask the user or use fallback suggestions.
+- Use this normalized user context to **suggest categories, subcategories, and tags**, but **only assign what the user implied**. You can invent new values for suggestions.
+- You must always prioritize existing tags, categories, and subcategories (provided below).
+- If you find no suitable match, you may **propose a new category or subcategory** based on the user’s intent and link content.
+- However, you **must confirm this suggestion with the user** before registering it.
+- Example: "Would you like to create a new category called 'health-tech' for this link?"
 
 ---
 
@@ -265,6 +275,35 @@ Use this when users ask for information about a specific URL, want to summarize 
 
 ---
 
+### **Example 3: Proposing a new subcategory**
+
+**User Input:**
+	
+> “Save this to my creator setup, it’s a Notion dashboard for content planning: https://notion.link/content-planner”
+> 
+
+**Function Result (get_url_info):**
+
+\`\`\`json
+{
+  "success": true,
+  "summary": "A Notion template designed for content creators to plan and schedule their publishing pipeline.",
+  "urlMetadata": {
+    "title": "Content Planning Dashboard – Notion Template",
+    "image": "https://notion.link/cover.png"
+  }
+}
+\`\`\`
+
+**Chain of thought:**
+
+No matching subcategory found under “content creation” for something like dashboards or setup tools. The user says “creator setup”. I will suggest a new subcategory.
+
+**Suggested Output:**
+\`\`\`
+Would you like to create a new subcategory called "creator setup" under "content creation" for this link?
+\`\`\`
+
 ## 💡 Gemini URL Context Tool (Built-in)
 
 Gemini can ingest and analyze URLs directly to enhance responses. Use this context-aware tool to:
@@ -328,6 +367,8 @@ const normalize = (str) => str.trim().toLowerCase();
 - Always fill parameters in the tool call with normalized values
 - For missing but required metadata, either ask or suggest
 - Structure output using tool calls only (no plaintext unless in clarification)
+- You may propose new categories or subcategories if appropriate, but never register them without confirmation.
+- Use natural suggestions, e.g.: "This seems to belong to a new subcategory 'no-code tools' under 'productivity'. Want to create it?"
 
 ---
 
@@ -341,93 +382,174 @@ If you cannot confidently assign a category, tag, or subcategory:
 const tools = {
   functionDeclarations: [
     {
-      name: "register_link",
-      description: "Registers a new saved link",
+      name: 'register_link',
+      description: 'Registers a new saved link',
       parameters: {
-        type: "OBJECT",
+        type: 'OBJECT',
         properties: {
-          url: { type: "STRING", description: "The link to save" },
-          title: { type: "STRING", description: "User-defined title" },
-          description: { type: "STRING", description: "Short context or summary" },
-          category: { type: "STRING", description: "One of the known categories" },
-          subcategory: { type: "STRING", description: "Optional subcategory, also validated" },
-          tags: { type: "ARRAY", items: { type: "STRING" }, description: "List of tags" },
-          source: { type: "STRING", description: "Optional source (e.g., Twitter, YouTube)" },
-          img_preview: { type: "STRING", description: "Image preview URL" },
+          url: { type: 'STRING', description: 'The link to save' },
+          title: { type: 'STRING', description: 'User-defined title' },
+          description: {
+            type: 'STRING',
+            description: 'Short context or summary',
+          },
+          category: {
+            type: 'STRING',
+            description: 'One of the known categories',
+          },
+          subcategory: {
+            type: 'STRING',
+            description: 'Optional subcategory, also validated',
+          },
+          tags: {
+            type: 'ARRAY',
+            items: { type: 'STRING' },
+            description: 'List of tags',
+          },
+          source: {
+            type: 'STRING',
+            description: 'Optional source (e.g., Twitter, YouTube)',
+          },
+          img_preview: { type: 'STRING', description: 'Image preview URL' },
         },
-        required: ["url", "category", "title"],
+        required: ['url', 'category', 'title'],
       },
     },
     {
-      name: "get_links",
-      description: "Fetches links using filters (not raw queries)",
+      name: 'get_links',
+      description: 'Fetches links using filters (not raw queries)',
       parameters: {
-        type: "OBJECT",
+        type: 'OBJECT',
         properties: {
-          stringQuery: { type: "STRING", description: "Searches title/description using simple keyword match" },
-          category: { type: "STRING", description: "Filter by category name" },
-          subcategory: { type: "STRING", description: "Filter by subcategory name" },
-          tags: { type: "ARRAY", items: { "type": "STRING" }, description: "Filter by tag(s)" },
+          stringQuery: {
+            type: 'STRING',
+            description:
+              'Searches title/description using simple keyword match',
+          },
+          category: { type: 'STRING', description: 'Filter by category name' },
+          subcategory: {
+            type: 'STRING',
+            description: 'Filter by subcategory name',
+          },
+          tags: {
+            type: 'ARRAY',
+            items: { type: 'STRING' },
+            description: 'Filter by tag(s)',
+          },
           dateRange: {
-            type: "OBJECT",
+            type: 'OBJECT',
             properties: {
-              from: { type: "STRING", description: "Start date (YYYY-MM-DD)" },
-              to: { type: "STRING", description: "End date (YYYY-MM-DD)" },
+              from: { type: 'STRING', description: 'Start date (YYYY-MM-DD)' },
+              to: { type: 'STRING', description: 'End date (YYYY-MM-DD)' },
             },
           },
         },
       },
     },
     {
-      name: "get_url_info",
-      description: "Analyzes a URL and provides a summary and key information about its content",
+      name: 'get_url_info',
+      description:
+        'Analyzes a URL and provides a summary and key information about its content',
       parameters: {
-        type: "OBJECT",
+        type: 'OBJECT',
         properties: {
-          url: { type: "STRING", description: "The URL to analyze and summarize" },
-          focus: { type: "STRING", description: "Optional: specific aspect to focus on (e.g., 'key points', 'technical details', 'summary')" }
+          url: {
+            type: 'STRING',
+            description: 'The URL to analyze and summarize',
+          },
+          focus: {
+            type: 'STRING',
+            description:
+              "Optional: specific aspect to focus on (e.g., 'key points', 'technical details', 'summary')",
+          },
         },
-        required: ["url"],
+        required: ['url'],
       },
-    }
+    },
   ],
 };
 
-async function registerLink(supabase: SupabaseClient<Database>, user_id: string, args: any) {
-  const { url, title, description, category: category_name, subcategory, tags, source, img_preview } = args;
+async function registerLink(
+  supabase: SupabaseClient<Database>,
+  user_id: string,
+  args: any
+) {
+  const {
+    url,
+    title,
+    description,
+    category: category_name,
+    subcategory,
+    tags,
+    source,
+    img_preview,
+  } = args;
 
   const sub_category_name = subcategory || 'general';
 
-  let { data: category } = await supabase.from('categories').select('id').eq('name', category_name).eq('user_id', user_id).maybeSingle();
+  let { data: category } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category_name)
+    .eq('user_id', user_id)
+    .maybeSingle();
 
   if (!category) {
-    const { data: newCategory, error: newCatError } = await supabase.from('categories').insert({ name: category_name, user_id: user_id }).select('id').single();
+    const { data: newCategory, error: newCatError } = await supabase
+      .from('categories')
+      .insert({ name: category_name, user_id: user_id })
+      .select('id')
+      .single();
     if (newCatError) throw newCatError;
     category = newCategory;
   }
 
-  let { data: subCategory } = await supabase.from('sub_categories').select('id').eq('name', sub_category_name).eq('category_id', category.id).eq('user_id', user_id).maybeSingle();
+  let { data: subCategory } = await supabase
+    .from('sub_categories')
+    .select('id')
+    .eq('name', sub_category_name)
+    .eq('category_id', category.id)
+    .eq('user_id', user_id)
+    .maybeSingle();
 
   if (!subCategory) {
-    const { data: newSubCategory, error: newSubCatError } = await supabase.from('sub_categories').insert({ name: sub_category_name, category_id: category.id, user_id: user_id }).select('id').single();
+    const { data: newSubCategory, error: newSubCatError } = await supabase
+      .from('sub_categories')
+      .insert({
+        name: sub_category_name,
+        category_id: category.id,
+        user_id: user_id,
+      })
+      .select('id')
+      .single();
     if (newSubCatError) throw newSubCatError;
     subCategory = newSubCategory;
   }
 
   const { data: newLink, error: linkError } = await supabase
     .from('links')
-    .insert({ url, description, sub_category_id: subCategory.id, user_id, title, source, img_preview })
+    .insert({
+      url,
+      description,
+      sub_category_id: subCategory.id,
+      user_id,
+      title,
+      source,
+      img_preview,
+    })
     .select('id')
     .single();
 
   if (linkError) return { success: false, error: linkError.message };
-  if (!newLink) return { success: false, error: "Failed to create link." };
-  
+  if (!newLink) return { success: false, error: 'Failed to create link.' };
+
   if (tags && Array.isArray(tags) && tags.length > 0) {
-    const tagObjects = tags.map((tagName: string) => ({ 
-      name: String(tagName).trim().toLowerCase(), 
-      user_id: user_id 
-    })).filter(t => t.name.length > 0);
+    const tagObjects = tags
+      .map((tagName: string) => ({
+        name: String(tagName).trim().toLowerCase(),
+        user_id: user_id,
+      }))
+      .filter((t) => t.name.length > 0);
 
     if (tagObjects.length > 0) {
       const { data: upsertedTags, error: tagsUpsertError } = await supabase
@@ -436,20 +558,20 @@ async function registerLink(supabase: SupabaseClient<Database>, user_id: string,
         .select('id');
 
       if (tagsUpsertError) {
-          console.error('Error upserting tags:', tagsUpsertError);
+        console.error('Error upserting tags:', tagsUpsertError);
       } else if (upsertedTags) {
-          const linkTagRelations = upsertedTags.map((tag: {id: string}) => ({
-              link_id: newLink.id,
-              tag_id: tag.id
-          }));
+        const linkTagRelations = upsertedTags.map((tag: { id: string }) => ({
+          link_id: newLink.id,
+          tag_id: tag.id,
+        }));
 
-          const { error: linkTagsError } = await supabase
-              .from('link_tags')
-              .insert(linkTagRelations);
+        const { error: linkTagsError } = await supabase
+          .from('link_tags')
+          .insert(linkTagRelations);
 
-          if (linkTagsError) {
-              console.error('Error creating link-tag associations:', linkTagsError);
-          }
+        if (linkTagsError) {
+          console.error('Error creating link-tag associations:', linkTagsError);
+        }
       }
     }
   }
@@ -457,8 +579,18 @@ async function registerLink(supabase: SupabaseClient<Database>, user_id: string,
   return { success: true };
 }
 
-async function getLinks(supabase: SupabaseClient<Database>, user_id: string, args: any) {
-  const { stringQuery: keywords, category: category_name, subcategory: sub_category_name, tags, dateRange } = args;
+async function getLinks(
+  supabase: SupabaseClient<Database>,
+  user_id: string,
+  args: any
+) {
+  const {
+    stringQuery: keywords,
+    category: category_name,
+    subcategory: sub_category_name,
+    tags,
+    dateRange,
+  } = args;
 
   const withTagsFilter = tags && Array.isArray(tags) && tags.length > 0;
 
@@ -475,23 +607,34 @@ async function getLinks(supabase: SupabaseClient<Database>, user_id: string, arg
       name,
       categories!inner(name)
     ),
-    ${withTagsFilter ? 'link_tags!inner(tags!inner(id, name, color))' : 'link_tags(tags(id, name, color))'}
+    ${
+      withTagsFilter
+        ? 'link_tags!inner(tags!inner(id, name, color))'
+        : 'link_tags(tags(id, name, color))'
+    }
   `;
 
-  let query = supabase.from('links').select(selectStatement)
+  let query = supabase
+    .from('links')
+    .select(selectStatement)
     .eq('user_id', user_id);
 
-  if (category_name) query = query.eq('sub_categories.categories.name', category_name);
-  if (sub_category_name) query = query.eq('sub_categories.name', sub_category_name);
-  if (keywords) query = query.or(`description.ilike.%${keywords}%,title.ilike.%${keywords}%,url.ilike.%${keywords}%`);
+  if (category_name)
+    query = query.eq('sub_categories.categories.name', category_name);
+  if (sub_category_name)
+    query = query.eq('sub_categories.name', sub_category_name);
+  if (keywords)
+    query = query.or(
+      `description.ilike.%${keywords}%,title.ilike.%${keywords}%,url.ilike.%${keywords}%`
+    );
 
   if (dateRange) {
     if (dateRange.from) {
-        query = query.gte('created_at', dateRange.from);
+      query = query.gte('created_at', dateRange.from);
     }
     if (dateRange.to) {
-        // Use lte with end of day timestamp to include the whole day
-        query = query.lte('created_at', `${dateRange.to}T23:59:59.999Z`);
+      // Use lte with end of day timestamp to include the whole day
+      query = query.lte('created_at', `${dateRange.to}T23:59:59.999Z`);
     }
   }
 
@@ -501,16 +644,18 @@ async function getLinks(supabase: SupabaseClient<Database>, user_id: string, arg
 
   const { data: linksResult, error: linksError } = await query;
 
-  if (linksError) return { result: `Error fetching links: ${linksError.message}` };
-  if (!linksResult || linksResult.length === 0) return { result: "I couldn't find any links matching your criteria." };
-  
+  if (linksError)
+    return { result: `Error fetching links: ${linksError.message}` };
+  if (!linksResult || linksResult.length === 0)
+    return { result: "I couldn't find any links matching your criteria." };
+
   // Flatten the tags structure for easier consumption by the AI
   const formattedLinks = linksResult.map((link: any) => {
     const linkTags = link.link_tags.map((lt: any) => lt.tags).filter(Boolean);
     const { link_tags, ...rest } = link;
     return {
-        ...rest,
-        tags: linkTags,
+      ...rest,
+      tags: linkTags,
     };
   });
 
@@ -519,7 +664,7 @@ async function getLinks(supabase: SupabaseClient<Database>, user_id: string, arg
 
 async function getUrlInfo(url: string, focus?: string) {
   try {
-    const prompt = focus 
+    const prompt = focus
       ? `Analyze this URL and provide detailed information focusing on: ${focus}. URL: ${url}`
       : `Analyze this URL and provide a comprehensive summary including: main topic, key points, type of content, and any important details. URL: ${url}`;
 
@@ -531,28 +676,35 @@ async function getUrlInfo(url: string, focus?: string) {
       },
     });
 
-    const metadataPromise = getOGTags(url).catch(err => {
+    const metadataPromise = getOGTags(url).catch((err) => {
       console.error(`Opengraph extract error for ${url}:`, err.message);
       return {}; // Return empty object on error, so it doesn't fail the whole process
     });
 
-    const [response, ogMetadata] = await Promise.all([geminiPromise, metadataPromise]);
+    const [response, ogMetadata] = await Promise.all([
+      geminiPromise,
+      metadataPromise,
+    ]);
 
     console.log('Full getUrlInfo response:', JSON.stringify(response, null, 2));
 
     if (!response.text && Object.keys(ogMetadata).length === 0) {
-      return { success: false, error: "No content could be extracted from the URL" };
+      return {
+        success: false,
+        error: 'No content could be extracted from the URL',
+      };
     }
 
-    const geminiUrlMetadata = response.candidates?.[0]?.urlContextMetadata || null;
+    const geminiUrlMetadata =
+      response.candidates?.[0]?.urlContextMetadata || null;
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       summary: response.text || (ogMetadata as any).description || '',
       urlMetadata: {
-          ...(geminiUrlMetadata || {}),
-          ...ogMetadata
-      }
+        ...(geminiUrlMetadata || {}),
+        ...ogMetadata,
+      },
     };
   } catch (error) {
     console.error('Error analyzing URL:', error);
@@ -568,39 +720,84 @@ serve(async (req) => {
   try {
     const { sessionId, message, timeZone } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
-    
+
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false }
+      auth: { persistSession: false },
     });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const { data: categoriesData } = await supabase.from('categories').select('name').eq('user_id', user.id);
-    const categories = categoriesData?.map(c => c.name).join('\n- ') || 'personal\n- work\n- research\n- side-projects\n- girlfriend';
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('name')
+      .eq('user_id', user.id);
+    const categories =
+      categoriesData?.map((c) => c.name).join('\n- ') ||
+      'personal\n- work\n- research\n- side-projects\n- girlfriend';
 
-    const { data: subCategoriesData } = await supabase.from('sub_categories').select('name').eq('user_id', user.id);
-    const subcategories = subCategoriesData?.map(s => s.name).join('\n- ') || 'travel\n- finance\n- tech\n- product\n- books\n- food';
+    const { data: subCategoriesData } = await supabase
+      .from('sub_categories')
+      .select('name')
+      .eq('user_id', user.id);
+    const subcategories =
+      subCategoriesData?.map((s) => s.name).join('\n- ') ||
+      'travel\n- finance\n- tech\n- product\n- books\n- food';
 
-    const { data: tagsData } = await supabase.from('tags').select('name').eq('user_id', user.id);
-    const tags = tagsData?.map(t => t.name).join('\n- ') || 'startup\n- design\n- AI\n- python\n- recipes\n- fitness\n- product-management\n- investment';
+    const { data: tagsData } = await supabase
+      .from('tags')
+      .select('name')
+      .eq('user_id', user.id);
+    const tags =
+      tagsData?.map((t) => t.name).join('\n- ') ||
+      'startup\n- design\n- AI\n- python\n- recipes\n- fitness\n- product-management\n- investment';
 
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
-    const fromDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString().split('T')[0];
-    const toDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).toISOString().split('T')[0];
-    
+    const fromDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1)
+      .toISOString()
+      .split('T')[0];
+    const toDate = new Date(
+      lastMonth.getFullYear(),
+      lastMonth.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split('T')[0];
+
     const userTimeZone = timeZone || 'UTC';
     const now = new Date();
 
-    const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: userTimeZone }).format(now);
-    const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', timeZone: userTimeZone }).format(now);
-    const month = new Intl.DateTimeFormat('en-GB', { month: 'long', timeZone: userTimeZone }).format(now);
-    const year = new Intl.DateTimeFormat('en-GB', { year: 'numeric', timeZone: userTimeZone }).format(now);
-    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: userTimeZone }).format(now);
+    const weekday = new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long',
+      timeZone: userTimeZone,
+    }).format(now);
+    const day = new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      timeZone: userTimeZone,
+    }).format(now);
+    const month = new Intl.DateTimeFormat('en-GB', {
+      month: 'long',
+      timeZone: userTimeZone,
+    }).format(now);
+    const year = new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      timeZone: userTimeZone,
+    }).format(now);
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: userTimeZone,
+    }).format(now);
 
     const current_datetime = `${weekday}, ${day} ${month} ${year}, ${time} (${userTimeZone})`;
 
@@ -612,7 +809,11 @@ serve(async (req) => {
       .replace('2025-05-31', toDate)
       .replace('{current_datetime}', current_datetime);
 
-    await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'user', parts: [{ text: message }] });
+    await supabase.from('chat_messages').insert({
+      session_id: sessionId,
+      role: 'user',
+      parts: [{ text: message }],
+    });
 
     const { data: historyData, error: historyError } = await supabase
       .from('chat_messages')
@@ -621,10 +822,13 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     if (historyError) throw historyError;
-    
-    const contents: Content[] = historyData.map(h => ({ role: h.role as 'user' | 'model' | 'function', parts: h.parts as any[] }));
 
-    let botReply = "";
+    const contents: Content[] = historyData.map((h) => ({
+      role: h.role as 'user' | 'model' | 'function',
+      parts: h.parts as any[],
+    }));
+
+    let botReply = '';
     const functionCallsForClient = [];
     let continueConversation = true;
 
@@ -641,42 +845,64 @@ serve(async (req) => {
       const functionCalls = result.functionCalls;
 
       if (functionCalls && functionCalls.length > 0) {
-        const functionCallParts = functionCalls.map(fc => ({ functionCall: fc }));
+        const functionCallParts = functionCalls.map((fc) => ({
+          functionCall: fc,
+        }));
 
-        await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: functionCallParts });
+        await supabase.from('chat_messages').insert({
+          session_id: sessionId,
+          role: 'model',
+          parts: functionCallParts,
+        });
         contents.push({ role: 'model', parts: functionCallParts });
 
         const functionResponseParts = [];
         for (const fc of functionCalls) {
           let functionResponse;
           if (fc.name === 'register_link') {
-              functionResponse = await registerLink(supabase, user.id, fc.args);
+            functionResponse = await registerLink(supabase, user.id, fc.args);
           } else if (fc.name === 'get_links') {
-              functionResponse = await getLinks(supabase, user.id, fc.args);
+            functionResponse = await getLinks(supabase, user.id, fc.args);
           } else if (fc.name === 'get_url_info') {
-              functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
+            functionResponse = await getUrlInfo(fc.args.url, fc.args.focus);
           }
-          functionCallsForClient.push({ function: { name: fc.name, result: functionResponse } });
-          functionResponseParts.push({ functionResponse: { name: fc.name, response: functionResponse } });
+          functionCallsForClient.push({
+            function: { name: fc.name, result: functionResponse },
+          });
+          functionResponseParts.push({
+            functionResponse: { name: fc.name, response: functionResponse },
+          });
         }
 
-        await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'function', parts: functionResponseParts });
+        await supabase.from('chat_messages').insert({
+          session_id: sessionId,
+          role: 'function',
+          parts: functionResponseParts,
+        });
         contents.push({ role: 'function', parts: functionResponseParts });
-        
       } else {
         continueConversation = false;
         if (result.text) {
           botReply = result.text;
-          await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'model', parts: [{ text: botReply }] });
+          await supabase.from('chat_messages').insert({
+            session_id: sessionId,
+            role: 'model',
+            parts: [{ text: botReply }],
+          });
         }
       }
     }
 
-    return new Response(JSON.stringify({ reply: botReply, functionCalls: functionCallsForClient }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-
+    return new Response(
+      JSON.stringify({
+        reply: botReply,
+        functionCalls: functionCallsForClient,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error('Error in gemini-chat function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
