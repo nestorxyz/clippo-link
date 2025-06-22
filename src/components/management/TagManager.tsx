@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +8,14 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,15 +45,15 @@ const TagManager = ({ session }: { session: Session | null }) => {
       if (values.color) {
         insertData.color = values.color;
       }
-      const { error } = await supabase
-        .from('tags')
-        .insert(insertData);
+      const { error } = await supabase.from('tags').insert(insertData);
 
       if (error) throw error;
       toast.success('Tag created successfully!');
       form.reset();
-    } catch (error: any) {
-      toast.error('Failed to create tag', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Failed to create tag', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   };
 
@@ -65,7 +71,9 @@ const TagManager = ({ session }: { session: Session | null }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tag Name</FormLabel>
-                  <FormControl><Input placeholder="e.g. important" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="e.g. important" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -76,13 +84,21 @@ const TagManager = ({ session }: { session: Session | null }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Color (optional, random if not set)</FormLabel>
-                  <FormControl><Input type="color" {...field} value={field.value || '#000000'} /></FormControl>
+                  <FormControl>
+                    <Input
+                      type="color"
+                      {...field}
+                      value={field.value || '#000000'}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {form.formState.isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Add Tag
             </Button>
           </form>
@@ -97,12 +113,14 @@ const TagManager = ({ session }: { session: Session | null }) => {
                 <p>No tags found.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
+                  {tags.map((tag) => (
                     <Badge
                       key={tag.id}
                       style={{
                         backgroundColor: tag.color || undefined,
-                        color: tag.color ? getContrastColor(tag.color) : undefined,
+                        color: tag.color
+                          ? getContrastColor(tag.color)
+                          : undefined,
                         borderColor: 'transparent',
                       }}
                     >
