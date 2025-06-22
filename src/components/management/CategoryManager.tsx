@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +8,14 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -29,25 +35,27 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!session) return;
     try {
-      const { error } = await retired-provider
-        .from('categories')
-        .insert({
-          name: values.name,
-          description: values.description,
-          user_id: session.user.id,
-        });
+      const { error } = await retired-provider.from('categories').insert({
+        name: values.name,
+        description: values.description,
+        user_id: session.user.id,
+      });
 
       if (error) throw error;
       toast.success('Category created successfully!');
       form.reset();
-    } catch (error: any) {
-      toast.error('Failed to create category', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Failed to create category', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   };
 
   return (
     <div>
-      <h3 className="text-2xl font-semibold leading-none tracking-tight">Manage Categories</h3>
+      <h3 className="text-2xl font-semibold leading-none tracking-tight">
+        Manage Categories
+      </h3>
       <div className="space-y-4 pt-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -57,7 +65,9 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category Name</FormLabel>
-                  <FormControl><Input placeholder="e.g. Work" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="e.g. Work" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -68,13 +78,20 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
-                  <FormControl><Input placeholder="Briefly describe the category" {...field} /></FormControl>
+                  <FormControl>
+                    <Input
+                      placeholder="Briefly describe the category"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {form.formState.isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Add Category
             </Button>
           </form>
@@ -89,8 +106,10 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
                 <p>No categories found.</p>
               ) : (
                 <ul className="space-y-2">
-                  {categories.map(cat => (
-                    <li key={cat.id} className="p-2 bg-secondary rounded-md">{cat.name}</li>
+                  {categories.map((cat) => (
+                    <li key={cat.id} className="p-2 bg-secondary rounded-md">
+                      {cat.name}
+                    </li>
                   ))}
                 </ul>
               )}
