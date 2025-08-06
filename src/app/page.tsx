@@ -1,65 +1,48 @@
-'use client';
+import { Navigation } from './_components/Navigation';
+import { Hero } from './_components/Hero';
+import { WhatIsClippo } from './_components/WhatIsClippo';
+import { Features } from './_components/Features';
+import { UseCases } from './_components/UseCases';
+import { ClippoInAction } from './_components/ClippoInAction';
+import { ForPeopleLikeYou } from './_components/ForPeopleLikeYou';
+import { FinalCTA } from './_components/FinalCTA';
+import { Footer } from './_components/Footer';
 
-import { useEffect, useState } from 'react';
-import { retired-provider } from '@/integrations/retired-provider/client';
-import { Session } from '@retired-provider/retired-provider-js';
-import { Loader2 } from 'lucide-react';
-import { redirect } from 'next/navigation';
-import Header from '@/components/landing/Header';
-import HeroSection from '@/components/landing/HeroSection';
-import ValuePropositionSection from '@/components/landing/ValuePropositionSection';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import UseCasesSection from '@/components/landing/UseCasesSection';
-import AudienceSection from '@/components/landing/AudienceSection';
-import FinalCTASection from '@/components/landing/FinalCTASection';
-import Footer from '@/components/landing/Footer';
-
-export default function HomePage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    retired-provider.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const subscription = retired-provider.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.data.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && session) {
-      redirect('/dashboard');
-    }
-  }, [session, loading]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (session) {
-    return null; // Will redirect
-  }
-
+export default function Home() {
   return (
-    <div className="bg-background text-foreground">
-      <Header />
+    <div className="min-h-screen bg-white">
+      <Navigation />
+
       <main>
-        <HeroSection />
-        <ValuePropositionSection />
-        <FeaturesSection id="features" />
-        <UseCasesSection />
-        <AudienceSection />
-        <FinalCTASection />
+        <section id="hero">
+          <Hero />
+        </section>
+
+        <section id="what-is-clippo">
+          <WhatIsClippo />
+        </section>
+
+        <section id="features">
+          <Features />
+        </section>
+
+        <section id="use-cases">
+          <UseCases />
+        </section>
+
+        <section id="in-action">
+          <ClippoInAction />
+        </section>
+
+        <section id="for-you">
+          <ForPeopleLikeYou />
+        </section>
+
+        <section id="final-cta">
+          <FinalCTA />
+        </section>
       </main>
+
       <Footer />
     </div>
   );
