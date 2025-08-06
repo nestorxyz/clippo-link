@@ -92,7 +92,7 @@ export const ClippoInAction = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Clippo typing indicator
+      // DoryAI typing indicator
       const typingMessage: Message = {
         id: messageId++,
         type: 'clippo',
@@ -104,7 +104,7 @@ export const ClippoInAction = () => {
       setMessages((prev) => [...prev, typingMessage]);
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Clippo response
+      // DoryAI response
       const clippoMessage: Message = {
         id: messageId++,
         type: 'clippo',
@@ -152,7 +152,7 @@ export const ClippoInAction = () => {
           style={{ animationDelay: '300ms' }}
         />
       </div>
-      <span className="text-sm text-slate-500">Clippo is organizing...</span>
+      <span className="text-sm text-slate-500">DoryAI is organizing...</span>
     </div>
   );
 
@@ -176,11 +176,11 @@ export const ClippoInAction = () => {
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-slate-900 mb-6">
-            Watch Clippo
+            Watch DoryAI
             <span className="block gradient-text">organize in real-time</span>
           </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-8 leading-relaxed">
-            See how Clippo intelligently understands, tags, and organizes your
+            See how DoryAI intelligently understands, tags, and organizes your
             links through natural conversation.
             <br className="hidden md:block" />
             It's like having a personal assistant for your digital life.
@@ -202,7 +202,7 @@ export const ClippoInAction = () => {
                   <Bot className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Clippo</h3>
+                  <h3 className="font-semibold text-lg">DoryAI</h3>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                     <span className="text-sm opacity-90">
@@ -222,7 +222,7 @@ export const ClippoInAction = () => {
                     Ready to see the magic?
                   </p>
                   <p className="text-sm">
-                    Click "Start Interactive Demo" to watch Clippo organize
+                    Click "Start Interactive Demo" to watch DoryAI organize
                     links in real-time!
                   </p>
                 </div>
@@ -356,7 +356,7 @@ export const ClippoInAction = () => {
               Intelligent Tagging
             </h3>
             <p className="text-slate-600 leading-relaxed">
-              Clippo automatically generates relevant tags from context, making
+              DoryAI automatically generates relevant tags from context, making
               your links instantly searchable.
             </p>
           </Card>

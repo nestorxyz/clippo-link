@@ -104,7 +104,7 @@ export const UseCases = () => {
             <span className="block gradient-text">digital collector</span>
           </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto font-body leading-relaxed">
-            See how Clippo adapts to your unique way of collecting and
+            See how DoryAI adapts to your unique way of collecting and
             organizing information. Whatever you're building, we've got you
             covered.
           </p>

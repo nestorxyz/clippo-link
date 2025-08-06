@@ -121,7 +121,7 @@ export const ForPeopleLikeYou = () => {
           <p className="text-xl md:text-2xl lg:text-3xl font-body text-slate-600 leading-relaxed mb-8">
             <WordReveal delay={3.5}>
               Whether you're building a startup, learning AI, or planning a trip
-              — Clippo helps you capture the web like never before.
+              — DoryAI helps you capture the web like never before.
             </WordReveal>
           </p>
         </div>
@@ -139,7 +139,7 @@ export const ForPeopleLikeYou = () => {
               The Builder
             </h3>
             <p className="text-slate-600 leading-relaxed">
-              You're creating something new. Clippo organizes your research,
+              You're creating something new. DoryAI organizes your research,
               inspiration, and resources so you can focus on building.
             </p>
           </div>
@@ -152,7 +152,7 @@ export const ForPeopleLikeYou = () => {
               The Learner
             </h3>
             <p className="text-slate-600 leading-relaxed">
-              Every day brings new discoveries. Clippo turns your curiosity into
+              Every day brings new discoveries. DoryAI turns your curiosity into
               a searchable knowledge base that grows with you.
             </p>
           </div>
@@ -165,7 +165,7 @@ export const ForPeopleLikeYou = () => {
               The Explorer
             </h3>
             <p className="text-slate-600 leading-relaxed">
-              Life's an adventure, and the web is full of gems. Clippo helps you
+              Life's an adventure, and the web is full of gems. DoryAI helps you
               collect and treasure everything you discover.
             </p>
           </div>
@@ -180,7 +180,7 @@ export const ForPeopleLikeYou = () => {
             <Sparkles className="w-5 h-5 text-indigo-600 animate-pulse" />
             <span className="text-slate-700 font-medium text-lg">
               <WordReveal delay={6.2}>
-                Join thousands of curious minds already using Clippo
+                Join thousands of curious minds already using DoryAI
               </WordReveal>
             </span>
           </div>

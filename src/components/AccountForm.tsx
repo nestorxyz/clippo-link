@@ -114,7 +114,7 @@ export const AccountForm = ({ session }: { session: Session }) => {
           <div className="space-y-0.5">
             <Label className="text-base">WhatsApp Integration</Label>
             <p className="text-sm text-muted-foreground">
-              Connect your WhatsApp to use Clippo on mobile
+              Connect your WhatsApp to use DoryAI on mobile
             </p>
           </div>
           {phoneStatus?.phoneVerified ? (
@@ -134,7 +134,7 @@ export const AccountForm = ({ session }: { session: Session }) => {
               {phoneStatus.phoneNumber}
             </p>
             <p className="text-sm text-muted-foreground">
-              You can now use Clippo via WhatsApp! Send any message to start.
+              You can now use DoryAI via WhatsApp! Send any message to start.
             </p>
           </div>
         ) : (

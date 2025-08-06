@@ -33,7 +33,7 @@ const HeroSection = () => {
         >
           <Link href="/auth">
             <Button size="lg" className="w-full sm:w-auto animate-pulse-subtle">
-              Try Clippo
+              Try DoryAI
             </Button>
           </Link>
           <a href="#features" onClick={handleScroll}>

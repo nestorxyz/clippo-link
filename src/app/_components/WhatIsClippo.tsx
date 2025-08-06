@@ -12,12 +12,12 @@ export const WhatIsClippo = () => {
   const sentences = [
     {
       id: 'intro',
-      text: 'Clippo is your personal link assistant, powered by AI.',
+      text: 'DoryAI is your personal link assistant, powered by AI.',
       tooltip: 'Think of me as your digital memory that never forgets! 🧠',
     },
     {
       id: 'process',
-      text: "Just drop a link in the chat. Tell Clippo what it's about. Done — it's remembered, tagged, and ready to find later.",
+      text: "Just drop a link in the chat. Tell DoryAI what it's about. Done — it's remembered, tagged, and ready to find later.",
       tooltip:
         "Example: 'Cool recipe for Sunday dinner' → instantly organized and findable! ✨",
     },
@@ -49,7 +49,7 @@ export const WhatIsClippo = () => {
           {/* Left Side - Text Content */}
           <div className="space-y-8">
             <h2 className="text-4xl lg:text-5xl font-heading font-bold text-slate-900 leading-tight">
-              What is Clippo?
+              What is DoryAI?
             </h2>
 
             <div className="space-y-6 text-lg lg:text-xl text-slate-600 leading-relaxed">
@@ -87,13 +87,13 @@ export const WhatIsClippo = () => {
             </div>
           </div>
 
-          {/* Right Side - Clippo Character */}
+          {/* Right Side - DoryAI Character */}
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
               {/* Floating background glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-full blur-xl scale-150 animate-pulse" />
 
-              {/* Clippo Character Container */}
+              {/* DoryAI Character Container */}
               <div
                 className={`relative bg-white rounded-3xl p-8 shadow-2xl border border-slate-200 transition-all duration-300 ${
                   clippoState === 'tilted' ? 'rotate-3' : ''
@@ -103,7 +103,7 @@ export const WhatIsClippo = () => {
                     'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
                 }}
               >
-                {/* Clippo Avatar */}
+                {/* DoryAI Avatar */}
                 <div className="relative w-32 h-32 mx-auto mb-4">
                   <div
                     className={`w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center relative overflow-hidden transition-transform duration-300 ${

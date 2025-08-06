@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, MessageCircle, Send } from 'lucide-react';
 
@@ -68,20 +69,20 @@ export const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button
-                size="lg"
-                className="group text-lg px-8 py-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-xl font-semibold animate-breathe"
-                onClick={() => window.open('https://app.clippo.ai', '_blank')}
-              >
-                <Sparkles className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                Try Clippo
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              </Button>
+              <Link href="/auth">
+                <Button
+                  size="lg"
+                  className="group text-lg px-8 py-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-xl font-semibold animate-breathe"
+                >
+                  <Sparkles className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                  Try DoryAI
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                </Button>
+              </Link>
 
               <Button
                 variant="outline"
-                size="lg"
-                className="group text-lg px-8 py-6 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 transition-all duration-300 rounded-xl font-semibold"
+                size="xl"
                 onClick={() => {
                   document
                     .querySelector('#in-action')
@@ -121,7 +122,7 @@ export const Hero = () => {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-white font-semibold">Clippo</div>
+                    <div className="text-white font-semibold">DoryAI</div>
                     <div className="text-white/80 text-sm">
                       Your link assistant
                     </div>
@@ -167,7 +168,7 @@ export const Hero = () => {
                     </div>
                   )}
 
-                  {/* Clippo Response */}
+                  {/* DoryAI Response */}
                   {!isTyping && (
                     <div className="flex items-start gap-2">
                       <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">

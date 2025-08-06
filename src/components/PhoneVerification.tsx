@@ -268,7 +268,7 @@ export function PhoneVerification({
             Link Your WhatsApp
           </DialogTitle>
           <DialogDescription>
-            Connect your WhatsApp number to use Clippo on both web and WhatsApp.
+            Connect your WhatsApp number to use DoryAI on both web and WhatsApp.
           </DialogDescription>
         </DialogHeader>
 

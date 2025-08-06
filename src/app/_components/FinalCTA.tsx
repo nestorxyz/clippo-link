@@ -47,7 +47,7 @@ export const FinalCTA = () => {
         />
       </div>
 
-      {/* Clippo Avatar with Orbiting Links */}
+      {/* DoryAI Avatar with Orbiting Links */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
         {/* Central Avatar */}
         <div
@@ -108,7 +108,7 @@ export const FinalCTA = () => {
           }`}
         >
           <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Stop losing brilliant ideas to the digital abyss. Let Clippo be your
+            Stop losing brilliant ideas to the digital abyss. Let DoryAI be your
             AI-powered memory assistant that never forgets.
           </p>
         </div>
@@ -124,7 +124,7 @@ export const FinalCTA = () => {
             className="group text-xl px-12 py-6 rounded-2xl bg-white text-indigo-600 hover:bg-yellow-300 hover:text-indigo-700 shadow-2xl hover:shadow-white/25 transition-all duration-300 border-2 border-white/20 backdrop-blur-sm font-bold animate-breathe"
             onClick={() => window.open('https://app.clippo.ai', '_blank')}
           >
-            <span className="mr-3">Try Clippo Now</span>
+            <span className="mr-3">Try DoryAI Now</span>
             <ArrowRight
               size={24}
               className="transition-transform duration-300 group-hover:translate-x-2"

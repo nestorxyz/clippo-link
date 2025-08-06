@@ -54,7 +54,7 @@ export default function AuthPage() {
           className="text-lg font-bold flex items-center gap-2 text-foreground"
         >
           <Bookmark className="w-6 h-6" />
-          <span>Clippo</span>
+          <span>DoryAI</span>
         </Link>
       </header>
 

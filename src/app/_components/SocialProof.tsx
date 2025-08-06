@@ -32,7 +32,7 @@ interface Testimonial {
 const statistics: Statistic[] = [
   {
     value: '500K+',
-    label: 'Creators Trust Clippo',
+    label: 'Creators Trust DoryAI',
     icon: <Users className="w-8 h-8 text-primary" />,
   },
   {
@@ -66,7 +66,7 @@ const testimonials: Testimonial[] = [
   {
     id: 1,
     quote:
-      'Clippo transformed my content creation process completely. What used to take me 8 hours now takes just 30 minutes, and my engagement rates have increased by 340% since I started using it.',
+      'DoryAI transformed my content creation process completely. What used to take me 8 hours now takes just 30 minutes, and my engagement rates have increased by 340% since I started using it.',
     name: 'Sarah Chen',
     title: 'Content Creator',
     company: '@sarahcreates',
@@ -76,7 +76,7 @@ const testimonials: Testimonial[] = [
   {
     id: 2,
     quote:
-      'As a small business owner, I was struggling to create professional videos for my products. Clippo helped me generate over 200 product videos in just one month, leading to a 150% increase in online sales.',
+      'As a small business owner, I was struggling to create professional videos for my products. DoryAI helped me generate over 200 product videos in just one month, leading to a 150% increase in online sales.',
     name: 'Marcus Rodriguez',
     title: 'Founder',
     company: 'Urban Threads',
@@ -86,7 +86,7 @@ const testimonials: Testimonial[] = [
   {
     id: 3,
     quote:
-      "We've scaled our client video production by 500% using Clippo. Our team can now deliver high-quality video campaigns faster than ever, and our clients are seeing 2x better ROI on their video marketing.",
+      "We've scaled our client video production by 500% using DoryAI. Our team can now deliver high-quality video campaigns faster than ever, and our clients are seeing 2x better ROI on their video marketing.",
     name: 'Jessica Park',
     title: 'Creative Director',
     company: 'Pulse Marketing Agency',
@@ -96,7 +96,7 @@ const testimonials: Testimonial[] = [
   {
     id: 4,
     quote:
-      'My online course completion rates jumped from 45% to 78% after switching to Clippo for my educational content. Students love the engaging, bite-sized video lessons I can now create effortlessly.',
+      'My online course completion rates jumped from 45% to 78% after switching to DoryAI for my educational content. Students love the engaging, bite-sized video lessons I can now create effortlessly.',
     name: 'Dr. Michael Thompson',
     title: 'Course Creator',
     company: 'LearnTech Academy',
@@ -106,7 +106,7 @@ const testimonials: Testimonial[] = [
   {
     id: 5,
     quote:
-      "Clippo has been a game-changer for our nonprofit's storytelling. We've increased our donation conversion rate by 180% with compelling video stories that used to cost us thousands to produce.",
+      "DoryAI has been a game-changer for our nonprofit's storytelling. We've increased our donation conversion rate by 180% with compelling video stories that used to cost us thousands to produce.",
     name: 'Lisa Patel',
     title: 'Communications Manager',
     company: 'Future Hope Foundation',
@@ -116,7 +116,7 @@ const testimonials: Testimonial[] = [
   {
     id: 6,
     quote:
-      'Before Clippo, creating product videos for our 500+ SKUs seemed impossible. Now we have professional videos for our entire catalog, and our conversion rates have improved by 220%.',
+      'Before DoryAI, creating product videos for our 500+ SKUs seemed impossible. Now we have professional videos for our entire catalog, and our conversion rates have improved by 220%.',
     name: 'David Kim',
     title: 'E-commerce Manager',
     company: 'TechGear Pro',
@@ -126,7 +126,7 @@ const testimonials: Testimonial[] = [
   {
     id: 7,
     quote:
-      'As a personal brand strategist, I need to create consistent, high-quality content. Clippo helps me maintain my posting schedule while delivering videos that consistently get 50K+ views.',
+      'As a personal brand strategist, I need to create consistent, high-quality content. DoryAI helps me maintain my posting schedule while delivering videos that consistently get 50K+ views.',
     name: 'Amanda Foster',
     title: 'Personal Brand Strategist',
     company: 'Foster Growth',
@@ -136,7 +136,7 @@ const testimonials: Testimonial[] = [
   {
     id: 8,
     quote:
-      "Clippo saved our startup $50K in video production costs in our first year. We've been able to create compelling investor pitches and product demos that helped us secure Series A funding.",
+      "DoryAI saved our startup $50K in video production costs in our first year. We've been able to create compelling investor pitches and product demos that helped us secure Series A funding.",
     name: 'Alex Chen',
     title: 'Co-Founder & CEO',
     company: 'NextWave AI',
@@ -174,7 +174,7 @@ export const SocialProof = () => {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-16">
             Join hundreds of thousands of creators who have transformed their
-            content creation process with Clippo
+            content creation process with DoryAI
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
@@ -220,7 +220,7 @@ export const SocialProof = () => {
               Real Results from Real Creators
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover how Clippo is helping creators achieve extraordinary
+              Discover how DoryAI is helping creators achieve extraordinary
               results
             </p>
           </div>
@@ -299,7 +299,7 @@ export const SocialProof = () => {
                       Creator Success Story #{video}
                     </div>
                     <div className="text-xs opacity-90">
-                      How Clippo changed everything
+                      How DoryAI changed everything
                     </div>
                   </div>
                 </div>

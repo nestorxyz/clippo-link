@@ -14,7 +14,7 @@ const Header = ({ session }: HeaderProps) => {
         className="flex items-center justify-center gap-2 mr-auto"
       >
         <LinkIcon className="h-6 w-6 text-primary" />
-        <span className="font-semibold tracking-tight text-2xl">Clippo</span>
+        <span className="font-semibold tracking-tight text-2xl">DoryAI</span>
       </Link>
       <div className="flex items-center gap-2">
         <Link href={session ? '/account' : '/auth'}>
