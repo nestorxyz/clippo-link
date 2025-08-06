@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import {
   ArrowRight,
   Link2,
@@ -119,17 +120,18 @@ export const FinalCTA = () => {
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <Button
-            size="lg"
-            className="group text-xl px-12 py-6 rounded-2xl bg-white text-indigo-600 hover:bg-yellow-300 hover:text-indigo-700 shadow-2xl hover:shadow-white/25 transition-all duration-300 border-2 border-white/20 backdrop-blur-sm font-bold animate-breathe"
-            onClick={() => window.open('https://app.clippo.ai', '_blank')}
-          >
-            <span className="mr-3">Try DoryAI Now</span>
-            <ArrowRight
-              size={24}
-              className="transition-transform duration-300 group-hover:translate-x-2"
-            />
-          </Button>
+          <Link href="/auth">
+            <Button
+              size="lg"
+              className="group text-xl px-12 py-6 rounded-2xl bg-white text-indigo-600 hover:bg-yellow-300 hover:text-indigo-700 shadow-2xl hover:shadow-white/25 transition-all duration-300 border-2 border-white/20 backdrop-blur-sm font-bold animate-breathe"
+            >
+              <span className="mr-3">Try DoryAI Now</span>
+              <ArrowRight
+                size={24}
+                className="transition-transform duration-300 group-hover:translate-x-2"
+              />
+            </Button>
+          </Link>
         </div>
 
         {/* Trust Indicators */}
@@ -174,8 +176,8 @@ export const FinalCTA = () => {
               ))}
             </div>
             <span className="text-sm font-medium">
-              Join <strong className="text-yellow-300">2,847</strong> curious
-              minds this week
+              Join <strong className="text-yellow-300">247</strong> curious
+              minds
             </span>
           </div>
         </div>

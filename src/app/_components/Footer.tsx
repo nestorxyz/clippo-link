@@ -1,9 +1,17 @@
+'use client';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Twitter, Github, Linkedin, Mail, Sparkles, Heart } from 'lucide-react';
 
 export const Footer = () => {
+  const handleNavClick = (href: string) => {
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="bg-slate-50 border-t border-slate-200">
       <div className="container mx-auto px-6 py-16">
@@ -25,15 +33,13 @@ export const Footer = () => {
               </p>
             </div>
 
-            {/* Contact Info */}
-            <div className="space-y-3 mb-6">
+            {/* <div className="space-y-3 mb-6">
               <div className="flex items-center text-slate-600">
                 <Mail className="w-4 h-4 mr-3 text-indigo-500" />
                 <span className="text-sm">hello@clippo.ai</span>
               </div>
             </div>
 
-            {/* Social Media */}
             <div className="flex space-x-4">
               <Link
                 href="https://twitter.com/clippo"
@@ -56,7 +62,7 @@ export const Footer = () => {
               >
                 <Linkedin className="w-5 h-5" />
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Product Links */}
@@ -66,42 +72,34 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  href="/features"
+                <button
+                  onClick={() => handleNavClick('#features')}
                   className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
                 >
                   Features
-                </Link>
+                </button>
               </li>
               <li>
-                <Link
-                  href="/pricing"
-                  className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
-                >
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/examples"
+                <button
+                  onClick={() => handleNavClick('#in-action')}
                   className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
                 >
                   Examples
-                </Link>
+                </button>
               </li>
               <li>
-                <Link
-                  href="/integrations"
+                <button
+                  onClick={() => handleNavClick('#for-you')}
                   className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
                 >
-                  Integrations
-                </Link>
+                  For you
+                </button>
               </li>
             </ul>
           </div>
 
           {/* Resources Links */}
-          <div>
+          {/* <div>
             <h4 className="font-heading text-lg font-semibold text-slate-900 mb-4">
               Resources
             </h4>
@@ -139,10 +137,10 @@ export const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Company & Newsletter */}
-          <div>
+          {/* <div>
             <h4 className="font-heading text-lg font-semibold text-slate-900 mb-4">
               Stay Updated
             </h4>
@@ -173,7 +171,6 @@ export const Footer = () => {
               </li>
             </ul>
 
-            {/* Newsletter Signup */}
             <div>
               <h5 className="font-heading text-base font-semibold text-slate-900 mb-3">
                 Get updates
@@ -195,7 +192,7 @@ export const Footer = () => {
                 </Button>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Trust Indicators */}
@@ -206,8 +203,8 @@ export const Footer = () => {
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                 99.9% Uptime
               </span>
-              <span>SOC 2 Certified</span>
-              <span>GDPR Compliant</span>
+              {/* <span>SOC 2 Certified</span>
+              <span>GDPR Compliant</span> */}
               <span>Privacy-First</span>
             </div>
           </div>
@@ -217,7 +214,7 @@ export const Footer = () => {
         <div className="border-t border-slate-200 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>© 2024 DoryAI AI, Inc.</span>
+              <span>© {new Date().getFullYear()} DoryAI, Inc.</span>
               <span>Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
               <span>for curious minds</span>
@@ -226,22 +223,16 @@ export const Footer = () => {
             {/* Legal Links */}
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <Link
-                href="/privacy"
+                href="/"
                 className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
               >
                 Privacy Policy
               </Link>
               <Link
-                href="/terms"
+                href="/"
                 className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
               >
                 Terms of Service
-              </Link>
-              <Link
-                href="/cookies"
-                className="text-slate-600 hover:text-indigo-600 transition-colors duration-200"
-              >
-                Cookie Policy
               </Link>
             </div>
           </div>
