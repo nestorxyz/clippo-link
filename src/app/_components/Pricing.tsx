@@ -34,7 +34,7 @@ const pricingTiers: PricingTier[] = [
       '5 videos per month',
       'Basic templates',
       '720p export quality',
-      'Clippo watermark',
+      'DoryAI watermark',
       'Community support',
       'AI video generation',
     ],

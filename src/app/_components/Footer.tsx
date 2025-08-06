@@ -16,7 +16,7 @@ export const Footer = () => {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="font-heading text-2xl font-bold text-slate-900">
-                  Clippo
+                  DoryAI
                 </h3>
               </div>
               <p className="text-slate-600 mb-6 leading-relaxed">
@@ -217,7 +217,7 @@ export const Footer = () => {
         <div className="border-t border-slate-200 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>© 2024 Clippo AI, Inc.</span>
+              <span>© 2024 DoryAI AI, Inc.</span>
               <span>Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
               <span>for curious minds</span>

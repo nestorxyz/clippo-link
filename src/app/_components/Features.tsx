@@ -42,13 +42,13 @@ const features: Feature[] = [
   {
     icon: Search,
     title: '🔍 Instant search',
-    description: 'Ask "Show me marketing stuff for LukAI" — Clippo finds it.',
+    description: 'Ask "Show me marketing stuff for LukAI" — DoryAI finds it.',
     tooltip: "I remember everything so you don't have to! 🎯",
   },
   {
     icon: Brain,
     title: '🧩 Context-aware memory',
-    description: 'Clippo remembers the "why" behind each saved link.',
+    description: 'DoryAI remembers the "why" behind each saved link.',
     tooltip: 'I know you saved that for your weekend project! 🔗',
   },
   {
@@ -105,7 +105,7 @@ export const Features = () => {
                       {feature.description}
                     </p>
 
-                    {/* Clippo Tooltip */}
+                    {/* DoryAI Tooltip */}
                     <div
                       className={`absolute -top-2 -right-2 bg-gradient-to-br from-indigo-500 to-purple-600 text-white px-3 py-2 rounded-xl text-sm font-medium shadow-lg transition-all duration-300 ${
                         hoveredFeature === index

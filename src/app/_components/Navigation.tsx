@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -83,7 +84,7 @@ export const Navigation = ({ className }: NavigationProps) => {
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              Clippo
+              DoryAI
             </button>
           </div>
 
@@ -94,12 +95,11 @@ export const Navigation = ({ className }: NavigationProps) => {
 
           {/* Desktop CTA Button */}
           <div className="hidden md:flex items-center">
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-body font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95 rounded-xl px-6"
-              onClick={() => window.open('https://app.clippo.ai', '_blank')}
-            >
-              Try Clippo
-            </Button>
+            <Link href="/auth">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-body font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95 rounded-xl px-6">
+                Try DoryAI
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu */}
@@ -124,7 +124,7 @@ export const Navigation = ({ className }: NavigationProps) => {
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
                       <span className="text-xl font-bold text-slate-900 font-heading">
-                        Clippo
+                        DoryAI
                       </span>
                     </div>
                     <Button
@@ -153,7 +153,7 @@ export const Navigation = ({ className }: NavigationProps) => {
                         setMobileMenuOpen(false);
                       }}
                     >
-                      Try Clippo
+                      Try DoryAI
                     </Button>
                   </div>
                 </div>

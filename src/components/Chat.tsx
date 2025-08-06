@@ -7,7 +7,11 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -16,23 +20,21 @@ interface ChatProps {
   session: Session | null;
   onLinkAdded: () => void;
 }
-const Chat = ({
-  categories,
-  session,
-  onLinkAdded
-}: ChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([{
-    id: crypto.randomUUID(),
-    text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-    sender: 'bot'
-  }]);
+const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: crypto.randomUUID(),
+      text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
+      sender: 'bot',
+    },
+  ]);
   const [input, setInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   }, [messages, isBotTyping]);
   useEffect(() => {
@@ -40,62 +42,78 @@ const Chat = ({
     const loadOrCreateChatSession = async () => {
       setIsBotTyping(true);
       try {
-        const {
-          data: existingSession,
-          error: existingSessionError
-        } = await supabase.from('chat_sessions').select('id').eq('user_id', session.user.id).order('created_at', {
-          ascending: false
-        }).limit(1).maybeSingle();
+        const { data: existingSession, error: existingSessionError } =
+          await supabase
+            .from('chat_sessions')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .order('created_at', {
+              ascending: false,
+            })
+            .limit(1)
+            .maybeSingle();
         if (existingSessionError) throw existingSessionError;
         let currentSessionId: string;
         if (existingSession) {
           currentSessionId = existingSession.id;
           setSessionId(currentSessionId);
-          const {
-            data: messageHistory,
-            error: messageHistoryError
-          } = await supabase.from('chat_messages').select('id, parts, role').eq('session_id', currentSessionId).order('created_at', {
-            ascending: true
-          });
+          const { data: messageHistory, error: messageHistoryError } =
+            await supabase
+              .from('chat_messages')
+              .select('id, parts, role')
+              .eq('session_id', currentSessionId)
+              .order('created_at', {
+                ascending: true,
+              });
           if (messageHistoryError) throw messageHistoryError;
           if (messageHistory && messageHistory.length > 0) {
-            const formattedMessages: Message[] = messageHistory.map((msg: any) => ({
-              id: msg.id,
-              text: Array.isArray(msg.parts) && msg.parts[0]?.text || '',
-              sender: msg.role === 'user' ? 'user' : 'bot'
-            }));
+            const formattedMessages: Message[] = messageHistory.map(
+              (msg: any) => ({
+                id: msg.id,
+                text: (Array.isArray(msg.parts) && msg.parts[0]?.text) || '',
+                sender: msg.role === 'user' ? 'user' : 'bot',
+              })
+            );
             setMessages(formattedMessages);
           } else {
-            setMessages([{
-              id: crypto.randomUUID(),
-              text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-              sender: 'bot'
-            }]);
+            setMessages([
+              {
+                id: crypto.randomUUID(),
+                text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
+                sender: 'bot',
+              },
+            ]);
           }
         } else {
-          const {
-            data: newSession,
-            error: newSessionError
-          } = await supabase.from('chat_sessions').insert({
-            user_id: session.user.id
-          }).select('id').single();
+          const { data: newSession, error: newSessionError } = await supabase
+            .from('chat_sessions')
+            .insert({
+              user_id: session.user.id,
+            })
+            .select('id')
+            .single();
           if (newSessionError) throw newSessionError;
           currentSessionId = newSession.id;
           setSessionId(currentSessionId);
-          setMessages([{
-            id: crypto.randomUUID(),
-            text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-            sender: 'bot'
-          }]);
+          setMessages([
+            {
+              id: crypto.randomUUID(),
+              text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
+              sender: 'bot',
+            },
+          ]);
         }
       } catch (error) {
-        console.error("Error managing chat session:", error);
-        toast.error("Could not start a new chat session.");
-        setMessages(prev => [...prev, {
-          id: crypto.randomUUID(),
-          text: "Sorry, I'm having trouble starting our conversation. Please refresh the page.",
-          sender: 'bot'
-        }]);
+        console.error('Error managing chat session:', error);
+        toast.error('Could not start a new chat session.');
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            text: "Sorry, I'm having trouble starting our conversation. Please refresh the page.",
+            sender: 'bot',
+          },
+        ]);
       } finally {
         setIsBotTyping(false);
       }
@@ -108,23 +126,20 @@ const Chat = ({
     const userMessage: Message = {
       id: crypto.randomUUID(),
       text: input,
-      sender: 'user'
+      sender: 'user',
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
     setInput('');
     setIsBotTyping(true);
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('gemini-chat', {
+      const { data, error } = await supabase.functions.invoke('gemini-chat', {
         body: {
           sessionId,
           message: currentInput,
-          timeZone
-        }
+          timeZone,
+        },
       });
       if (error) {
         throw new Error(`Edge function error: ${error.message}`);
@@ -132,17 +147,22 @@ const Chat = ({
       const botMessage: Message = {
         id: crypto.randomUUID(),
         text: data.reply,
-        sender: 'bot'
+        sender: 'bot',
       };
-      setMessages(prev => [...prev, botMessage]);
-      if (data.functionCalls?.some((fc: any) => fc.function?.name === 'register_link' && fc.function.result?.success)) {
+      setMessages((prev) => [...prev, botMessage]);
+      if (
+        data.functionCalls?.some(
+          (fc: any) =>
+            fc.function?.name === 'register_link' && fc.function.result?.success
+        )
+      ) {
         onLinkAdded();
-        toast.success("Link added successfully!");
+        toast.success('Link added successfully!');
       }
     } catch (error) {
-      console.error("Error calling gemini-chat function:", error);
-      toast.error("An error occurred", {
-        description: "I couldn't process that request. Please try again."
+      console.error('Error calling gemini-chat function:', error);
+      toast.error('An error occurred', {
+        description: "I couldn't process that request. Please try again.",
       });
     } finally {
       setIsBotTyping(false);
@@ -150,34 +170,43 @@ const Chat = ({
   };
   const handleClearChat = async () => {
     if (!sessionId) {
-      toast.info("No active chat session to clear.");
+      toast.info('No active chat session to clear.');
       return;
     }
     setIsBotTyping(true);
     try {
-      const {
-        error
-      } = await supabase.from('chat_messages').delete().eq('session_id', sessionId);
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('session_id', sessionId);
       if (error) throw error;
-      setMessages([{
-        id: crypto.randomUUID(),
-        text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-        sender: 'bot'
-      }]);
-      toast.success("Chat history has been cleared.");
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
+          sender: 'bot',
+        },
+      ]);
+      toast.success('Chat history has been cleared.');
     } catch (error) {
-      console.error("Error clearing chat history:", error);
-      toast.error("Could not clear chat history. Please try again.");
+      console.error('Error clearing chat history:', error);
+      toast.error('Could not clear chat history. Please try again.');
     } finally {
       setIsBotTyping(false);
     }
   };
-  return <div className="flex flex-col h-full">
+  return (
+    <div className="flex flex-col h-full">
       <header className="p-4 flex justify-between items-center border-b py-0">
         <h1 className="font-normal text-base">Chat</h1>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={handleClearChat} disabled={!sessionId || messages.length <= 1 || isBotTyping}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearChat}
+              disabled={!sessionId || messages.length <= 1 || isBotTyping}
+            >
               <RefreshCw className="h-5 w-5" />
               <span className="sr-only">Clear chat history</span>
             </Button>
@@ -188,13 +217,28 @@ const Chat = ({
         </Tooltip>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map(message => <div key={message.id} className={cn("flex animate-message-in", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
-            <div className={cn("max-w-md p-3 rounded-lg", message.sender === 'user' ? 'bg-secondary' : 'bg-card', message.sender === 'bot' ? 'prose' : '')}>
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={cn(
+              'flex animate-message-in',
+              message.sender === 'user' ? 'justify-end' : 'justify-start'
+            )}
+          >
+            <div
+              className={cn(
+                'max-w-md p-3 rounded-lg',
+                message.sender === 'user' ? 'bg-secondary' : 'bg-card',
+                message.sender === 'bot' ? 'prose' : ''
+              )}
+            >
               {message.sender === 'bot' ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                    a: ({ node, ...props }) => (
+                      <a {...props} target="_blank" rel="noopener noreferrer" />
+                    ),
                   }}
                 >
                   {message.text}
@@ -203,8 +247,10 @@ const Chat = ({
                 <p className="text-sm whitespace-pre-wrap">{message.text}</p>
               )}
             </div>
-          </div>)}
-        {isBotTyping && <div className="flex animate-message-in justify-start">
+          </div>
+        ))}
+        {isBotTyping && (
+          <div className="flex animate-message-in justify-start">
             <div className="p-3 rounded-lg bg-card">
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -212,22 +258,36 @@ const Chat = ({
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
               </div>
             </div>
-          </div>}
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
       <div className="p-4 bg-card">
         <form onSubmit={handleSendMessage} className="relative">
-          <Textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Message Clippo..." className="w-full bg-secondary rounded-full py-3 px-5 text-base min-h-[52px] pr-14 resize-none" rows={1} onKeyDown={e => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage(e);
-          }
-        }} />
-          <Button type="submit" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10" disabled={isBotTyping || !input.trim() || !sessionId}>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Message DoryAI..."
+            className="w-full bg-secondary rounded-full py-3 px-5 text-base min-h-[52px] pr-14 resize-none"
+            rows={1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10"
+            disabled={isBotTyping || !input.trim() || !sessionId}
+          >
             <Send className="h-5 w-5" />
           </Button>
         </form>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default Chat;

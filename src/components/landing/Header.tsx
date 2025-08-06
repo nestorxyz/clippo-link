@@ -10,7 +10,7 @@ const Header = () => {
           className="text-lg font-bold flex items-center gap-2 text-foreground"
         >
           <Bookmark className="w-6 h-6 text-primary" />
-          <span>Clippo</span>
+          <span>DoryAI</span>
         </Link>
       </div>
     </header>
