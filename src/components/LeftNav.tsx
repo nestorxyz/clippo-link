@@ -30,10 +30,10 @@ const LeftNav: React.FC<LeftNavProps> = ({
         <div className="flex-1 overflow-y-auto py-2">
           {categories.map((category) => (
             <div key={category.id} className="mb-2">
-              <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+              <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-[#646363]">
                 {category.name}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 px-1">
                 {category.subCategories.map((sub) => {
                   const isSelected = selectedSubCategoryId === sub.id;
                   return (
@@ -44,13 +44,13 @@ const LeftNav: React.FC<LeftNavProps> = ({
                         onSelectSubCategory(sub.id, category.id);
                       }}
                       className={cn(
-                        'w-full text-left px-3 py-1.5 text-sm rounded-md flex items-center justify-between',
-                        'hover:bg-accent hover:text-accent-foreground',
-                        isSelected && 'bg-accent text-accent-foreground'
+                        'w-full text-left px-3 py-1.5 text-[#A5A5A5] text-sm rounded-md flex items-center justify-between',
+                        'hover:bg-[#3A3A3A] hover:text-white',
+                        isSelected && 'bg-[#3A3A3A] text-white'
                       )}
                     >
                       <span className="truncate">{sub.name}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="ml-2 text-xs text-[#A5A5A5]">
                         {sub.links.length}
                       </span>
                     </button>
