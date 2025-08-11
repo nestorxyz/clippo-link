@@ -5,7 +5,8 @@ import { retired-provider } from '@/integrations/retired-provider/client';
 import { Session } from '@retired-provider/retired-provider-js';
 import { Loader2 } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+import LeftNav from '@/components/LeftNav';
+import RightPreviewSidebar from '@/components/RightPreviewSidebar';
 import Chat from '@/components/Chat';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle } from 'lucide-react';
@@ -25,7 +26,12 @@ export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<
+    string | null
+  >(null);
   const {
     data: categories = [],
     isLoading: isLoadingCategories,
@@ -155,11 +161,15 @@ export default function DashboardPage() {
 
       <div className="flex h-screen bg-background">
         {!isMobile && (
-          <Sidebar
+          <LeftNav
             categories={categories}
-            isCollapsed={isSidebarCollapsed}
-            toggleSidebar={() => setSidebarCollapsed(!isSidebarCollapsed)}
-            session={session}
+            selectedCategoryId={selectedCategoryId}
+            selectedSubCategoryId={selectedSubCategoryId}
+            onSelectCategory={(id) => setSelectedCategoryId(id)}
+            onSelectSubCategory={(subId, catId) => {
+              setSelectedSubCategoryId(subId);
+              setSelectedCategoryId(catId);
+            }}
           />
         )}
 
@@ -169,8 +179,6 @@ export default function DashboardPage() {
             !isMobile && 'transition-all duration-300'
           )}
         >
-          {!isMobile && <Header session={session} />}
-
           <main className="flex-1 overflow-hidden">
             {activeView === 'chat' && (
               <Chat
@@ -189,6 +197,13 @@ export default function DashboardPage() {
             />
           )}
         </div>
+
+        {!isMobile && (
+          <RightPreviewSidebar
+            categories={categories}
+            selectedSubCategoryId={selectedSubCategoryId}
+          />
+        )}
       </div>
     </>
   );

@@ -198,7 +198,6 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   return (
     <div className="flex flex-col h-full">
       <header className="p-4 flex justify-between items-center border-b py-0">
-        <h1 className="font-normal text-base">Chat</h1>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
