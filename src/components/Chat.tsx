@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, RefreshCw } from 'lucide-react';
+import { Send, RefreshCw, Plus, Mic } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,11 +32,22 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const MAX_TEXTAREA_HEIGHT = 200;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
   }, [messages, isBotTyping]);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = '0px';
+    const nextHeight = Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY =
+      el.scrollHeight > MAX_TEXTAREA_HEIGHT ? 'auto' : 'hidden';
+  }, [input]);
   useEffect(() => {
     if (!session?.user.id) return;
     const loadOrCreateChatSession = async () => {
@@ -264,7 +275,7 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
             ))}
             {isBotTyping && (
               <div className="group">
-                <div className="rounded-lg border p-4 bg-[#1A1A1A] border-[#1D1D1D]">
+                <div className="rounded-lg p-4">
                   <div className="flex items-center gap-1">
                     <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                     <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -277,30 +288,36 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
           </div>
         </div>
       </div>
-      <div>
-        <div className="mx-auto w-full max-w-[720px] px-4 py-4 pt-2">
+      <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
+        <div className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+        <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3">
           <form onSubmit={handleSendMessage} className="relative">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message DoryAI..."
-              className="w-full bg-[#1A1A1A] border-[#1D1D1D] rounded-xl py-3 px-4 text-base min-h-[52px] pr-14 resize-none"
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9"
-              disabled={isBotTyping || !input.trim() || !sessionId}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
+            <div className="relative rounded-[28px] md:rounded-full border border-[#1D1D1D] bg-[#1A1A1A] shadow-sm">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Talk with DoryAI"
+                className="w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base min-h-[52px] max-h-[200px] pl-12 pr-28 py-3 resize-none"
+                rows={1}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+              />
+              <div className="absolute inset-y-0 right-2 flex items-center gap-1">
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="h-9 w-9 rounded-full"
+                  disabled={isBotTyping || !input.trim() || !sessionId}
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
           </form>
         </div>
       </div>
