@@ -340,21 +340,10 @@ const Sidebar = ({
   }, []);
 
   return (
-    <div className={cn('h-full w-full')}>
+    <div className={cn('h-full w-[252px] flex-shrink-0')}>
       <div className="flex flex-col h-full">
         <div className="p-4 flex items-center justify-between py-0 border-b">
-          {!isCollapsed && (
-            <h2 className="tracking-tight font-normal text-base">Links</h2>
-          )}
-          {!isMobile && (
-            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-              {isCollapsed ? (
-                <PanelLeftOpen className="h-5 w-5" />
-              ) : (
-                <PanelLeftClose className="h-5 w-5" />
-              )}
-            </Button>
-          )}
+          <h2 className="tracking-tight font-normal text-base">Links</h2>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 py-4">
