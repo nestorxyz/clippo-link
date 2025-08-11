@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { retired-provider } from '@/integrations/retired-provider/client';
+import { env } from '@/env';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 interface PhoneStatus {
   hasPhone: boolean;
