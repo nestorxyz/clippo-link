@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Session } from '@supabase/supabase-js';
@@ -84,8 +85,8 @@ const LeftNav: React.FC<LeftNavProps> = ({
   return (
     <aside className="h-screen w-[252px] flex-shrink-0 bg-background">
       <div className="flex flex-col h-full">
-        <div className="px-4 h-12 shrink-0 flex items-center">
-          <h2 className="text-sm font-medium tracking-tight">DoryAI</h2>
+        <div className="px-4 mb-4 pt-4 shrink-0 flex items-center">
+          <Image src="/isologo.png" width={130} height={24} alt="DoryAI" />
         </div>
 
         <div className="px-2 pb-2">
