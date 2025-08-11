@@ -173,6 +173,13 @@ export default function DashboardPage() {
           />
         )}
 
+        {!isMobile && (
+          <RightPreviewSidebar
+            categories={categories}
+            selectedSubCategoryId={selectedSubCategoryId}
+          />
+        )}
+
         <div
           className={cn(
             'flex-1 flex flex-col',
@@ -197,13 +204,6 @@ export default function DashboardPage() {
             />
           )}
         </div>
-
-        {!isMobile && (
-          <RightPreviewSidebar
-            categories={categories}
-            selectedSubCategoryId={selectedSubCategoryId}
-          />
-        )}
       </div>
     </>
   );
