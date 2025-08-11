@@ -67,13 +67,18 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
               });
           if (messageHistoryError) throw messageHistoryError;
           if (messageHistory && messageHistory.length > 0) {
-            const formattedMessages: Message[] = messageHistory.map(
-              (msg: any) => ({
-                id: msg.id,
-                text: (Array.isArray(msg.parts) && msg.parts[0]?.text) || '',
-                sender: msg.role === 'user' ? 'user' : 'bot',
-              })
-            );
+            type RawMessage = {
+              id: string;
+              parts: Array<{ text?: string }>;
+              role: string;
+            };
+            const formattedMessages: Message[] = (
+              messageHistory as RawMessage[]
+            ).map((msg) => ({
+              id: msg.id,
+              text: (Array.isArray(msg.parts) && msg.parts[0]?.text) || '',
+              sender: msg.role === 'user' ? 'user' : 'bot',
+            }));
             setMessages(formattedMessages);
           } else {
             setMessages([
@@ -151,9 +156,13 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
       };
       setMessages((prev) => [...prev, botMessage]);
       if (
-        data.functionCalls?.some(
-          (fc: any) =>
-            fc.function?.name === 'register_link' && fc.function.result?.success
+        Array.isArray(data?.functionCalls) &&
+        data.functionCalls.some(
+          (fc: {
+            function?: { name?: string; result?: { success?: boolean } };
+          }) =>
+            fc.function?.name === 'register_link' &&
+            fc.function?.result?.success
         )
       ) {
         onLinkAdded();
@@ -197,94 +206,103 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   };
   return (
     <div className="flex flex-col h-full">
-      <header className="p-4 flex justify-between items-center border-b py-0">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClearChat}
-              disabled={!sessionId || messages.length <= 1 || isBotTyping}
-            >
-              <RefreshCw className="h-5 w-5" />
-              <span className="sr-only">Clear chat history</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Clear chat history</p>
-          </TooltipContent>
-        </Tooltip>
+      <header className="px-4 h-12 flex items-center shrink-0 border-b border-[#1D1D1D]">
+        <div className="mx-auto w-full max-w-[720px] flex justify-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearChat}
+                disabled={!sessionId || messages.length <= 1 || isBotTyping}
+              >
+                <RefreshCw className="h-5 w-5" />
+                <span className="sr-only">Clear chat history</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Clear chat history</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </header>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              'flex animate-message-in',
-              message.sender === 'user' ? 'justify-end' : 'justify-start'
-            )}
-          >
-            <div
-              className={cn(
-                'max-w-md p-3 rounded-lg',
-                message.sender === 'user' ? 'bg-secondary' : 'bg-card',
-                message.sender === 'bot' ? 'prose' : ''
-              )}
-            >
-              {message.sender === 'bot' ? (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    a: ({ node, ...props }) => (
-                      <a {...props} target="_blank" rel="noopener noreferrer" />
-                    ),
-                  }}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[720px] px-4 py-6">
+          <div className="space-y-6">
+            {messages.map((message) => (
+              <div key={message.id} className="animate-message-in group">
+                <div
+                  className={cn(
+                    'rounded-lg border p-4',
+                    message.sender === 'user'
+                      ? 'bg-[#141414] border-[#1D1D1D]'
+                      : 'bg-transparent border-0'
+                  )}
                 >
-                  {message.text}
-                </ReactMarkdown>
-              ) : (
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-              )}
-            </div>
-          </div>
-        ))}
-        {isBotTyping && (
-          <div className="flex animate-message-in justify-start">
-            <div className="p-3 rounded-lg bg-card">
-              <div className="flex items-center gap-1">
-                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+                  {message.sender === 'bot' ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: ({ node, ...props }) => (
+                          <a
+                            {...props}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          />
+                        ),
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.text}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
+            {isBotTyping && (
+              <div className="group">
+                <div className="rounded-lg border p-4 bg-[#1A1A1A] border-[#1D1D1D]">
+                  <div className="flex items-center gap-1">
+                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
-        )}
-        <div ref={messagesEndRef} />
+        </div>
       </div>
-      <div className="p-4 bg-card">
-        <form onSubmit={handleSendMessage} className="relative">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Message DoryAI..."
-            className="w-full bg-secondary rounded-full py-3 px-5 text-base min-h-[52px] pr-14 resize-none"
-            rows={1}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10"
-            disabled={isBotTyping || !input.trim() || !sessionId}
-          >
-            <Send className="h-5 w-5" />
-          </Button>
-        </form>
+      <div>
+        <div className="mx-auto w-full max-w-[720px] px-4 py-4 pt-2">
+          <form onSubmit={handleSendMessage} className="relative">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message DoryAI..."
+              className="w-full bg-[#1A1A1A] border-[#1D1D1D] rounded-xl py-3 px-4 text-base min-h-[52px] pr-14 resize-none"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9"
+              disabled={isBotTyping || !input.trim() || !sessionId}
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );
