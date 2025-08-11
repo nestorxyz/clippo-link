@@ -95,6 +95,8 @@ const Sidebar = ({
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
 
+  console.log('categories', categories);
+
   // Set up sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -368,7 +370,6 @@ const Sidebar = ({
                 key={category.id}
                 category={category}
                 isOpen={isCategoryOpen(category.id)}
-                isCollapsed={isCollapsed}
                 isDragging={isDragging}
                 deletingLinkId={deletingLinkId}
                 onToggle={() => toggleCategory(category.id)}

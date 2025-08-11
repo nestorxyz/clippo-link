@@ -22,7 +22,6 @@ const CategoryIcon = ({ name }: { name: string }) => {
 interface DroppableCategoryProps {
   category: Category;
   isOpen: boolean;
-  isCollapsed: boolean;
   isDragging?: boolean;
   deletingLinkId?: string | null;
   onToggle: () => void;
@@ -32,7 +31,6 @@ interface DroppableCategoryProps {
 const DroppableCategory: React.FC<DroppableCategoryProps> = ({
   category,
   isOpen,
-  isCollapsed,
   isDragging = false,
   deletingLinkId,
   onToggle,
@@ -59,20 +57,18 @@ const DroppableCategory: React.FC<DroppableCategoryProps> = ({
       >
         <button onClick={onToggle} className="flex items-center gap-2 flex-1">
           <CategoryIcon name={category.name} />
-          {!isCollapsed && <span className="font-medium">{category.name}</span>}
+          <span className="font-medium">{category.name}</span>
         </button>
-        {!isCollapsed && (
-          <ChevronRight
-            className={cn(
-              'h-4 w-4 transition-transform duration-200',
-              isOpen && 'rotate-90'
-            )}
-          />
-        )}
+        <ChevronRight
+          className={cn(
+            'h-4 w-4 transition-transform duration-200',
+            isOpen && 'rotate-90'
+          )}
+        />
       </div>
 
       {/* Subcategories */}
-      {isOpen && !isCollapsed && (
+      {isOpen && (
         <div className="pl-6 space-y-1 py-1">
           {category.subCategories.map((sub) => (
             <DroppableSubCategory
