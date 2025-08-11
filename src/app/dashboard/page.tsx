@@ -170,6 +170,7 @@ export default function DashboardPage() {
               setSelectedSubCategoryId(subId);
               setSelectedCategoryId(catId);
             }}
+            session={session}
           />
         )}
 
