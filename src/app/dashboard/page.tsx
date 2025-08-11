@@ -159,7 +159,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen">
         {!isMobile && (
           <LeftNav
             categories={categories}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
         <div
           className={cn(
-            'flex-1 flex flex-col',
+            'flex-1 flex flex-col bg-[#111111] border border-[#1D1D1D] m-2 rounded-sm overflow-hidden',
             !isMobile && 'transition-all duration-300'
           )}
         >
