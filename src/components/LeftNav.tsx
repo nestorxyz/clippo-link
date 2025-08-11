@@ -7,7 +7,10 @@ interface LeftNavProps {
   selectedCategoryId: string | null;
   selectedSubCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
-  onSelectSubCategory: (subCategoryId: string | null, categoryId: string | null) => void;
+  onSelectSubCategory: (
+    subCategoryId: string | null,
+    categoryId: string | null
+  ) => void;
 }
 
 const LeftNav: React.FC<LeftNavProps> = ({
@@ -18,9 +21,9 @@ const LeftNav: React.FC<LeftNavProps> = ({
   onSelectSubCategory,
 }) => {
   return (
-    <aside className="h-screen w-[252px] flex-shrink-0 border-r bg-background">
+    <aside className="h-screen w-[252px] flex-shrink-0 bg-background">
       <div className="flex flex-col h-full">
-        <div className="px-4 h-12 shrink-0 flex items-center border-b">
+        <div className="px-4 h-12 shrink-0 flex items-center">
           <h2 className="text-sm font-medium tracking-tight">DoryAI</h2>
         </div>
 
@@ -63,5 +66,3 @@ const LeftNav: React.FC<LeftNavProps> = ({
 };
 
 export default LeftNav;
-
-
