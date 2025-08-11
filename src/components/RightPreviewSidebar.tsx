@@ -41,9 +41,6 @@ const RightPreviewSidebar: React.FC<RightPreviewSidebarProps> = ({
   return (
     <aside className="h-screen w-[360px] flex-shrink-0 bg-background">
       <div className="flex flex-col h-full">
-        <div className="px-4 h-12 shrink-0 flex items-center">
-          <h2 className="text-sm font-medium tracking-tight">Previews</h2>
-        </div>
         <div className="flex-1 overflow-y-auto p-3">
           <div className="grid grid-cols-2 gap-3">
             {links.map((link) => (
