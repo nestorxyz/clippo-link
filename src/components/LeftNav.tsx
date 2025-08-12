@@ -160,16 +160,17 @@ const LeftNav: React.FC<LeftNavProps> = ({
               </div>
               <DropdownMenuSeparator className="bg-[#2A2A2A]" />
               <DropdownMenuItem
-                asChild
+                onClick={() => {
+                  try {
+                    window.dispatchEvent(new CustomEvent('open-settings'));
+                  } catch (e) {
+                    console.error('Failed to open settings modal', e);
+                  }
+                }}
                 className="cursor-pointer focus:bg-[#2A2A2A]"
               >
-                <Link
-                  href="/account"
-                  className="flex items-center gap-2 w-full"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
+                <Settings className="h-4 w-4 mr-2" />
+                <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleSignOut}

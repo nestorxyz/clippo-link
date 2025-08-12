@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import BottomNavbar from '@/components/BottomNavbar';
 import Header from '@/components/Header';
+import SettingsModal from '@/components/SettingsModal';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 
@@ -47,6 +48,7 @@ export default function DashboardPage() {
     refresh: refreshPhoneStatus,
   } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -61,6 +63,15 @@ export default function DashboardPage() {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const open = () => setShowSettings(true);
+    const closeOnRoute = () => setShowSettings(false);
+    window.addEventListener('open-settings', open as EventListener);
+    return () => {
+      window.removeEventListener('open-settings', open as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -148,6 +159,11 @@ export default function DashboardPage() {
 
   return (
     <>
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        session={session}
+      />
       {showPhoneVerification && (
         <PhoneVerification
           isOpen={showPhoneVerification}
