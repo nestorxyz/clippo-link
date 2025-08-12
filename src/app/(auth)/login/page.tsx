@@ -52,6 +52,46 @@ export default function AuthPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showElements, setShowElements] = useState(false);
+  const [elementPositions, setElementPositions] = useState<
+    Array<{ left: number; top: number; fromSide: number }>
+  >([]);
+
+  // Generate random positions for floating elements
+  useEffect(() => {
+    const generateRandomPositions = () => {
+      return floatingElements.map(() => {
+        const fromSide = Math.floor(Math.random() * 4); // 0: left-top, 1: right-top, 2: right-bottom, 3: left-bottom
+
+        // Define safe zones to avoid the center content area
+        // Center area is roughly 30% width and 50% height of the screen
+        const centerLeft = 15; // Start of center area (35% from left)
+        const centerRight = 65; // End of center area (65% from left)
+        const centerTop = 25; // Start of center area (25% from top)
+        const centerBottom = 75; // End of center area (75% from top)
+
+        let left, top;
+
+        // Generate position avoiding the center area
+        do {
+          left = Math.random() * 80 + 10; // 10% to 90% from left
+          top = Math.random() * 70 + 15; // 15% to 85% from top
+        } while (
+          left > centerLeft &&
+          left < centerRight &&
+          top > centerTop &&
+          top < centerBottom
+        );
+
+        return {
+          left,
+          top,
+          fromSide,
+        };
+      });
+    };
+
+    setElementPositions(generateRandomPositions());
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -100,25 +140,39 @@ export default function AuthPage() {
       <div className="absolute inset-0 pointer-events-none">
         {floatingElements.map((element, index) => {
           const Icon = element.icon;
+          const position = elementPositions[index];
+
+          if (!position) return null; // Don't render until positions are generated
+
+          // Define the starting position based on fromSide
+          const getStartTransform = (fromSide: number) => {
+            switch (fromSide) {
+              case 0:
+                return '-translate-x-full -translate-y-full'; // from top-left
+              case 1:
+                return 'translate-x-full -translate-y-full'; // from top-right
+              case 2:
+                return 'translate-x-full translate-y-full'; // from bottom-right
+              case 3:
+                return '-translate-x-full translate-y-full'; // from bottom-left
+              default:
+                return '-translate-x-full -translate-y-full';
+            }
+          };
+
           return (
             <div
               key={index}
               className={`absolute transition-all duration-[2000ms] ease-out ${
                 showElements
                   ? `opacity-100 transform translate-x-0 translate-y-0`
-                  : `opacity-0 transform ${
-                      index % 4 === 0
-                        ? '-translate-x-full -translate-y-full'
-                        : index % 4 === 1
-                        ? 'translate-x-full -translate-y-full'
-                        : index % 4 === 2
-                        ? 'translate-x-full translate-y-full'
-                        : '-translate-x-full translate-y-full'
-                    }`
+                  : `opacity-0 transform ${getStartTransform(
+                      position.fromSide
+                    )}`
               }`}
               style={{
-                left: `${10 + ((index * 7) % 80)}%`,
-                top: `${15 + ((index * 11) % 70)}%`,
+                left: `${position.left}%`,
+                top: `${position.top}%`,
                 transitionDelay: `${element.delay}s`,
                 animation: showElements
                   ? `float-${index % 3} 6s ease-in-out infinite ${
@@ -128,7 +182,7 @@ export default function AuthPage() {
               }}
             >
               <div
-                className={`${element.color} rounded-xl p-3 shadow-lg bg-opacity-80 border border-white/10`}
+                className={`${element.color} rounded-xl p-3 shadow-lg backdrop-blur-sm bg-opacity-80 border border-white/10`}
               >
                 <div className="flex items-center gap-2 text-white text-sm font-medium">
                   <Icon className="w-4 h-4" />
@@ -152,7 +206,7 @@ export default function AuthPage() {
           </Link>
         </header>
 
-        <main className="w-full max-w-md mx-auto backdrop-blur-sm bg-background/80 rounded-2xl p-8 border border-border/50 shadow-2xl">
+        <main className="w-full max-w-md mx-auto p-8">
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
               Organize your digital life
