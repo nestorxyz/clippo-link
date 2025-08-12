@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo, useDeferredValue } from 'react';
 import { Send, RefreshCw, Plus, Mic } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,64 @@ interface ChatProps {
   session: Session | null;
   onLinkAdded: () => void;
 }
+
+// Memoized list to avoid re-rendering the whole chat on each keystroke
+const MessageList = memo(
+  ({
+    messages,
+    isBotTyping,
+    messagesEndRef,
+  }: {
+    messages: Message[];
+    isBotTyping: boolean;
+    messagesEndRef: React.RefObject<HTMLDivElement>;
+  }) => {
+    return (
+      <div className="space-y-6">
+        {messages.map((message) => (
+          <div key={message.id} className="animate-message-in group">
+            <div
+              className={cn(
+                'rounded-lg border p-4',
+                message.sender === 'user'
+                  ? 'bg-[#141414] border-[#1D1D1D]'
+                  : 'bg-transparent border-0'
+              )}
+            >
+              {message.sender === 'bot' ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ node, ...props }) => (
+                      <a {...props} target="_blank" rel="noopener noreferrer" />
+                    ),
+                  }}
+                >
+                  {message.text}
+                </ReactMarkdown>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+              )}
+            </div>
+          </div>
+        ))}
+        {isBotTyping && (
+          <div className="group">
+            <div className="rounded-lg p-4">
+              <div className="flex items-center gap-1">
+                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+    );
+  }
+);
+
 const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -34,6 +92,8 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const MAX_TEXTAREA_HEIGHT = 200;
+  // Defer heavy message list rendering while the user is typing
+  const deferredMessages = useDeferredValue(messages);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
@@ -231,53 +291,11 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
       </header>
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[720px] px-4 py-6">
-          <div className="space-y-6">
-            {messages.map((message) => (
-              <div key={message.id} className="animate-message-in group">
-                <div
-                  className={cn(
-                    'rounded-lg border p-4',
-                    message.sender === 'user'
-                      ? 'bg-[#141414] border-[#1D1D1D]'
-                      : 'bg-transparent border-0'
-                  )}
-                >
-                  {message.sender === 'bot' ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        a: ({ node, ...props }) => (
-                          <a
-                            {...props}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />
-                        ),
-                      }}
-                    >
-                      {message.text}
-                    </ReactMarkdown>
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.text}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-            {isBotTyping && (
-              <div className="group">
-                <div className="rounded-lg p-4">
-                  <div className="flex items-center gap-1">
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+          <MessageList
+            messages={deferredMessages}
+            isBotTyping={isBotTyping}
+            messagesEndRef={messagesEndRef}
+          />
         </div>
       </div>
       <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
