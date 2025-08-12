@@ -63,25 +63,43 @@ export default function AuthPage() {
       return floatingElements.map(() => {
         const fromSide = Math.floor(Math.random() * 4); // 0: left-top, 1: right-top, 2: right-bottom, 3: left-bottom
 
-        // Define safe zones to avoid the center content area
-        // Center area is roughly 30% width and 50% height of the screen
-        const centerLeft = 15; // Start of center area (35% from left)
-        const centerRight = 65; // End of center area (65% from left)
-        const centerTop = 25; // Start of center area (25% from top)
-        const centerBottom = 75; // End of center area (75% from top)
+        // Check if we're on mobile (screen width < 768px)
+        const isMobile = window.innerWidth < 768;
 
         let left, top;
 
-        // Generate position avoiding the center area
-        do {
+        if (isMobile) {
+          // On mobile: only show elements at top and bottom
+          const isTopArea = Math.random() > 0.5; // Randomly choose top or bottom
+
+          if (isTopArea) {
+            // Top area: 10% to 20% from top
+            top = Math.random() * 10 + 5; // 5% to 15% from top
+          } else {
+            // Bottom area: 80% to 90% from top
+            top = Math.random() * 10 + 80; // 80% to 90% from top
+          }
+
+          // Horizontal position: full width with small margins
           left = Math.random() * 80 + 10; // 10% to 90% from left
-          top = Math.random() * 70 + 15; // 15% to 85% from top
-        } while (
-          left > centerLeft &&
-          left < centerRight &&
-          top > centerTop &&
-          top < centerBottom
-        );
+        } else {
+          // Desktop: use the original logic with center safe zone
+          const centerLeft = 15; // Start of center area
+          const centerRight = 65; // End of center area
+          const centerTop = 25; // Start of center area
+          const centerBottom = 75; // End of center area
+
+          // Generate position avoiding the center area
+          do {
+            left = Math.random() * 80 + 10; // 10% to 90% from left
+            top = Math.random() * 70 + 15; // 15% to 85% from top
+          } while (
+            left > centerLeft &&
+            left < centerRight &&
+            top > centerTop &&
+            top < centerBottom
+          );
+        }
 
         return {
           left,
@@ -211,7 +229,7 @@ export default function AuthPage() {
                 className="mx-auto"
               />
             </Link>
-            <h1 className="text-3xl sm:text-5xl text-[#AFAFAF] font-bold text-foreground tracking-tight mb-4">
+            <h1 className="text-4xl sm:text-5xl text-[#AFAFAF] font-bold text-foreground tracking-tight mb-4">
               save, tag, and organize links{' '}
               <span className="text-[#EBEBEB]">effortlessly</span>
             </h1>
