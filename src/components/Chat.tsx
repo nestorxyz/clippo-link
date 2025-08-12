@@ -39,15 +39,7 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
       behavior: 'smooth',
     });
   }, [messages, isBotTyping]);
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = '0px';
-    const nextHeight = Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT);
-    el.style.height = `${nextHeight}px`;
-    el.style.overflowY =
-      el.scrollHeight > MAX_TEXTAREA_HEIGHT ? 'auto' : 'hidden';
-  }, [input]);
+
   useEffect(() => {
     if (!session?.user.id) return;
     const loadOrCreateChatSession = async () => {

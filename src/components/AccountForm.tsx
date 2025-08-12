@@ -88,15 +88,6 @@ export const AccountForm = ({
 
   return (
     <div className="space-y-6">
-      <AvatarUploader
-        uid={session.user.id}
-        url={avatarUrl}
-        size={150}
-        onUpload={(url) => {
-          setAvatarUrl(url);
-          updateProfile(url);
-        }}
-      />
       <form onSubmit={handleFormSubmit} className="space-y-6">
         <div>
           <Label htmlFor="email">Email</Label>

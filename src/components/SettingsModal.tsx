@@ -38,8 +38,27 @@ export default function SettingsModal({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { phoneStatus, refresh: refreshPhoneStatus } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   const email = session.user.email ?? '';
+  const displayName = useMemo(() => {
+    return (
+      fullName ||
+      (session.user.user_metadata?.full_name as string | undefined) ||
+      (session.user.user_metadata?.name as string | undefined) ||
+      ''
+    );
+  }, [fullName, session.user.user_metadata]);
+
+  const displayAvatarUrl = useMemo(() => {
+    return (
+      avatarUrl ||
+      (session.user.user_metadata?.avatar_url as string | undefined) ||
+      (session.user.user_metadata?.picture as string | undefined) ||
+      null
+    );
+  }, [avatarUrl, session.user.user_metadata]);
+
   const avatarFallback = useMemo(
     () => (email ? email.charAt(0).toUpperCase() : 'U'),
     [email]
@@ -81,7 +100,7 @@ export default function SettingsModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed left-0 top-0 z-modal flex h-full w-full bg-background z-50"
+          className="fixed left-0 top-0 z-modal flex h-full w-full bg-[#0F0F0F] z-50"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
@@ -89,16 +108,12 @@ export default function SettingsModal({
         >
           {/* Sidebar */}
           <aside
-            className="hidden-scrollbar h-full flex-1 overflow-y-scroll bg-gray-75 px-6 transition-colors dark:bg-gray-900"
+            className="hidden-scrollbar h-full flex-1 overflow-y-scroll bg-gray-75 px-6 transition-colors"
             style={{
               flexBasis: '320px',
             }}
           >
             <div className="ml-auto flex w-48 flex-col py-12">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </div>
               <nav className="space-y-6 text-sm">
                 <div>
                   <div className="px-2 text-[11px] uppercase tracking-wider text-[#646363] mb-2">
@@ -158,40 +173,51 @@ export default function SettingsModal({
             </span>
           </div>
           {/* Content */}
-          <div className="hidden-scrollbar relative h-full flex-1 overflow-y-scroll transition-colors dark:bg-gray-870">
+          <div
+            className="hidden-scrollbar relative h-full flex-1 overflow-y-scroll transition-colors"
+            style={{
+              flexBasis: '888px',
+            }}
+          >
             {/* Close with ESC label */}
             <div className="flex min-h-full w-full min-w-[520px] max-w-[900px] flex-col px-12 py-12">
               {/* Title */}
-              <div className="mx-auto max-w-5xl px-8 pt-8">
+              <div className="pt-8">
                 <h1 className="text-xl font-semibold">{title}</h1>
                 <p className="text-sm text-muted-foreground">{subtitle}</p>
               </div>
 
               {/* Header banner */}
-              <div className="mx-auto max-w-5xl px-8 pt-6">
-                <div className="relative rounded-xl border border-[#1D1D1D] bg-gradient-to-b from-[#121212] to-[#0F0F0F] p-6">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-20 w-20 ring-2 ring-primary/30">
-                      {avatarUrl ? (
-                        <AvatarImage src={avatarUrl} alt="avatar" />
-                      ) : (
-                        <AvatarFallback className="text-xl">
-                          <UserIcon className="h-1/2 w-1/2 text-muted-foreground" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <div className="text-xl font-semibold">
-                        {fullName || 'Your Account'}
+              {activeTab === 'profile' && (
+                <div className="pt-6">
+                  <div className="relative rounded-xl border border-[#1D1D1D] bg-gradient-to-b from-[#121212] to-[#0F0F0F] p-6">
+                    <div className="flex items-center gap-6">
+                      <Avatar className="h-20 w-20 ring-2 ring-primary/30">
+                        {displayAvatarUrl && !avatarLoadError ? (
+                          <AvatarImage
+                            src={displayAvatarUrl}
+                            alt="avatar"
+                            onError={() => setAvatarLoadError(true)}
+                          />
+                        ) : (
+                          <AvatarFallback className="text-xl">
+                            <UserIcon className="h-1/2 w-1/2 text-muted-foreground" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div>
+                        <div className="text-xl font-semibold">
+                          {displayName || 'Your Account'}
+                        </div>
+                        <div className="text-sm text-[#A5A5A5]">{email}</div>
                       </div>
-                      <div className="text-sm text-[#A5A5A5]">{email}</div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Body */}
-              <div className="mx-auto max-w-5xl px-8 py-8">
+              <div className="py-8">
                 {activeTab === 'profile' && (
                   <div className="max-w-xl">
                     <AccountForm
