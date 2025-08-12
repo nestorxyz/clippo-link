@@ -157,7 +157,11 @@ export const AuthForm = () => {
       <Button
         variant="outline"
         type="button"
-        className="w-full text-base py-6 flex items-center justify-center"
+        className="w-full text-base bg-[#EBEBEB] hover:bg-[#EBEBEB] hover:text-black text-black py-6 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+        style={{
+          boxShadow:
+            '0 8px 32px rgba(234, 100, 211, 0.3), 0 4px 16px rgba(234, 100, 211, 0.2)',
+        }}
         onClick={signInWithGoogle}
         disabled={!!loading}
       >

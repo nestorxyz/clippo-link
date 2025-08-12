@@ -196,7 +196,7 @@ export default function AuthPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col justify-center items-center h-full text-center p-4 sm:p-8">
+      <div className="relative z-10 -mt-5 flex flex-col justify-center items-center h-full text-center p-4 sm:p-8">
         <main className="w-full max-w-md mx-auto">
           <div className="mb-8">
             <Link
@@ -211,8 +211,9 @@ export default function AuthPage() {
                 className="mx-auto"
               />
             </Link>
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-              save, tag, and organize links effortlessly
+            <h1 className="text-3xl sm:text-5xl text-[#AFAFAF] font-bold text-foreground tracking-tight mb-4">
+              save, tag, and organize links{' '}
+              <span className="text-[#EBEBEB]">effortlessly</span>
             </h1>
           </div>
 
