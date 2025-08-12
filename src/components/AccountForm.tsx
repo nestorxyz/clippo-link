@@ -10,7 +10,17 @@ import { AvatarUploader } from './AvatarUploader';
 import { PhoneVerification } from './PhoneVerification';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 
-export const AccountForm = ({ session }: { session: Session }) => {
+interface AccountFormProps {
+  session: Session;
+  showWhatsAppSection?: boolean;
+  showSignOutButton?: boolean;
+}
+
+export const AccountForm = ({
+  session,
+  showWhatsAppSection = true,
+  showSignOutButton = true,
+}: AccountFormProps) => {
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -109,65 +119,71 @@ export const AccountForm = ({ session }: { session: Session }) => {
         </div>
       </form>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label className="text-base">WhatsApp Integration</Label>
-            <p className="text-sm text-muted-foreground">
-              Connect your WhatsApp to use DoryAI on mobile
-            </p>
+      {showWhatsAppSection && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">WhatsApp Integration</Label>
+              <p className="text-sm text-muted-foreground">
+                Connect your WhatsApp to use DoryAI on mobile
+              </p>
+            </div>
+            {phoneStatus?.phoneVerified ? (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                Connected
+              </div>
+            ) : (
+              <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            )}
           </div>
+
           {phoneStatus?.phoneVerified ? (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle2 className="h-4 w-4" />
-              Connected
+            <div className="rounded-lg border p-4 space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">Phone Number:</span>{' '}
+                {phoneStatus.phoneNumber}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You can now use DoryAI via WhatsApp! Send any message to start.
+              </p>
             </div>
           ) : (
-            <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowPhoneVerification(true)}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Connect WhatsApp
+            </Button>
           )}
         </div>
+      )}
 
-        {phoneStatus?.phoneVerified ? (
-          <div className="rounded-lg border p-4 space-y-2">
-            <p className="text-sm">
-              <span className="font-medium">Phone Number:</span>{' '}
-              {phoneStatus.phoneNumber}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              You can now use DoryAI via WhatsApp! Send any message to start.
-            </p>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setShowPhoneVerification(true)}
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Connect WhatsApp
-          </Button>
-        )}
-      </div>
+      {showSignOutButton && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => retired-provider.auth.signOut()}
+        >
+          Sign Out
+        </Button>
+      )}
 
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => retired-provider.auth.signOut()}
-      >
-        Sign Out
-      </Button>
-
-      <PhoneVerification
-        isOpen={showPhoneVerification}
-        onClose={() => setShowPhoneVerification(false)}
-        onVerified={(phoneNumber) => {
-          setShowPhoneVerification(false);
-          refreshPhoneStatus();
-          toast.success('WhatsApp Connected!', {
-            description: `Your phone number ${phoneNumber} has been linked.`,
-          });
-        }}
-      />
+      {showWhatsAppSection && (
+        <PhoneVerification
+          isOpen={showPhoneVerification}
+          onClose={() => setShowPhoneVerification(false)}
+          onVerified={(phoneNumber) => {
+            setShowPhoneVerification(false);
+            refreshPhoneStatus();
+            toast.success('WhatsApp Connected!', {
+              description: `Your phone number ${phoneNumber} has been linked.`,
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
