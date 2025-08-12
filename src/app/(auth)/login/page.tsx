@@ -24,6 +24,7 @@ import {
 import { redirect } from 'next/navigation';
 import { AuthForm } from '@/components/AuthForm';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Floating elements data with different link types and platforms
 const floatingElements = [
@@ -196,50 +197,47 @@ export default function AuthPage() {
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col justify-center items-center h-full text-center p-4 sm:p-8">
-        <header className="absolute top-8">
-          <Link
-            href="/"
-            className="text-lg font-bold flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-          >
-            <Bookmark className="w-6 h-6" />
-            <span>DoryAI</span>
-          </Link>
-        </header>
-
-        <main className="w-full max-w-md mx-auto p-8">
+        <main className="w-full max-w-md mx-auto">
           <div className="mb-8">
+            <Link
+              href="/"
+              className="text-lg mb-5 font-bold mx-auto flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+            >
+              <Image
+                src="/logo.png"
+                alt="DoryAI Logo"
+                width={48}
+                height={48}
+                className="mx-auto"
+              />
+            </Link>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-              Organize your digital life
+              save, tag, and organize links effortlessly
             </h1>
-            <p className="text-muted-foreground leading-relaxed">
-              DoryAI helps you save, tag, and organize links effortlessly. Use
-              natural language to retrieve anything — from research to side
-              projects.
-            </p>
           </div>
 
           <AuthForm />
-        </main>
 
-        <footer className="absolute bottom-8 text-xs text-muted-foreground max-w-md px-4">
-          <p>
-            By proceeding, you agree to our{' '}
-            <a
-              href="#"
-              className="underline hover:text-foreground transition-colors"
-            >
-              Terms of Service
-            </a>{' '}
-            and acknowledge that our{' '}
-            <a
-              href="#"
-              className="underline hover:text-foreground transition-colors"
-            >
-              Privacy Policy
-            </a>{' '}
-            applies to you.
-          </p>
-        </footer>
+          <footer className="bottom-8 mt-5 text-left text-xs text-[#A5A5A5] max-w-md">
+            <p>
+              By proceeding, you agree to our{' '}
+              <a
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
+                Terms of Service
+              </a>{' '}
+              and acknowledge that our{' '}
+              <a
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </a>{' '}
+              applies to you.
+            </p>
+          </footer>
+        </main>
       </div>
 
       {/* CSS Animations */}
