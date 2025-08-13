@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export const NavigationHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,9 +18,12 @@ export const NavigationHeader = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-semibold text-dark-text font-inter">
-              April
-            </h1>
+            <Image
+              src="/isologo-black.png"
+              alt="DoryAI Logo"
+              width={120}
+              height={40}
+            />
           </div>
 
           {/* Desktop Navigation */}
@@ -45,12 +50,12 @@ export const NavigationHeader = () => {
 
           {/* App Store Button - Desktop */}
           <div className="hidden md:block">
-            <a
-              href="#download"
-              className="inline-flex items-center px-6 py-3 bg-primary text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
+            <Link
+              href="/login"
+              className="inline-flex items-center px-6 py-3 bg-[#EA64D3] text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
             >
-              Download for iOS
-            </a>
+              Login
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

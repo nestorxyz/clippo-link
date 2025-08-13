@@ -9,7 +9,7 @@ interface HeroSectionProps {
 export const HeroSection = ({ className }: HeroSectionProps) => {
   return (
     <section
-      className={`py-20 px-6 relative ${className}`}
+      className={`py-20 px-6 overflow-hidden relative ${className}`}
       style={{
         background: 'linear-gradient(180deg,#d1d1d157,#f8f8f866)',
       }}
@@ -146,35 +146,21 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
         ></div>
       </div>
       <div
-        className="container mx-auto max-w-6xl"
+        className="container mx-auto max-w-6xl mt-[74px]"
         style={{ position: 'relative', zIndex: 1 }}
       >
-        {/* YCombinator Badge */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center px-4 py-2 bg-accent rounded-full text-accent-foreground text-sm font-medium transition-transform hover:scale-105">
-            Y Combinator
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="text-center mb-16">
+          <div></div>
           {/* Hero Headline */}
           <h1 className="text-4xl !z-99 md:text-5xl lg:text-6xl font-bold text-dark-text mb-6 leading-tight">
-            Manage email and calendar while you
+            Never lose a link again.
           </h1>
-
-          {/* Secondary Text */}
-          <div className="text-2xl md:text-3xl lg:text-4xl font-medium text-muted mb-8">
-            Walk Drive Gym
-          </div>
 
           {/* Descriptive Paragraph */}
           <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed mb-12">
-            April is your AI-powered email assistant that works seamlessly
-            across all your devices. Stay productive and maintain inbox zero
-            whether you're commuting, exercising, or on the go. Experience
-            executive-grade voice AI that understands context and learns your
-            communication style.
+            Save links by chatting. Your AI assistant organizes them instantly —
+            with context, tags, and memory.
           </p>
         </div>
 
