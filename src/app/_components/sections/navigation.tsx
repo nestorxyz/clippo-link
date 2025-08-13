@@ -1,0 +1,108 @@
+'use client';
+
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+
+export const NavigationHeader = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  return (
+    <header className="bg-white shadow-sm sticky top-0 z-50">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <h1 className="text-2xl font-semibold text-dark-text font-inter">
+              April
+            </h1>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <a
+              href="#features"
+              className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+            >
+              Pricing
+            </a>
+            <a
+              href="#contact"
+              className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+            >
+              Contact
+            </a>
+          </nav>
+
+          {/* App Store Button - Desktop */}
+          <div className="hidden md:block">
+            <a
+              href="#download"
+              className="inline-flex items-center px-6 py-3 bg-primary text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
+            >
+              Download for iOS
+            </a>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={toggleMobileMenu}
+            className="md:hidden p-2 rounded-md text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 border-t border-light-background">
+            <nav className="flex flex-col space-y-4 pt-4">
+              <a
+                href="#features"
+                className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a
+                href="#pricing"
+                className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              <a
+                href="#contact"
+                className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </a>
+              <a
+                href="#download"
+                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-white text-base font-medium rounded-md hover:bg-blue-600 transition-colors duration-150 ease-in-out mt-4"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Download for iOS
+              </a>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};

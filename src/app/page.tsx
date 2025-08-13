@@ -1,48 +1,26 @@
-import { Navigation } from './_components/Navigation';
-import { Hero } from './_components/Hero';
-import { WhatIsClippo } from './_components/WhatIsClippo';
-import { Features } from './_components/Features';
-import { UseCases } from './_components/UseCases';
-import { ClippoInAction } from './_components/ClippoInAction';
-import { ForPeopleLikeYou } from './_components/ForPeopleLikeYou';
-import { FinalCTA } from './_components/FinalCTA';
-import { Footer } from './_components/Footer';
+import { NavigationHeader } from './_components/sections/navigation';
+import { HeroSection } from './_components/sections/hero';
+import { FeaturesDemo } from './_components/sections/features-demos';
+import { CoreFeatures } from './_components/sections/core-features';
+import { UseCases } from './_components/sections/use-cases';
+import { IOSIntegration } from './_components/sections/ios-intergrations';
+import { CustomerReviews } from './_components/sections/reviews';
+import { PricingSection } from './_components/sections/pricing';
+import { Footer } from './_components/sections/footer';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      <Navigation />
-
+    <div className="bg-white text-black">
+      <NavigationHeader />
       <main>
-        <section id="hero">
-          <Hero />
-        </section>
-
-        <section id="what-is-clippo">
-          <WhatIsClippo />
-        </section>
-
-        <section id="features">
-          <Features />
-        </section>
-
-        <section id="use-cases">
-          <UseCases />
-        </section>
-
-        <section id="in-action">
-          <ClippoInAction />
-        </section>
-
-        <section id="for-you">
-          <ForPeopleLikeYou />
-        </section>
-
-        <section id="final-cta">
-          <FinalCTA />
-        </section>
+        <HeroSection />
+        <FeaturesDemo />
+        <CoreFeatures />
+        <UseCases />
+        <IOSIntegration />
+        <CustomerReviews />
+        <PricingSection />
       </main>
-
       <Footer />
     </div>
   );
