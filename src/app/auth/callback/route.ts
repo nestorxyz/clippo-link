@@ -3,10 +3,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/integrations/retired-provider/server';
 
 export async function GET(request: Request) {
-  console.log('Auth Callback Route Hit:', request.url);
   const { searchParams, origin } = new URL(request.url);
-  const access_token = searchParams.get('access_token');
-  const provider_token = searchParams.get('provider_token');
+  const code = searchParams.get('code');
   // if "next" is in param, use it as the redirect URL
   let next = searchParams.get('next') ?? '/';
   if (!next.startsWith('/')) {
@@ -14,18 +12,9 @@ export async function GET(request: Request) {
     next = '/';
   }
 
-  console.log('Access Token:', access_token);
-  console.log('Provider Token:', provider_token);
-
-  if (access_token && provider_token) {
+  if (code) {
     const retired-provider = await createClient();
-    const { data, error } = await retired-provider.auth.signInWithIdToken({
-      provider: 'google',
-      access_token,
-      token: provider_token,
-    });
-    console.log('retired-provider Auth Data:', data);
-    console.log('retired-provider Auth Error:', error);
+    const { error } = await retired-provider.auth.exchangeCodeForSession(code);
 
     if (!error) {
       const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
