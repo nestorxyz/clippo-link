@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,22 +7,28 @@ import { Session } from '@supabase/supabase-js';
 
 const transformDataToCategories = (data: any[] | null): Category[] => {
   if (!data) return [];
-  return data.map(category => ({
+  return data.map((category) => ({
     id: category.id,
     name: category.name,
     description: category.description,
-    subCategories: category.sub_categories ? category.sub_categories.map((sub: any) => ({
-      id: sub.id,
-      name: sub.name,
-      description: sub.description,
-      links: sub.links ? sub.links.map((link: any) => ({
-        id: link.id,
-        url: link.url,
-        description: link.description,
-        createdAt: link.created_at,
-        tags: link.link_tags ? link.link_tags.map((lt: any) => lt.tags).filter(Boolean) : [],
-      })) : [],
-    })) : [],
+    subCategories: category.sub_categories
+      ? category.sub_categories.map((sub: any) => ({
+          id: sub.id,
+          name: sub.name,
+          description: sub.description,
+          links: sub.links
+            ? sub.links.map((link: any) => ({
+                id: link.id,
+                url: link.url,
+                description: link.description,
+                createdAt: link.created_at,
+                tags: link.link_tags
+                  ? link.link_tags.map((lt: any) => lt.tags).filter(Boolean)
+                  : [],
+              }))
+            : [],
+        }))
+      : [],
   }));
 };
 
@@ -32,7 +39,8 @@ export const useCategories = (session: Session | null) => {
       if (!session?.user.id) return null;
       const { data, error } = await supabase
         .from('categories')
-        .select(`
+        .select(
+          `
           id,
           name,
           description,
@@ -54,12 +62,18 @@ export const useCategories = (session: Session | null) => {
               )
             )
           )
-        `)
+        `
+        )
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: true })
-        .order('created_at', { foreignTable: 'sub_categories', ascending: true })
-        .order('created_at', { foreignTable: 'sub_categories.links', ascending: true });
-
+        .order('created_at', {
+          foreignTable: 'sub_categories',
+          ascending: true,
+        })
+        .order('created_at', {
+          foreignTable: 'sub_categories.links',
+          ascending: true,
+        });
 
       if (error) {
         throw new Error(error.message);
