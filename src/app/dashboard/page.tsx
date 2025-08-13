@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !session) {
-      redirect('/auth');
+      redirect('/login');
     }
   }, [session, loading]);
 

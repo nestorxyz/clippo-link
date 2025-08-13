@@ -31,7 +31,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!loading && !session) {
-      redirect('/auth');
+      redirect('/login');
     }
   }, [session, loading]);
 

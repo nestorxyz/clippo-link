@@ -42,9 +42,9 @@ export const AuthForm = () => {
     setLoading('google');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      /* options: {
-        redirectTo: `${window.location.origin}`,
-      }, */
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+      },
     });
     if (error) {
       toast.error('Error with Google Sign-in', { description: error.message });
