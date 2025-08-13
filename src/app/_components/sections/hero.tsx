@@ -1,6 +1,7 @@
 'use client';
 
-import { Play } from 'lucide-react';
+import { getWhatsappBotLinkWithMessage } from '@/lib/chat';
+import { MessageCircle, Play } from 'lucide-react';
 
 interface HeroSectionProps {
   className?: string;
@@ -146,12 +147,31 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
         ></div>
       </div>
       <div
-        className="container mx-auto max-w-6xl mt-[74px]"
+        className="container mx-auto max-w-6xl mt-[44px]"
         style={{ position: 'relative', zIndex: 1 }}
       >
         {/* Main Content */}
         <div className="text-center mb-16">
-          <div></div>
+          {/* WhatsApp Badge */}
+          <div className="flex justify-center mb-12" aria-hidden="false">
+            <a
+              href={getWhatsappBotLinkWithMessage('hi!! i am new on the app')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 rounded-full border border-black/10 bg-white/75 px-4 py-2 shadow-sm backdrop-blur-md"
+            >
+              <span
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md"
+                style={{ background: '#25D366' }}
+                aria-hidden
+              >
+                <MessageCircle className="h-4 w-4" color="white" />
+              </span>
+              <span className="text-sm font-medium text-gray-700">
+                You can save links on WhatsApp!
+              </span>
+            </a>
+          </div>
           {/* Hero Headline */}
           <h1 className="text-4xl !z-99 md:text-5xl lg:text-6xl font-bold text-dark-text mb-6 leading-tight">
             Never lose a link again.
