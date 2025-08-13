@@ -2,6 +2,7 @@
 
 import { getWhatsappBotLinkWithMessage } from '@/lib/chat';
 import { MessageCircle, Play } from 'lucide-react';
+import Image from 'next/image';
 
 interface HeroSectionProps {
   className?: string;
@@ -185,33 +186,33 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
         </div>
 
         {/* Video Section */}
-        <div className="max-w-4xl mx-auto">
-          <div className="relative aspect-video bg-light-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <iframe
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-              title="April Email Assistant Demo"
-              className="absolute inset-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+        <div className="mx-auto">
+          <div className="relative bg-light-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Image
+              src="/product.png"
+              alt="DoryAI dashboard"
+              className="inset-0 w-full h-full"
+              width={1200}
+              height={700}
             />
 
             {/* Video Overlay (optional, for styling) */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
 
             {/* Play Button Overlay (optional, for better UX) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {/* <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm">
                 <Play
                   className="w-6 h-6 text-primary ml-1"
                   fill="currentColor"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Video Caption */}
           <p className="text-center text-sm text-muted mt-4">
-            See how April transforms your email experience in under 2 minutes
+            DoryAI automatically organizes your saved links with AI.
           </p>
         </div>
       </div>
