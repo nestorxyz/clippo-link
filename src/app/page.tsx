@@ -10,7 +10,7 @@ import { Footer } from './_components/sections/footer';
 
 export default function Home() {
   return (
-    <div className="bg-white text-black">
+    <div className="bg-white text-black ">
       <NavigationHeader />
       <main>
         <HeroSection />
