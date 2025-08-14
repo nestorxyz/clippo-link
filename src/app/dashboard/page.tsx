@@ -179,6 +179,12 @@ export default function DashboardPage() {
           isOpen={showPhoneVerification}
           onVerified={() => {
             setShowPhoneVerification(false);
+            setDismissedPhoneVerification(true);
+            try {
+              sessionStorage.setItem('dismissed_phone_verification', '1');
+            } catch {
+              // ignore storage errors
+            }
             refreshPhoneStatus();
           }}
           onClose={() => {
