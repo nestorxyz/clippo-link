@@ -20,8 +20,9 @@ export default function Home() {
         <UseCases />
         <IOSIntegration />
         <CustomerReviews />
-        <PricingSection /> */}
+       */}
         <ClippoInAction />
+        <PricingSection />
       </main>
       <Footer />
     </div>

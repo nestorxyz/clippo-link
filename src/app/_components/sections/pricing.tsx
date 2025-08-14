@@ -8,38 +8,47 @@ interface PricingPlan {
   originalPrice?: string;
   billing: string;
   isPopular?: boolean;
+  description?: string;
+  featuresTitle?: string;
+  ctaText?: string;
+  ctaVariant?: 'filled' | 'outlined';
   features: string[];
 }
 
 export const PricingSection = () => {
   const plans: PricingPlan[] = [
     {
-      title: 'Monthly Plan',
-      price: '$29.00',
-      billing: 'per month',
+      title: '💡 Monthly Plan',
+      price: '$4.99',
+      billing: '/month',
+      description:
+        'Perfect for trying out DoryAI with full flexibility — no commitment, all features.',
+      featuresTitle: 'What you’ll get:',
+      ctaText: 'Get Started',
+      ctaVariant: 'outlined',
       features: [
-        'Unlimited email processing',
-        'Voice command integration',
-        'AI-powered summaries',
-        'AirPods & CarPlay support',
-        'Basic analytics',
-        'Email support',
+        'Unlimited link saving & organization',
+        'Smart AI tagging & search',
+        'Access from any device',
+        'Cancel anytime',
       ],
     },
     {
-      title: 'Annual Plan',
-      price: '$199.00',
-      originalPrice: '$249.99',
-      billing: 'per year (save $110)',
+      title: '⚡ Annual Plan',
+      price: '$34.99',
+      originalPrice: '$59.88',
+      billing: '/year (Save 40% vs monthly)',
       isPopular: true,
+      description:
+        'Unlock the best value — 7-day free trial, premium features, and extra perks.',
+      featuresTitle: 'What you’ll get:',
+      ctaText: 'Start Free Trial',
+      ctaVariant: 'filled',
       features: [
-        'Everything in Monthly Plan',
-        'Advanced AI personalization',
-        'Priority email support',
-        'Custom voice commands',
-        'Detailed analytics & insights',
-        'Early access to new features',
-        '30-day money-back guarantee',
+        'Everything in Monthly, plus:',
+        'Priority feature access',
+        'VIP support',
+        'Exclusive productivity tips & updates',
       ],
     },
   ];
@@ -48,7 +57,7 @@ export const PricingSection = () => {
     <section className="py-20 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-semibold text-[#1A1A1A] mb-4">
+          <h2 className="text-center text-5xl font-medium mb-20">
             Choose the perfect plan
           </h2>
         </div>
@@ -82,7 +91,14 @@ interface PricingCardProps {
 
 const PricingCard = ({ plan }: PricingCardProps) => {
   return (
-    <div className="relative bg-white rounded-lg p-8 shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-150 ease-in-out mb-8 md:mb-0">
+    <div
+      className={
+        'relative bg-white rounded-lg border shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-150 ease-in-out mb-8 md:mb-0 ' +
+        (plan.isPopular
+          ? 'border-[#007AFF] ring-1 ring-[#007AFF]'
+          : 'border-[#E5E7EB]')
+      }
+    >
       {plan.isPopular && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
           <span className="bg-[#007AFF] text-white px-4 py-1 rounded-full text-sm font-medium">
@@ -91,37 +107,56 @@ const PricingCard = ({ plan }: PricingCardProps) => {
         </div>
       )}
 
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 p-4 pt-7">
         <h3 className="text-xl font-semibold text-[#1A1A1A] mb-4">
           {plan.title}
         </h3>
 
+        {plan.description && (
+          <p className="text-[#6B7280] text-sm max-w-sm mx-auto mb-4">
+            {plan.description}
+          </p>
+        )}
+
         <div className="mb-2">
+          <span className="text-4xl font-semibold mr-2 text-[#1A1A1A]">
+            {plan.price}
+          </span>
           {plan.originalPrice && (
-            <span className="text-sm text-[#6B7280] line-through mr-2">
+            <span className="text-3xl text-[#6B7280] line-through mr-2">
               {plan.originalPrice}
             </span>
           )}
-          <span className="text-4xl font-bold text-[#1A1A1A]">
-            {plan.price}
-          </span>
         </div>
 
         <p className="text-[#6B7280] text-sm">{plan.billing}</p>
       </div>
 
-      <ul className="space-y-4 mb-8">
-        {plan.features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-3">
-            <Check className="w-5 h-5 text-[#10B981] mt-0.5 flex-shrink-0" />
-            <span className="text-[#1A1A1A] text-sm">{feature}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="bg-[#f9f8f8] rounded-b-lg p-4 px-8">
+        {plan.featuresTitle && (
+          <p className="text-[#1A1A1A] text-sm font-medium mb-3 text-left">
+            {plan.featuresTitle}
+          </p>
+        )}
+        <ul className="space-y-4 mb-8">
+          {plan.features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <Check className="w-5 h-5 text-[#10B981] mt-0.5 flex-shrink-0" />
+              <span className="text-[#1A1A1A] text-sm">{feature}</span>
+            </li>
+          ))}
+        </ul>
 
-      <button className="w-full bg-[#007AFF] hover:bg-[#0056CC] text-white font-medium py-3 px-6 rounded-md transition-colors duration-150 ease-in-out">
-        Get Started
-      </button>
+        <button
+          className={`w-full ${
+            plan.ctaVariant === 'filled'
+              ? 'bg-[#007AFF] hover:bg-[#0056CC]'
+              : 'border border-[#007AFF] bg-white text-[#007AFF]'
+          } text-white font-medium py-3 px-6 rounded-md transition-colors duration-150 ease-in-out`}
+        >
+          {plan.ctaText ?? 'Get Started'}
+        </button>
+      </div>
     </div>
   );
 };
