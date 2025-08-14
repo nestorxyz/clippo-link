@@ -28,9 +28,12 @@ export function usePlan() {
       const { data: sessionRes } = await supabase.auth.getSession();
       const token = sessionRes.session?.access_token;
       if (!token) throw new Error('Not authenticated');
-      const res = await fetch(`${env.NEXT_PUBLIC_BACKEND_URL}/billing/plan`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${env.NEXT_PUBLIC_BACKEND_URL}/api/billing/plan`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (!res.ok) throw new Error(`Failed to load plan (${res.status})`);
       const json = await res.json();
       setData(json.data as UserPlan);
