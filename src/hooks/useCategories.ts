@@ -21,6 +21,7 @@ const transformDataToCategories = (data: any[] | null): Category[] => {
                 id: link.id,
                 url: link.url,
                 description: link.description,
+                img_preview: link.img_preview,
                 createdAt: link.created_at,
                 tags: link.link_tags
                   ? link.link_tags.map((lt: any) => lt.tags).filter(Boolean)
@@ -53,6 +54,7 @@ export const useCategories = (session: Session | null) => {
               url,
               description,
               created_at,
+              img_preview,
               link_tags (
                 tags (
                   id,

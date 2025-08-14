@@ -68,22 +68,31 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-xl bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
+      className="group rounded-xl relative overflow-hidden bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
     >
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-16">
-        <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] uppercase">
-          {domainFromUrl(link.url)[0] || '?'}
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 text-xs text-[#cdcccc] mb-16">
+          <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] uppercase">
+            {domainFromUrl(link.url)[0] || '?'}
+          </div>
+          <span className="truncate">{domainFromUrl(link.url)}</span>
         </div>
-        <span className="truncate">{domainFromUrl(link.url)}</span>
+        <div className="mt-10">
+          <div className="text-sm font-semibold line-clamp-2 mb-1">
+            {link.description || link.title || 'Untitled'}
+          </div>
+          <div className="text-xs text-[#cdcccc] truncate">
+            {domainFromUrl(link.url)}
+          </div>
+        </div>
       </div>
-      <div className="mt-10">
-        <div className="text-sm font-semibold line-clamp-2 mb-1">
-          {link.description || link.title || 'Untitled'}
-        </div>
-        <div className="text-xs text-muted-foreground truncate">
-          {domainFromUrl(link.url)}
-        </div>
-      </div>
+      {link.img_preview ? (
+        <img
+          src={link.img_preview}
+          alt={link.title || 'Preview Image'}
+          className="absolute opacity-50 inset-0 h-full w-full rounded-xl object-cover z-0 pointer-events-none transform-gpu transition-transform duration-300 ease-out group-hover:scale-105"
+        />
+      ) : null}
     </a>
   );
 };
