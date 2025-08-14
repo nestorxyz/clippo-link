@@ -13,35 +13,29 @@ export const NavigationHeader = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white shadow-sm sticky top-0 z-50 text-black">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0">
             <Image
               src="/isologo-black.png"
               alt="DoryAI Logo"
               width={120}
               height={40}
             />
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a
-              href="#features"
+            <Link
+              href="/#features"
               className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
             >
               Features
-            </a>
+            </Link>
             <a
-              href="#pricing"
-              className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
-            >
-              Pricing
-            </a>
-            <a
-              href="#contact"
+              href="mailto:nmamanipantoja@gmail.com"
               className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
             >
               Contact
@@ -76,13 +70,13 @@ export const NavigationHeader = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-light-background">
             <nav className="flex flex-col space-y-4 pt-4">
-              <a
-                href="#features"
+              <Link
+                href="/#features"
                 className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Features
-              </a>
+              </Link>
               <a
                 href="#pricing"
                 className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
