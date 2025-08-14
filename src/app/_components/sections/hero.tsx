@@ -3,6 +3,7 @@
 import { getWhatsappBotLinkWithMessage } from '@/lib/chat';
 import { MessageCircle, Play } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface HeroSectionProps {
   className?: string;
@@ -183,6 +184,13 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
             Save links by chatting. Your AI assistant organizes them instantly —
             with context, tags, and memory.
           </p>
+
+          <Link
+            href="/login"
+            className="inline-flex items-center px-6 py-3 bg-black text-white text-lg font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
+          >
+            Prueba DoryAI
+          </Link>
         </div>
 
         {/* Video Section */}
