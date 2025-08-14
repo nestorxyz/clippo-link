@@ -64,9 +64,19 @@ export const WhatsAppCTA = ({ className = '' }: WhatsAppCTAProps) => {
           </div>
 
           {/* Phone image */}
+          <div className="hidden lg:flex right-0 absolute -bottom-[380px] w-full max-w-96 h-[620px] lg:h-[660px]">
+            <Image
+              src="/landing/whatsapp-chat.png"
+              alt="Save links in WhatsApp with DoryAI"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-contain drop-shadow-[0_25px_80px_rgba(0,0,0,0.6)]"
+            />
+          </div>
         </div>
       </div>
-      <div className="absolute -bottom-[380px] w-full h-[620px] lg:h-[560px]">
+      <div className="absolute lg:hidden -bottom-[380px] w-full h-[620px] lg:h-[560px]">
         <Image
           src="/landing/whatsapp-chat.png"
           alt="Save links in WhatsApp with DoryAI"
