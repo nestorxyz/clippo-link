@@ -45,7 +45,7 @@ export const FeaturesDemo: React.FC<{ items?: FeatureItem[] }> = ({
           See the magic in action!
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-[110px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-[110px] px-4 md:px-0">
           {items.map((item, idx) => (
             <div key={idx} className="md:col-span-2 lg:col-span-3">
               <div

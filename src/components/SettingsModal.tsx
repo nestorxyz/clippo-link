@@ -19,8 +19,9 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { usePlan } from '@/hooks/usePlan';
 
-type SettingsTab = 'profile' | 'integrations';
+type SettingsTab = 'profile' | 'integrations' | 'billing';
 
 interface SettingsModalProps {
   open: boolean;
@@ -39,6 +40,9 @@ export default function SettingsModal({
   const { phoneStatus, refresh: refreshPhoneStatus } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [planLabel, setPlanLabel] = useState<'free' | 'premium' | null>(null);
+  const { data: plan } = usePlan();
 
   const email = session.user.email ?? '';
   const displayName = useMemo(() => {
@@ -92,9 +96,21 @@ export default function SettingsModal({
     };
   }, [open, session.user.id]);
 
-  const title = activeTab === 'profile' ? 'Profile' : 'Integrations';
+  const title =
+    activeTab === 'profile'
+      ? 'Profile'
+      : activeTab === 'integrations'
+      ? 'Integrations'
+      : 'Billing';
   const subtitle =
-    activeTab === 'profile' ? 'Manage your profile' : 'Connect your apps';
+    activeTab === 'profile'
+      ? 'Manage your profile'
+      : activeTab === 'integrations'
+      ? 'Connect your apps'
+      : 'Manage your subscription and plan';
+  useEffect(() => {
+    if (plan) setPlanLabel(plan.plan);
+  }, [plan]);
 
   return (
     <AnimatePresence>
@@ -143,6 +159,16 @@ export default function SettingsModal({
                     onClick={() => setActiveTab('integrations')}
                   >
                     Integrations
+                  </button>
+                  <button
+                    className={`mt-2 w-full text-left px-2 py-1.5 rounded-md ${
+                      activeTab === 'billing'
+                        ? 'bg-[#1D1D1D] text-white'
+                        : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white'
+                    }`}
+                    onClick={() => setActiveTab('billing')}
+                  >
+                    Billing
                   </button>
                 </div>
               </nav>
@@ -282,6 +308,74 @@ export default function SettingsModal({
                         });
                       }}
                     />
+                  </div>
+                )}
+
+                {activeTab === 'billing' && (
+                  <div className="max-w-xl space-y-4">
+                    <div className="rounded-lg border p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-base font-medium">Your Plan</div>
+                          <div className="text-sm text-muted-foreground">
+                            {planLabel === 'premium' ? 'Premium' : 'Free'}
+                          </div>
+                        </div>
+                      </div>
+                      {plan?.plan === 'premium' && (
+                        <div className="text-sm text-muted-foreground mt-2">
+                          {plan.trialEndsAt
+                            ? `Trial ends on ${new Date(
+                                plan.trialEndsAt
+                              ).toLocaleDateString()}`
+                            : plan.renewsAt
+                            ? `Renews on ${new Date(
+                                plan.renewsAt
+                              ).toLocaleDateString()}`
+                            : null}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        disabled={isOpeningPortal}
+                        onClick={async () => {
+                          try {
+                            setIsOpeningPortal(true);
+                            const { data: sessionRes } =
+                              await supabase.auth.getSession();
+                            const token = sessionRes.session?.access_token;
+                            if (!token) throw new Error('No session');
+                            const res = await fetch(
+                              `${
+                                process.env.NEXT_PUBLIC_BACKEND_URL || ''
+                              }/billing/portal`,
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+                            const json = await res.json();
+                            const url = json?.url as string | undefined;
+                            if (url) window.location.href = url;
+                            else toast.error('No billing portal available');
+                          } catch (e) {
+                            console.error(e);
+                            toast.error('Failed to open billing portal');
+                          } finally {
+                            setIsOpeningPortal(false);
+                          }
+                        }}
+                      >
+                        Manage subscription
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          window.dispatchEvent(new CustomEvent('open-pricing'))
+                        }
+                      >
+                        {planLabel === 'premium' ? 'Change plan' : 'Upgrade'}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

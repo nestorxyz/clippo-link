@@ -20,6 +20,7 @@ import Header from '@/components/Header';
 import SettingsModal from '@/components/SettingsModal';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
+import PricingModal from '@/components/PricingModal';
 
 type ActiveView = 'columns' | 'chat' | 'settings';
 
@@ -59,6 +60,7 @@ export default function DashboardPage() {
       }
     });
   const [showSettings, setShowSettings] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -79,8 +81,11 @@ export default function DashboardPage() {
     const open = () => setShowSettings(true);
     const closeOnRoute = () => setShowSettings(false);
     window.addEventListener('open-settings', open as EventListener);
+    const openPricing = () => setShowPricing(true);
+    window.addEventListener('open-pricing', openPricing as EventListener);
     return () => {
       window.removeEventListener('open-settings', open as EventListener);
+      window.removeEventListener('open-pricing', openPricing as EventListener);
     };
   }, []);
 
@@ -174,6 +179,7 @@ export default function DashboardPage() {
         onClose={() => setShowSettings(false)}
         session={session}
       />
+      <PricingModal open={showPricing} onClose={() => setShowPricing(false)} />
       {showPhoneVerification && (
         <PhoneVerification
           isOpen={showPhoneVerification}
