@@ -189,7 +189,7 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
             href="/login"
             className="inline-flex items-center px-6 py-3 bg-black text-white text-lg font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
           >
-            Prueba DoryAI
+            Try DoryAI
           </Link>
         </div>
 

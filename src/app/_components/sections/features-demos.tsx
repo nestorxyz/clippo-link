@@ -15,19 +15,19 @@ const DEFAULT_FEATURES: FeatureItem[] = [
     title: 'Organize personal inspiration: travel, gifts, hobbies',
     description:
       'Collect travel destinations, gift ideas, recipes, and hobby resources. Make your personal interests easily accessible.',
-    imageUrl: '/product.png',
+    imageUrl: '/landing/personal-inspo.png',
   },
   {
     title: 'Collect tutorials, components, tools, tweets',
     description:
       'Build your toolkit of helpful tutorials, code snippets, design components, and insightful tweets for future reference.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: '/landing/tutorials.png',
   },
   {
     title: 'Store research for school, work, or content',
     description:
       'Organize articles, papers, and resources by project or topic. Never lose track of important research again.',
-    imageUrl: '/isologo-black.png',
+    imageUrl: '/landing/research.png',
   },
 ];
 
