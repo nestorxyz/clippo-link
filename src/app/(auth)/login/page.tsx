@@ -240,19 +240,19 @@ export default function AuthPage() {
           <footer className="bottom-8 mt-5 text-left text-xs text-[#A5A5A5] max-w-md">
             <p>
               By proceeding, you agree to our{' '}
-              <a
-                href="#"
+              <Link
+                href="/terms"
                 className="underline hover:text-foreground transition-colors"
               >
                 Terms of Service
-              </a>{' '}
+              </Link>{' '}
               and acknowledge that our{' '}
-              <a
-                href="#"
+              <Link
+                href="/privacy"
                 className="underline hover:text-foreground transition-colors"
               >
                 Privacy Policy
-              </a>{' '}
+              </Link>{' '}
               applies to you.
             </p>
           </footer>
