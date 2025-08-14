@@ -7,6 +7,7 @@ import { IOSIntegration } from './_components/sections/ios-intergrations';
 import { CustomerReviews } from './_components/sections/reviews';
 import { PricingSection } from './_components/sections/pricing';
 import { Footer } from './_components/sections/footer';
+import { ClippoInAction } from '@/app/_components/ClippoInAction';
 
 export default function Home() {
   return (
@@ -15,11 +16,12 @@ export default function Home() {
       <main>
         <HeroSection />
         <FeaturesDemo />
-        <CoreFeatures />
+        {/* <CoreFeatures />
         <UseCases />
         <IOSIntegration />
         <CustomerReviews />
-        <PricingSection />
+        <PricingSection /> */}
+        <ClippoInAction />
       </main>
       <Footer />
     </div>
