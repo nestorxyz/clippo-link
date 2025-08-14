@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           <h2 id="toc" className="text-xl font-medium mb-4">
             Table of Contents
           </h2>
-          <ol className="list-decimal pl-6 space-y-2 text-blue-600">
+          <ol className="pl-6 space-y-2 text-blue-600">
             <li>
               <Link href="#s1" className="hover:underline">
                 1. Collection of Your Information

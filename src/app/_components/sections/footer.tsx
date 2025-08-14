@@ -60,7 +60,7 @@ export const Footer = () => {
           </div>
 
           {/* Company Links */}
-          <div className="lg:col-span-6 lg:justify-self-end">
+          <div className="lg:col-span-6 lg:justify-self-end lg:mr-40">
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-4">
               <li>
@@ -72,28 +72,28 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/terms"
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   Terms of use
-                </a>
+                </Link>
               </li>
               <li>
                 <a
-                  href="mailto:privacy@doryai.com"
+                  href="mailto:nmamanipantoja@gmail.com"
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   Contact Us
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/security"
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   Security
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
