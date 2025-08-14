@@ -48,6 +48,16 @@ export default function DashboardPage() {
     refresh: refreshPhoneStatus,
   } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  // Track if the user dismissed the phone verification prompt (per session)
+  const [dismissedPhoneVerification, setDismissedPhoneVerification] =
+    useState<boolean>(() => {
+      if (typeof window === 'undefined') return false;
+      try {
+        return sessionStorage.getItem('dismissed_phone_verification') === '1';
+      } catch {
+        return false;
+      }
+    });
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -81,11 +91,11 @@ export default function DashboardPage() {
   }, [session, loading]);
 
   useEffect(() => {
-    // Show phone verification modal if needed
-    if (needsPhoneVerification && !showPhoneVerification) {
+    // Show phone verification modal if needed and not previously dismissed this session
+    if (needsPhoneVerification && !dismissedPhoneVerification) {
       setShowPhoneVerification(true);
     }
-  }, [needsPhoneVerification, showPhoneVerification]);
+  }, [needsPhoneVerification, dismissedPhoneVerification]);
 
   useEffect(() => {
     if (!session?.user.id) return;
@@ -171,7 +181,15 @@ export default function DashboardPage() {
             setShowPhoneVerification(false);
             refreshPhoneStatus();
           }}
-          onClose={() => setShowPhoneVerification(false)}
+          onClose={() => {
+            setShowPhoneVerification(false);
+            setDismissedPhoneVerification(true);
+            try {
+              sessionStorage.setItem('dismissed_phone_verification', '1');
+            } catch {
+              // ignore storage errors
+            }
+          }}
         />
       )}
 
