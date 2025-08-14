@@ -27,7 +27,7 @@ export const PricingSection = () => {
       ctaText: 'Get Started',
       ctaVariant: 'outlined',
       features: [
-        'Unlimited link saving & organization',
+        'Up to 200 link saving & organization',
         'Smart AI tagging & search',
         'Access from any device',
         'Cancel anytime',
