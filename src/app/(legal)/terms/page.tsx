@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { NavigationHeader } from '../_components/sections/navigation';
+import { NavigationHeader } from '../../_components/sections/navigation';
 
 export const metadata = {
   title: 'Terms of Service • DoryAI',

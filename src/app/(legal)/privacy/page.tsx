@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import Link from 'next/link';
-import { NavigationHeader } from '../_components/sections/navigation';
+import { NavigationHeader } from '../../_components/sections/navigation';
 
 export const metadata = {
   title: 'Privacy Policy • DoryAI',
