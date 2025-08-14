@@ -25,9 +25,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, Sparkles } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { usePlan } from '@/hooks/usePlan';
 
 interface LeftNavProps {
   categories: Category[];
@@ -72,6 +73,9 @@ const LeftNav: React.FC<LeftNavProps> = ({
     () => (email ? email.charAt(0).toUpperCase() : 'U'),
     [email]
   );
+
+  // Fetch plan to show current status and to wire billing/upgrade actions
+  const { data: plan } = usePlan();
 
   const handleSignOut = async () => {
     try {
@@ -146,7 +150,9 @@ const LeftNav: React.FC<LeftNavProps> = ({
                   <div className="text-sm text-white truncate">
                     {email || 'Account'}
                   </div>
-                  <div className="text-xs text-[#A5A5A5]">Free</div>
+                  <div className="text-xs text-[#A5A5A5]">
+                    {plan?.plan === 'premium' ? 'Premium' : 'Free'}
+                  </div>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -159,6 +165,49 @@ const LeftNav: React.FC<LeftNavProps> = ({
                 {email}
               </div>
               <DropdownMenuSeparator className="bg-[#2A2A2A]" />
+              {plan?.plan === 'premium' ? (
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      const { data: sessionRes } =
+                        await retired-provider.auth.getSession();
+                      const token = sessionRes.session?.access_token;
+                      if (!token) throw new Error('No session');
+                      const res = await fetch(
+                        `${
+                          process.env.NEXT_PUBLIC_BACKEND_URL || ''
+                        }/billing/portal`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      const json = await res.json();
+                      const url = json?.url as string | undefined;
+                      if (url) window.location.href = url;
+                      else toast.error('No portal URL available');
+                    } catch (e) {
+                      console.error(e);
+                      toast.error('Failed to open billing portal');
+                    }
+                  }}
+                  className="cursor-pointer focus:bg-[#2A2A2A]"
+                >
+                  <span>Billing</span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => {
+                    try {
+                      window.dispatchEvent(new CustomEvent('open-pricing'));
+                    } catch (e) {
+                      window.location.href =
+                        '/login?plan=monthly&intent=checkout&msg=areYouReadyToAction';
+                    }
+                  }}
+                  className="cursor-pointer focus:bg-[#2A2A2A]"
+                >
+                  <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
+                  <span>Upgrade</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => {
                   try {

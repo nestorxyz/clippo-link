@@ -16,15 +16,7 @@ interface PricingPlan {
   features: string[];
 }
 
-type PricingSectionProps = {
-  monthlyUrl: string;
-  annualUrl: string;
-};
-
-export const PricingSection = ({
-  monthlyUrl,
-  annualUrl,
-}: PricingSectionProps) => {
+export const PricingSection = () => {
   const plans: PricingPlan[] = [
     {
       title: '💡 Monthly Plan',
@@ -35,7 +27,7 @@ export const PricingSection = ({
       featuresTitle: 'What you’ll get:',
       ctaText: 'Get Started',
       ctaVariant: 'outlined',
-      href: monthlyUrl,
+      href: '/login?plan=monthly&intent=checkout&msg=areYouReadyToAction',
       features: [
         'Up to 200 link saving & organization',
         'Smart AI tagging & search',
@@ -54,7 +46,7 @@ export const PricingSection = ({
       featuresTitle: 'What you’ll get:',
       ctaText: 'Start Free Trial',
       ctaVariant: 'filled',
-      href: annualUrl,
+      href: '/login?plan=annual&intent=checkout&msg=areYouReadyToAction',
       features: [
         'Everything in Monthly, plus:',
         'Priority feature access',
@@ -65,7 +57,7 @@ export const PricingSection = ({
   ];
 
   return (
-    <section className="py-20 px-6">
+    <section id="pricing" aria-label="pricing" className="py-20 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-center text-5xl font-medium mb-20">
@@ -160,8 +152,6 @@ const PricingCard = ({ plan }: PricingCardProps) => {
 
         <a
           href={plan.href}
-          target="_blank"
-          rel="noopener noreferrer"
           className={`w-full inline-flex items-center justify-center ${
             plan.ctaVariant === 'filled'
               ? 'bg-[#007AFF] hover:bg-[#0056CC] text-white'

@@ -40,10 +40,21 @@ export const AuthForm = () => {
 
   const signInWithGoogle = async () => {
     setLoading('google');
+    const url = new URL(window.location.href);
+    const plan = url.searchParams.get('plan');
+    const intent = url.searchParams.get('intent');
+    const msg = url.searchParams.get('msg');
+    const nextParams = new URLSearchParams();
+    if (plan) nextParams.set('plan', plan);
+    if (intent) nextParams.set('intent', intent);
+    if (msg) nextParams.set('msg', msg);
+    const next = `/auth/after${nextParams.toString() ? `?${nextParams}` : ''}`;
     const { error } = await retired-provider.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        redirectTo: `${
+          window.location.origin
+        }/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
     if (error) {

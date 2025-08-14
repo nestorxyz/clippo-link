@@ -22,17 +22,7 @@ export default function Home() {
         <CustomerReviews />
        */}
         <ClippoInAction />
-        {/* TODO: replace with your actual Lemon Squeezy checkout links */}
-        <PricingSection
-          monthlyUrl={
-            process.env.NEXT_PUBLIC_LEMON_MONTHLY_URL ||
-            'https://your-lemon-squeezy-monthly-link'
-          }
-          annualUrl={
-            process.env.NEXT_PUBLIC_LEMON_ANNUAL_URL ||
-            'https://your-lemon-squeezy-annual-link'
-          }
-        />
+        <PricingSection />
       </main>
       <Footer />
     </div>

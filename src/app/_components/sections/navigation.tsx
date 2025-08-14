@@ -29,6 +29,12 @@ export const NavigationHeader = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link
+              href="/#pricing"
+              className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
+            >
+              Pricing
+            </Link>
+            <Link
               href="/#features"
               className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
             >
