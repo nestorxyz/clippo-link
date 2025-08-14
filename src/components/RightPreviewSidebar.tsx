@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Category, Link } from '@/lib/types';
 
 interface RightPreviewSidebarProps {
@@ -63,6 +63,7 @@ const domainFromUrl = (url: string): string => {
 };
 
 const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
+  const [hideImage, setHideImage] = useState(false);
   return (
     <a
       href={link.url}
@@ -86,10 +87,13 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
           </div>
         </div>
       </div>
-      {link.img_preview ? (
+      {link.img_preview && !hideImage ? (
         <img
           src={link.img_preview}
           alt={link.title || 'Preview Image'}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setHideImage(true)}
           className="absolute opacity-50 inset-0 h-full w-full rounded-xl object-cover z-0 pointer-events-none transform-gpu transition-transform duration-300 ease-out group-hover:scale-105"
         />
       ) : null}
