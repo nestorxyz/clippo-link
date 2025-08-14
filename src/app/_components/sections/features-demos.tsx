@@ -44,7 +44,11 @@ export const FeaturesDemo: React.FC<{ items?: FeatureItem[] }> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-[110px]">
           {items.map((item, idx) => (
             <div key={idx} className="md:col-span-2 lg:col-span-3">
-              <div className="flex flex-col md:flex-row items-center gap-8 justify-between">
+              <div
+                className={`flex flex-col ${
+                  idx === 1 ? 'md:flex-row-reverse' : 'md:flex-row'
+                } items-center gap-8 justify-between`}
+              >
                 {/* Left: Image preview */}
                 <div className="w-full md:w-[49%]">
                   <div className="bg-light-background rounded-lg">
