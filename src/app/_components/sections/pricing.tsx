@@ -12,10 +12,19 @@ interface PricingPlan {
   featuresTitle?: string;
   ctaText?: string;
   ctaVariant?: 'filled' | 'outlined';
+  href?: string;
   features: string[];
 }
 
-export const PricingSection = () => {
+type PricingSectionProps = {
+  monthlyUrl: string;
+  annualUrl: string;
+};
+
+export const PricingSection = ({
+  monthlyUrl,
+  annualUrl,
+}: PricingSectionProps) => {
   const plans: PricingPlan[] = [
     {
       title: '💡 Monthly Plan',
@@ -26,6 +35,7 @@ export const PricingSection = () => {
       featuresTitle: 'What you’ll get:',
       ctaText: 'Get Started',
       ctaVariant: 'outlined',
+      href: monthlyUrl,
       features: [
         'Up to 200 link saving & organization',
         'Smart AI tagging & search',
@@ -44,6 +54,7 @@ export const PricingSection = () => {
       featuresTitle: 'What you’ll get:',
       ctaText: 'Start Free Trial',
       ctaVariant: 'filled',
+      href: annualUrl,
       features: [
         'Everything in Monthly, plus:',
         'Priority feature access',
@@ -147,15 +158,18 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           ))}
         </ul>
 
-        <button
-          className={`w-full ${
+        <a
+          href={plan.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`w-full inline-flex items-center justify-center ${
             plan.ctaVariant === 'filled'
-              ? 'bg-[#007AFF] hover:bg-[#0056CC]'
-              : 'border border-[#007AFF] bg-white text-[#007AFF]'
-          } text-white font-medium py-3 px-6 rounded-md transition-colors duration-150 ease-in-out`}
+              ? 'bg-[#007AFF] hover:bg-[#0056CC] text-white'
+              : 'border border-[#007AFF] bg-white text-[#007AFF] hover:bg-[#F0F7FF]'
+          } font-medium py-3 px-6 rounded-md transition-colors duration-150 ease-in-out`}
         >
           {plan.ctaText ?? 'Get Started'}
-        </button>
+        </a>
       </div>
     </div>
   );
