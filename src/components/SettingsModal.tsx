@@ -350,7 +350,7 @@ export default function SettingsModal({
                             const res = await fetch(
                               `${
                                 process.env.NEXT_PUBLIC_BACKEND_URL || ''
-                              }/billing/portal`,
+                              }/api/billing/portal`,
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
                             const json = await res.json();
