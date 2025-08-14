@@ -35,7 +35,11 @@ export const FeaturesDemo: React.FC<{ items?: FeatureItem[] }> = ({
   items = DEFAULT_FEATURES,
 }) => {
   return (
-    <section className="py-20 w-full flex flex-col items-center justify-center mx-auto">
+    <section
+      id="features"
+      aria-label="Features"
+      className="py-20 w-full flex flex-col items-center justify-center mx-auto scroll-mt-28"
+    >
       <div className="mx-auto w-full max-w-[1242px]">
         <h2 className="text-center text-5xl font-medium mb-20">
           See the magic in action!

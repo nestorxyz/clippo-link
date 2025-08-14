@@ -1,5 +1,6 @@
 import { Mail, Linkedin } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export const Footer = () => {
   return (
@@ -63,12 +64,12 @@ export const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-4">
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/privacy"
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
                 <a
@@ -80,7 +81,7 @@ export const Footer = () => {
               </li>
               <li>
                 <a
-                  href="mailto:nmamanipantoja@gmail.com"
+                  href="mailto:privacy@doryai.com"
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   Contact Us
