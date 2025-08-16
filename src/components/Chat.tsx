@@ -298,9 +298,9 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
           />
         </div>
       </div>
-      <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
+      <div className="sticky bottom-16 md:bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
         <div className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
-        <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3">
+        <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3 pb-[calc(8px+env(safe-area-inset-bottom))]">
           <form onSubmit={handleSendMessage} className="relative">
             <div className="relative rounded-[28px] md:rounded-full border border-[#1D1D1D] bg-[#1A1A1A] shadow-sm">
               <Textarea
@@ -308,7 +308,7 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Talk with DoryAI"
-                className="w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base min-h-[52px] max-h-[200px] pl-12 pr-28 py-3 resize-none"
+                className="w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base min-h-[52px] max-h-[200px] px-12 md:pr-28 py-3 resize-none"
                 rows={1}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
