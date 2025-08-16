@@ -83,27 +83,26 @@ export const NavigationHeader = () => {
               >
                 Features
               </Link>
-              <a
+              <Link
                 href="#pricing"
                 className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Pricing
-              </a>
+              </Link>
               <a
-                href="#contact"
+                href="mailto:nmamanipantoja@gmail.com"
                 className="text-base font-medium text-dark-text hover:text-primary transition-colors duration-150 ease-in-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Contact
               </a>
-              <a
-                href="#download"
-                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-white text-base font-medium rounded-md hover:bg-blue-600 transition-colors duration-150 ease-in-out mt-4"
-                onClick={() => setIsMobileMenuOpen(false)}
+              <Link
+                href="/login"
+                className="inline-flex items-center px-6 py-3 bg-[#EA64D3] text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
               >
-                Download for iOS
-              </a>
+                Login
+              </Link>
             </nav>
           </div>
         )}
