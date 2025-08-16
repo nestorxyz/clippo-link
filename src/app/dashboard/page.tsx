@@ -16,13 +16,14 @@ import Management from '@/components/Management';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import BottomNavbar from '@/components/BottomNavbar';
-import Header from '@/components/Header';
 import SettingsModal from '@/components/SettingsModal';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import PricingModal from '@/components/PricingModal';
+import MobileHeader from '@/components/MobileHeader';
+import LinksGrid from '@/components/LinksGrid';
 
-type ActiveView = 'columns' | 'chat' | 'settings';
+type ActiveView = 'links' | 'chat';
 
 export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -205,7 +206,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="flex h-screen">
+      <div className="flex h-screen flex-col md:flex-row">
         {!isMobile && (
           <LeftNav
             categories={categories}
@@ -227,6 +228,8 @@ export default function DashboardPage() {
           />
         )}
 
+        {isMobile && <MobileHeader session={session} />}
+
         <div
           className={cn(
             'flex-1 flex flex-col bg-[#111111] border border-[#1D1D1D] m-2 rounded-sm overflow-hidden',
@@ -241,7 +244,14 @@ export default function DashboardPage() {
                 onLinkAdded={refetch}
               />
             )}
-            {activeView === 'columns' && <Management session={session} />}
+            {activeView === 'links' && (
+              <div className="h-full overflow-y-auto">
+                <LinksGrid
+                  categories={categories}
+                  selectedSubCategoryId={selectedSubCategoryId}
+                />
+              </div>
+            )}
           </main>
 
           {isMobile && (
