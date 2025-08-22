@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import ReactMarkdown from 'react-markdown';
+import { env } from '@/env';
 import remarkGfm from 'remark-gfm';
 
 interface ChatProps {
@@ -202,16 +203,37 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
     setIsBotTyping(true);
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const { data, error } = await supabase.functions.invoke('gemini-chat', {
-        body: {
+
+      // Call backend instead of edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${env.NEXT_PUBLIC_BACKEND_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
           sessionId,
           message: currentInput,
           timeZone,
-        },
+        }),
       });
-      if (error) {
-        throw new Error(`Edge function error: ${error.message}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
       }
+
+      const data = await response.json();
+
       const botMessage: Message = {
         id: crypto.randomUUID(),
         text: data.reply,
