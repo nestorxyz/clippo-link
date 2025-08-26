@@ -69,7 +69,7 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-xl relative overflow-hidden bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
+      className="group rounded-xl relative overflow-hidden bg-card p-3 pb-1 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="relative z-10">
         <div className="flex items-center gap-2 text-xs text-[#cdcccc] mb-16">
@@ -78,12 +78,9 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
           </div>
           <span className="truncate">{domainFromUrl(link.url)}</span>
         </div>
-        <div className="mt-10">
+        <div className="mt-20">
           <div className="text-sm font-semibold line-clamp-2 mb-1">
-            {link.description || link.title || 'Untitled'}
-          </div>
-          <div className="text-xs text-[#cdcccc] truncate">
-            {domainFromUrl(link.url)}
+            {link.title || link.description || 'Untitled'}
           </div>
         </div>
       </div>
@@ -94,7 +91,7 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
           loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => setHideImage(true)}
-          className="absolute opacity-50 inset-0 h-full w-full rounded-xl object-cover z-0 pointer-events-none transform-gpu transition-transform duration-300 ease-out group-hover:scale-105"
+          className="absolute opacity-80 inset-0 h-full w-full rounded-xl object-cover z-0 pointer-events-none transform-gpu transition-transform duration-300 ease-out group-hover:scale-105"
         />
       ) : null}
     </a>

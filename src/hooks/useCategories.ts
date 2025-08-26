@@ -20,6 +20,7 @@ const transformDataToCategories = (data: any[] | null): Category[] => {
             ? sub.links.map((link: any) => ({
                 id: link.id,
                 url: link.url,
+                title: link.title,
                 description: link.description,
                 img_preview: link.img_preview,
                 createdAt: link.created_at,
@@ -52,6 +53,7 @@ export const useCategories = (session: Session | null) => {
             links (
               id,
               url,
+              title,
               description,
               created_at,
               img_preview,
