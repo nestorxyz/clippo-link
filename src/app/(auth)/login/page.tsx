@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { retired-provider } from '@/integrations/retired-provider/client';
-import { Session } from '@retired-provider/retired-provider-js';
+import { useConvexAuth } from 'convex/react';
 import {
   Loader2,
   Bookmark,
@@ -47,11 +46,11 @@ const floatingElements = [
   { icon: BookOpen, text: 'Documentation', color: 'bg-amber-500', delay: 2.2 },
   { icon: Camera, text: 'Portfolio', color: 'bg-rose-500', delay: 2.4 },
   { icon: Code, text: 'Code Snippet', color: 'bg-slate-600', delay: 2.6 },
+  { icon: Bookmark, text: 'Saved Link', color: 'bg-blue-500', delay: 2.8 },
 ];
 
 export default function AuthPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const [showElements, setShowElements] = useState(false);
   const [elementPositions, setElementPositions] = useState<
     Array<{ left: number; top: number; fromSide: number }>
@@ -113,25 +112,10 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    retired-provider.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = retired-provider.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && session) {
+    if (!isLoading && isAuthenticated) {
       redirect('/dashboard');
     }
-  }, [session, loading]);
+  }, [isAuthenticated, isLoading]);
 
   // Trigger floating elements animation after component mounts
   useEffect(() => {
@@ -141,7 +125,7 @@ export default function AuthPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -149,7 +133,7 @@ export default function AuthPage() {
     );
   }
 
-  if (session) {
+  if (isAuthenticated) {
     return null; // Will redirect
   }
 

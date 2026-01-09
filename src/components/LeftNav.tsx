@@ -29,6 +29,8 @@ import { LogOut, Settings, Sparkles } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
+import { useConvexMutation } from '@/hooks/use-convex-mutation';
+import { api } from '../../convex/_generated/api';
 
 interface LeftNavProps {
   categories: Category[];
@@ -246,36 +248,32 @@ const AddCategoryButton = ({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { mutate: createCategory, isLoading: submitting } = useConvexMutation(
+    api.categories.create
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session || !name.trim()) return;
-    setSubmitting(true);
+    if (!name.trim()) return;
     try {
-      const { data, error } = await retired-provider
-        .from('categories')
-        .insert({
+      const categoryId = await createCategory(
+        {
           name: name.trim(),
-          description: description.trim() || null,
-          user_id: session.user.id,
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
-      if (data?.id) {
-        onCreated(data.id);
-        toast.success('Category created');
+          description: description.trim() || undefined,
+        },
+        {
+          successMessage: 'Category created',
+          errorMessage: 'Failed to create category',
+        }
+      );
+      if (categoryId) {
+        onCreated(categoryId);
         setOpen(false);
         setName('');
         setDescription('');
       }
-    } catch (err: unknown) {
-      toast.error('Failed to create category', {
-        description: err instanceof Error ? err.message : 'Unknown error',
-      });
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      // handled by hook
     }
   };
 

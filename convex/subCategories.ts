@@ -1,0 +1,75 @@
+import { v } from 'convex/values';
+import { mutation } from './_generated/server';
+import { getAuthUserId } from '@convex-dev/auth/server';
+
+export const create = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+    categoryId: v.id('categories'),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error('Unauthorized');
+
+    const subCategoryId = await ctx.db.insert('subCategories', {
+      name: args.name,
+      description: args.description,
+      categoryId: args.categoryId,
+      userId,
+      createdAt: new Date().toISOString(),
+    });
+
+    return subCategoryId;
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id('subCategories'),
+    name: v.string(),
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error('Unauthorized');
+
+    const subCategory = await ctx.db.get(args.id);
+    if (!subCategory || subCategory.userId !== userId)
+      throw new Error('Unauthorized');
+
+    await ctx.db.patch(args.id, {
+      name: args.name,
+      description: args.description,
+    });
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id('subCategories') },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error('Unauthorized');
+
+    const subCategory = await ctx.db.get(args.id);
+    if (!subCategory || subCategory.userId !== userId)
+      throw new Error('Unauthorized');
+
+    // Cascade delete links and linkTags
+    const links = await ctx.db
+      .query('links')
+      .withIndex('by_subCategory', (q) => q.eq('subCategoryId', args.id))
+      .collect();
+
+    for (const link of links) {
+      const linkTags = await ctx.db
+        .query('linkTags')
+        .withIndex('by_link', (q) => q.eq('linkId', link._id))
+        .collect();
+      await Promise.all(linkTags.map((lt) => ctx.db.delete(lt._id)));
+      await ctx.db.delete(link._id);
+    }
+
+    await ctx.db.delete(args.id);
+  },
+});

@@ -1,11 +1,16 @@
-import { useState, useRef, useEffect, memo, useDeferredValue } from 'react';
-import { Send, RefreshCw, Plus, Mic } from 'lucide-react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  memo,
+  useDeferredValue,
+  useMemo,
+} from 'react';
+import { Send, RefreshCw } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { retired-provider } from '@/integrations/retired-provider/client';
-import { Session } from '@retired-provider/retired-provider-js';
 import { toast } from 'sonner';
 import {
   Tooltip,
@@ -13,12 +18,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import ReactMarkdown from 'react-markdown';
-import { env } from '@/env';
 import remarkGfm from 'remark-gfm';
+import { useQuery, useMutation, useAction } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 interface ChatProps {
   categories: Category[];
-  session: Session | null;
   onLinkAdded: () => void;
 }
 
@@ -37,6 +43,7 @@ const MessageList = memo(
       <div className="space-y-6">
         {messages.map((message) => (
           <div key={message.id} className="animate-message-in group">
+            {/* Map Convex _id to id if needed, or use _id as key */}
             <div
               className={cn(
                 'rounded-lg border p-4',
@@ -45,7 +52,7 @@ const MessageList = memo(
                   : 'bg-transparent border-0'
               )}
             >
-              {message.sender === 'bot' ? (
+              {message.sender === 'bot' || message.role === 'model' ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -54,10 +61,14 @@ const MessageList = memo(
                     ),
                   }}
                 >
-                  {message.text}
+                  {message.text ||
+                    (message.parts && message.parts[0]?.text) ||
+                    ''}
                 </ReactMarkdown>
               ) : (
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {message.text || (message.parts && message.parts[0]?.text)}
+                </p>
               )}
             </div>
           </div>
@@ -79,182 +90,98 @@ const MessageList = memo(
   }
 );
 
-const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: crypto.randomUUID(),
-      text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-      sender: 'bot',
-    },
-  ]);
+const Chat = ({ onLinkAdded }: ChatProps) => {
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState<Id<'chatSessions'> | null>(null);
+
+  const getOrCreateSession = useMutation(api.chat.getOrCreateSession);
+  const clearHistory = useMutation(api.chat.clearHistory);
+  const processMessage = useAction(api.ai.processChatMessage);
+
+  // Initial session load
+  useEffect(() => {
+    getOrCreateSession().then((session) => setSessionId(session._id));
+  }, []);
+
+  const rawMessages = useQuery(
+    api.chat.getMessages,
+    sessionId ? { sessionId } : 'skip'
+  );
+
+  // Convert Convex messages to UI Message type
+  const messages = useMemo<Message[]>(
+    () =>
+      (rawMessages || [])
+        .filter((m) => m.role !== 'function')
+        .map((m) => ({
+          id: m._id,
+          text:
+            m.parts && Array.isArray(m.parts) ? m.parts[0]?.text : undefined,
+          parts: m.parts,
+          sender: m.role === 'model' ? 'bot' : 'user',
+          role: m.role as 'user' | 'model' | 'function',
+        })),
+    [rawMessages]
+  );
+
+  // If no messages, show welcome
+  const displayMessages = useMemo(
+    () =>
+      messages.length > 0
+        ? messages
+        : [
+            {
+              id: 'welcome',
+              text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
+              sender: 'bot',
+            } as Message,
+          ],
+    [messages]
+  );
+
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const MAX_TEXTAREA_HEIGHT = 200;
-  // Defer heavy message list rendering while the user is typing
-  const deferredMessages = useDeferredValue(messages);
+
+  const deferredMessages = useDeferredValue(displayMessages);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
-  }, [messages, isBotTyping]);
+  }, [displayMessages, isBotTyping]);
 
-  useEffect(() => {
-    if (!session?.user.id) return;
-    const loadOrCreateChatSession = async () => {
-      setIsBotTyping(true);
-      try {
-        const { data: existingSession, error: existingSessionError } =
-          await retired-provider
-            .from('chat_sessions')
-            .select('id')
-            .eq('user_id', session.user.id)
-            .order('created_at', {
-              ascending: false,
-            })
-            .limit(1)
-            .maybeSingle();
-        if (existingSessionError) throw existingSessionError;
-        let currentSessionId: string;
-        if (existingSession) {
-          currentSessionId = existingSession.id;
-          setSessionId(currentSessionId);
-          const { data: messageHistory, error: messageHistoryError } =
-            await retired-provider
-              .from('chat_messages')
-              .select('id, parts, role')
-              .eq('session_id', currentSessionId)
-              .order('created_at', {
-                ascending: true,
-              });
-          if (messageHistoryError) throw messageHistoryError;
-          if (messageHistory && messageHistory.length > 0) {
-            type RawMessage = {
-              id: string;
-              parts: Array<{ text?: string }>;
-              role: string;
-            };
-            const formattedMessages: Message[] = (
-              messageHistory as RawMessage[]
-            ).map((msg) => ({
-              id: msg.id,
-              text: (Array.isArray(msg.parts) && msg.parts[0]?.text) || '',
-              sender: msg.role === 'user' ? 'user' : 'bot',
-            }));
-            setMessages(formattedMessages);
-          } else {
-            setMessages([
-              {
-                id: crypto.randomUUID(),
-                text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-                sender: 'bot',
-              },
-            ]);
-          }
-        } else {
-          const { data: newSession, error: newSessionError } = await retired-provider
-            .from('chat_sessions')
-            .insert({
-              user_id: session.user.id,
-            })
-            .select('id')
-            .single();
-          if (newSessionError) throw newSessionError;
-          currentSessionId = newSession.id;
-          setSessionId(currentSessionId);
-          setMessages([
-            {
-              id: crypto.randomUUID(),
-              text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-              sender: 'bot',
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error('Error managing chat session:', error);
-        toast.error('Could not start a new chat session.');
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            text: "Sorry, I'm having trouble starting our conversation. Please refresh the page.",
-            sender: 'bot',
-          },
-        ]);
-      } finally {
-        setIsBotTyping(false);
-      }
-    };
-    loadOrCreateChatSession();
-  }, [session]);
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isBotTyping || !sessionId) return;
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      text: input,
-      sender: 'user',
-    };
-    setMessages((prev) => [...prev, userMessage]);
+
+    // Optimistic UI update could be done here, but Convex is fast enough usually.
+    // Actually, we should probably add the user message via mutation immediately for better UX
+    // But api.ai.processChatMessage handles adding the user message.
+    // Start typing indicator
+    setIsBotTyping(true);
     const currentInput = input;
     setInput('');
-    setIsBotTyping(true);
+
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-      // Call backend instead of edge function
-      const { data: sessionData } = await retired-provider.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${env.NEXT_PUBLIC_BACKEND_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          sessionId,
-          message: currentInput,
-          timeZone,
-        }),
+      const result = await processMessage({
+        message: currentInput,
+        sessionId,
+        timeZone,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const data = await response.json();
-
-      const botMessage: Message = {
-        id: crypto.randomUUID(),
-        text: data.reply,
-        sender: 'bot',
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      if (
-        Array.isArray(data?.functionCalls) &&
-        data.functionCalls.some(
-          (fc: {
-            function?: { name?: string; result?: { success?: boolean } };
-          }) =>
-            fc.function?.name === 'register_link' &&
-            fc.function?.result?.success
-        )
-      ) {
+      // No client-side tool execution needed anymore
+      if (result.reply) {
+        // Optionally trigger a refresh if we know a link was added?
+        // Since we don't know for sure without parsing toolResults (which we didn't return),
+        // we can just blindly refresh or rely on real-time subscriptions if the list is subscribed.
+        // But onLinkAdded callback was passed to Chat, maybe we should call it just in case?
+        // Or getting the recent links list will update automatically if it's a Query.
         onLinkAdded();
-        toast.success('Link added successfully!');
       }
     } catch (error) {
-      console.error('Error calling gemini-chat function:', error);
+      console.error('Error sending message:', error);
       toast.error('An error occurred', {
         description: "I couldn't process that request. Please try again.",
       });
@@ -262,33 +189,19 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
       setIsBotTyping(false);
     }
   };
+
   const handleClearChat = async () => {
-    if (!sessionId) {
-      toast.info('No active chat session to clear.');
-      return;
-    }
-    setIsBotTyping(true);
-    try {
-      const { error } = await retired-provider
-        .from('chat_messages')
-        .delete()
-        .eq('session_id', sessionId);
-      if (error) throw error;
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-          sender: 'bot',
-        },
-      ]);
-      toast.success('Chat history has been cleared.');
-    } catch (error) {
-      console.error('Error clearing chat history:', error);
-      toast.error('Could not clear chat history. Please try again.');
-    } finally {
-      setIsBotTyping(false);
+    if (!sessionId) return;
+    if (confirm('Are you sure you want to clear the chat history?')) {
+      try {
+        await clearHistory({ sessionId });
+        toast.success('Chat history cleared');
+      } catch (e) {
+        toast.error('Failed to clear history');
+      }
     }
   };
+
   return (
     <div className="flex flex-col h-full">
       <header className="px-4 h-12 flex items-center shrink-0 border-b border-[#1D1D1D]">
@@ -299,7 +212,7 @@ const Chat = ({ categories, session, onLinkAdded }: ChatProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={handleClearChat}
-                disabled={!sessionId || messages.length <= 1 || isBotTyping}
+                disabled={!sessionId || messages.length === 0 || isBotTyping}
               >
                 <RefreshCw className="h-5 w-5" />
                 <span className="sr-only">Clear chat history</span>

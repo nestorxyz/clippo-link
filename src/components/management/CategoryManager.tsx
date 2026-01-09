@@ -1,9 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Session } from '@retired-provider/retired-provider-js';
 import { useCategories } from '@/hooks/useCategories';
-import { retired-provider } from '@/integrations/retired-provider/client';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -18,14 +16,19 @@ import {
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useConvexMutation } from '@/hooks/use-convex-mutation';
+import { api } from '../../../convex/_generated/api';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Category name is required.'),
   description: z.string().optional(),
 });
 
-const CategoryManager = ({ session }: { session: Session | null }) => {
-  const { data: categories = [], isLoading } = useCategories(session);
+const CategoryManager = () => {
+  const { data: categories = [], isLoading } = useCategories();
+  const { mutate: createCategory, isLoading: isCreating } = useConvexMutation(
+    api.categories.create
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,21 +36,20 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!session) return;
     try {
-      const { error } = await retired-provider.from('categories').insert({
-        name: values.name,
-        description: values.description,
-        user_id: session.user.id,
-      });
-
-      if (error) throw error;
-      toast.success('Category created successfully!');
+      await createCategory(
+        {
+          name: values.name,
+          description: values.description,
+        },
+        {
+          successMessage: 'Category created successfully!',
+          errorMessage: 'Failed to create category',
+        }
+      );
       form.reset();
-    } catch (error: unknown) {
-      toast.error('Failed to create category', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      });
+    } catch {
+      // Error handled by hook
     }
   };
 
@@ -88,10 +90,8 @@ const CategoryManager = ({ session }: { session: Session | null }) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={isCreating}>
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Category
             </Button>
           </form>
