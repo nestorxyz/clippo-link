@@ -1,9 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Session } from '@supabase/supabase-js';
 import { useTags } from '@/hooks/useTags';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -21,14 +19,19 @@ import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { getContrastColor } from '@/lib/colorUtils';
+import { useConvexMutation } from '@/hooks/use-convex-mutation';
+import { api } from '../../../convex/_generated/api';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Tag name is required.'),
   color: z.string().optional(),
 });
 
-const TagManager = ({ session }: { session: Session | null }) => {
-  const { data: tags = [], isLoading } = useTags(session);
+const TagManager = () => {
+  const { data: tags = [], isLoading } = useTags();
+  const { mutate: createTag, isLoading: isCreating } = useConvexMutation(
+    api.tags.create
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,24 +39,20 @@ const TagManager = ({ session }: { session: Session | null }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!session) return;
     try {
-      const insertData: { name: string; user_id: string; color?: string } = {
-        name: values.name,
-        user_id: session.user.id,
-      };
-      if (values.color) {
-        insertData.color = values.color;
-      }
-      const { error } = await supabase.from('tags').insert(insertData);
-
-      if (error) throw error;
-      toast.success('Tag created successfully!');
+      await createTag(
+        {
+          name: values.name,
+          color: values.color || '#000000',
+        },
+        {
+          successMessage: 'Tag created successfully!',
+          errorMessage: 'Failed to create tag',
+        }
+      );
       form.reset();
-    } catch (error: unknown) {
-      toast.error('Failed to create tag', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      });
+    } catch {
+      // Error handled by hook
     }
   };
 
@@ -95,10 +94,8 @@ const TagManager = ({ session }: { session: Session | null }) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={isCreating}>
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Tag
             </Button>
           </form>

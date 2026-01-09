@@ -1,9 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Session } from '@supabase/supabase-js';
 import { useCategories } from '@/hooks/useCategories';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -26,6 +24,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useConvexMutation } from '@/hooks/use-convex-mutation';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Sub-category name is required.'),
@@ -33,9 +34,12 @@ const formSchema = z.object({
   category_id: z.string().min(1, 'Please select a category.'),
 });
 
-const SubCategoryManager = ({ session }: { session: Session | null }) => {
+const SubCategoryManager = () => {
   const { data: categories = [], isLoading: isLoadingCategories } =
-    useCategories(session);
+    useCategories();
+
+  const { mutate: createSubCategory, isLoading: isCreating } =
+    useConvexMutation(api.subCategories.create);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,22 +47,21 @@ const SubCategoryManager = ({ session }: { session: Session | null }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!session) return;
     try {
-      const { error } = await supabase.from('sub_categories').insert({
-        name: values.name,
-        description: values.description,
-        category_id: values.category_id,
-        user_id: session.user.id,
-      });
-
-      if (error) throw error;
-      toast.success('Sub-category created successfully!');
+      await createSubCategory(
+        {
+          name: values.name,
+          description: values.description,
+          categoryId: values.category_id as Id<'categories'>,
+        },
+        {
+          successMessage: 'Sub-category created successfully!',
+          errorMessage: 'Failed to create sub-category',
+        }
+      );
       form.reset();
-    } catch (error: unknown) {
-      toast.error('Failed to create sub-category', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      });
+    } catch {
+      // Error handled by hook
     }
   };
 
@@ -135,13 +138,8 @@ const SubCategoryManager = ({ session }: { session: Session | null }) => {
                 </FormItem>
               )}
             />
-            <Button
-              type="submit"
-              disabled={form.formState.isSubmitting || isLoadingCategories}
-            >
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={isCreating || isLoadingCategories}>
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Sub-Category
             </Button>
           </form>

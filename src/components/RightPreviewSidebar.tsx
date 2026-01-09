@@ -84,9 +84,9 @@ const PreviewCard: React.FC<{ link: Link }> = ({ link }) => {
           </div>
         </div>
       </div>
-      {link.img_preview && !hideImage ? (
+      {link.imgPreview && !hideImage ? (
         <img
-          src={link.img_preview}
+          src={link.imgPreview}
           alt={link.title || 'Preview Image'}
           loading="lazy"
           referrerPolicy="no-referrer"

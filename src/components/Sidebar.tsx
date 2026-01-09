@@ -54,6 +54,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import DroppableCategory from './DroppableCategory';
 import DraggableLink from './DraggableLink';
 
+import { useConvexMutation } from '@/hooks/use-convex-mutation';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
+
 interface SidebarProps {
   categories: Category[];
   isCollapsed: boolean;
@@ -93,7 +97,11 @@ const Sidebar = ({
     null
   );
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const queryClient = useQueryClient();
+  const { mutate: updateLink } = useConvexMutation(api.links.update);
+  const { mutate: deleteLink } = useConvexMutation(api.links.remove);
+  const { mutate: createSubCategory } = useConvexMutation(
+    api.subCategories.create
+  );
 
   console.log('categories', categories);
 
@@ -228,19 +236,11 @@ const Sidebar = ({
 
         if (!generalSubCategory) {
           // Create "general" subcategory
-          const { data: newSubCategory, error: subCategoryError } =
-            await supabase
-              .from('sub_categories')
-              .insert({
-                name: 'general',
-                category_id: category.id,
-                user_id: session.user.id,
-              })
-              .select('id')
-              .single();
-
-          if (subCategoryError) throw subCategoryError;
-          targetSubCategoryId = newSubCategory.id;
+          const newSubCategoryId = await createSubCategory({
+            name: 'general',
+            categoryId: category.id as Id<'categories'>,
+          });
+          targetSubCategoryId = newSubCategoryId;
         } else {
           targetSubCategoryId = generalSubCategory.id;
         }
@@ -248,27 +248,20 @@ const Sidebar = ({
 
       if (targetSubCategoryId && targetSubCategoryId !== link.subCategoryId) {
         // Update the link's subcategory
-        const { error } = await supabase
-          .from('links')
-          .update({ sub_category_id: targetSubCategoryId })
-          .eq('id', link.id);
-
-        if (error) throw error;
+        await updateLink({
+          id: link.id as Id<'links'>,
+          subCategoryId: targetSubCategoryId as Id<'subCategories'>,
+        });
 
         // Show success toast
         toast.success('Link moved successfully!');
 
-        // Invalidate and refetch categories
-        queryClient.invalidateQueries({
-          queryKey: ['categories', session.user.id],
-        });
-
         // Keep the dropped-on category open after successful drop
         if (droppedOnCategoryId) {
           setOpenCategories((prev) =>
-            prev.includes(droppedOnCategoryId)
+            prev.includes(droppedOnCategoryId!)
               ? prev
-              : [...prev, droppedOnCategoryId]
+              : [...prev, droppedOnCategoryId!]
           );
         }
       }
@@ -277,54 +270,21 @@ const Sidebar = ({
       setHoveredCategoryId(null);
     } catch (error: unknown) {
       console.error('Error moving link:', error);
-      toast.error('Failed to move link', {
-        description:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred',
-      });
-
-      // Clear hover state on error too
+      // Toast handled by mutation hook or manually if needed
       setHoveredCategoryId(null);
     }
   };
 
   const handleLinkDelete = async (linkId: string) => {
-    if (!session) return;
-
     setDeletingLinkId(linkId);
     try {
-      // Delete link-tag associations first
-      const { error: linkTagsError } = await supabase
-        .from('link_tags')
-        .delete()
-        .eq('link_id', linkId);
-
-      if (linkTagsError) throw linkTagsError;
-
-      // Delete the link
-      const { error: linkError } = await supabase
-        .from('links')
-        .delete()
-        .eq('id', linkId)
-        .eq('user_id', session.user.id);
-
-      if (linkError) throw linkError;
-
-      toast.success('Link deleted successfully!');
-
-      // Invalidate and refetch categories
-      queryClient.invalidateQueries({
-        queryKey: ['categories', session.user.id],
-      });
+      await deleteLink(
+        { id: linkId as Id<'links'> },
+        { successMessage: 'Link deleted successfully!' }
+      );
+      // Toast handled by mutation hook
     } catch (error: unknown) {
-      console.error('Error deleting link:', error);
-      toast.error('Failed to delete link', {
-        description:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred',
-      });
+      // Error handled by hook
     } finally {
       setDeletingLinkId(null);
     }
