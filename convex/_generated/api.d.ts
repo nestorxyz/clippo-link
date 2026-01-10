@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as chat from "../chat.js";
 import type * as http from "../http.js";
+import type * as import_data from "../import_data.js";
 import type * as links from "../links.js";
 import type * as subCategories from "../subCategories.js";
 import type * as tags from "../tags.js";
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   categories: typeof categories;
   chat: typeof chat;
   http: typeof http;
+  import_data: typeof import_data;
   links: typeof links;
   subCategories: typeof subCategories;
   tags: typeof tags;

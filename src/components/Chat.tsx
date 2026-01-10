@@ -113,14 +113,28 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
     () =>
       (rawMessages || [])
         .filter((m) => m.role !== 'function')
-        .map((m) => ({
-          id: m._id,
-          text:
-            m.parts && Array.isArray(m.parts) ? m.parts[0]?.text : undefined,
-          parts: m.parts,
-          sender: m.role === 'model' ? 'bot' : 'user',
-          role: m.role as 'user' | 'model' | 'function',
-        })),
+        .map((m) => {
+          let text = '';
+          const parts = m.parts as any[];
+
+          if (parts && Array.isArray(parts)) {
+            parts.forEach((p) => {
+              if (p.text) {
+                text += p.text;
+              } else if (p.functionCall) {
+                text += `_Used tool: ${p.functionCall.name}_\n`;
+              }
+            });
+          }
+
+          return {
+            id: m._id,
+            text,
+            parts: m.parts as any,
+            sender: m.role === 'model' ? 'bot' : 'user',
+            role: m.role as any,
+          };
+        }),
     [rawMessages]
   );
 
