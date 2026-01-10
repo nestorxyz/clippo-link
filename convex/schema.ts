@@ -58,4 +58,12 @@ export default defineSchema({
     parts: v.any(), // JSON content
     createdAt: v.optional(v.string()),
   }).index('by_session', ['sessionId']),
+
+  profiles: defineTable({
+    userId: v.id('users'),
+    phoneNumber: v.optional(v.string()),
+    phoneVerified: v.optional(v.boolean()),
+    phoneVerifiedAt: v.optional(v.string()),
+    updatedAt: v.optional(v.string()),
+  }).index('by_user', ['userId']),
 });

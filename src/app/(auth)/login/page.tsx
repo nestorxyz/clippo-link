@@ -50,7 +50,11 @@ const floatingElements = [
 ];
 
 export default function AuthPage() {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const auth = useConvexAuth();
+  const { isAuthenticated, isLoading } = auth || {
+    isAuthenticated: false,
+    isLoading: true,
+  };
   const [showElements, setShowElements] = useState(false);
   const [elementPositions, setElementPositions] = useState<
     Array<{ left: number; top: number; fromSide: number }>
