@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useConvexAuth } from 'convex/react';
-import { SignIn } from '@clerk/nextjs';
-import { dark } from '@clerk/themes';
+import { useAuth } from '@clerk/nextjs';
 import {
   Loader2,
   Bookmark,
@@ -52,12 +50,8 @@ const floatingElements = [
 ];
 
 export default function AuthPage() {
-  const auth = useConvexAuth();
-  console.log('auth', auth);
-  const { isAuthenticated, isLoading } = auth || {
-    isAuthenticated: false,
-    isLoading: true,
-  };
+  const { isLoaded, isSignedIn } = useAuth();
+
   const [showElements, setShowElements] = useState(false);
   const [elementPositions, setElementPositions] = useState<
     Array<{ left: number; top: number; fromSide: number }>
@@ -119,10 +113,10 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoaded && isSignedIn) {
       redirect('/dashboard');
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isSignedIn, isLoaded]);
 
   // Trigger floating elements animation after component mounts
   useEffect(() => {
@@ -132,7 +126,7 @@ export default function AuthPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -140,7 +134,7 @@ export default function AuthPage() {
     );
   }
 
-  if (isAuthenticated) {
+  if (isSignedIn) {
     return null; // Will redirect
   }
 
