@@ -1,8 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Providers } from '@/components/providers';
@@ -29,7 +27,6 @@ export default function RootLayout({
             <ConvexClientProvider>
               <TooltipProvider>{children}</TooltipProvider>
             </ConvexClientProvider>
-            <Toaster />
             <Sonner />
           </Providers>
         </body>

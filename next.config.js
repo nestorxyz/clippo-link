@@ -1,3 +1,8 @@
+const jiti = require('jiti')(__filename);
+
+// Import env here to validate during build. Using jiti we can import .ts files in .js
+jiti('./src/env');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable experimental features if needed
