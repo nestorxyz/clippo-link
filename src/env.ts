@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const env = createEnv({
   server: {
     CLERK_SECRET_KEY: z.string(),
+    CLERK_JWT_ISSUER_DOMAIN: z.string(),
   },
   client: {
     NEXT_PUBLIC_BACKEND_URL: z.string().url(),
@@ -22,6 +23,7 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_JWT_ISSUER_DOMAIN: process.env.CLERK_JWT_ISSUER_DOMAIN,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
