@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
-import { getAuthUserId } from '@convex-dev/auth/server';
+import { getUserId } from './users';
 
 export const getByUser = query({
   args: { userId: v.id('users') },
@@ -17,7 +17,7 @@ export const getByUser = query({
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) return [];
 
     const tags = await ctx.db
@@ -35,7 +35,7 @@ export const create = mutation({
     color: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const tagId = await ctx.db.insert('tags', {
@@ -55,7 +55,7 @@ export const update = mutation({
     color: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const tag = await ctx.db.get(args.id);
@@ -71,7 +71,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('tags') },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const tag = await ctx.db.get(args.id);

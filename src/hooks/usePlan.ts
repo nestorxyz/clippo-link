@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { retired-provider } from '@/integrations/retired-provider/client';
+import { useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
 
 export type UserPlan = {
@@ -20,14 +20,16 @@ export function usePlan() {
   const [data, setData] = useState<UserPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const fetchPlan = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) return;
     setIsLoading(true);
     setError(null);
     try {
-      const { data: sessionRes } = await retired-provider.auth.getSession();
-      const token = sessionRes.session?.access_token;
+      const token = await getToken({ template: 'convex' });
       if (!token) throw new Error('Not authenticated');
+
       const res = await fetch(
         `${env.NEXT_PUBLIC_BACKEND_URL}/api/billing/plan`,
         {
@@ -42,11 +44,13 @@ export function usePlan() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getToken, isLoaded, isSignedIn]);
 
   useEffect(() => {
-    fetchPlan();
-  }, [fetchPlan]);
+    if (isLoaded && isSignedIn) {
+      fetchPlan();
+    }
+  }, [fetchPlan, isLoaded, isSignedIn]);
 
   return { data, isLoading, error, refetch: fetchPlan } as const;
 }

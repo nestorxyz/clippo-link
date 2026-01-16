@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { retired-provider } from '@/integrations/retired-provider/client';
 import { env } from '@/env';
+import { useUser, useAuth } from '@clerk/nextjs';
 
 const BACKEND_URL = env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
@@ -38,6 +38,8 @@ export function PhoneVerification({
     whatsappAccountId: string;
   } | null>(null);
   const { toast } = useToast();
+  const { user } = useUser();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     if (cooldownSeconds > 0) {
@@ -62,23 +64,13 @@ export function PhoneVerification({
   };
 
   const sendOTP = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
 
     try {
-      const {
-        data: { session },
-      } = await retired-provider.auth.getSession();
-      if (!session) {
-        throw new Error('No authenticated session');
-      }
-
-      const {
-        data: { user },
-      } = await retired-provider.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      const token = await getToken({ template: 'convex' });
+      if (!token) throw new Error('No authenticated session');
 
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
@@ -86,7 +78,7 @@ export function PhoneVerification({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
@@ -114,23 +106,13 @@ export function PhoneVerification({
   };
 
   const verifyOTP = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
 
     try {
-      const {
-        data: { session },
-      } = await retired-provider.auth.getSession();
-      if (!session) {
-        throw new Error('No authenticated session');
-      }
-
-      const {
-        data: { user },
-      } = await retired-provider.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      const token = await getToken({ template: 'convex' });
+      if (!token) throw new Error('No authenticated session');
 
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
@@ -138,7 +120,7 @@ export function PhoneVerification({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
@@ -175,6 +157,7 @@ export function PhoneVerification({
   };
 
   const handleConsolidation = async (shouldConsolidate: boolean) => {
+    if (!user) return;
     if (!shouldConsolidate) {
       // User declined, go back to phone entry
       setStep('phone');
@@ -187,19 +170,8 @@ export function PhoneVerification({
     setError(null);
 
     try {
-      const {
-        data: { session },
-      } = await retired-provider.auth.getSession();
-      if (!session) {
-        throw new Error('No authenticated session');
-      }
-
-      const {
-        data: { user },
-      } = await retired-provider.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      const token = await getToken({ template: 'convex' });
+      if (!token) throw new Error('No authenticated session');
 
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
@@ -209,7 +181,7 @@ export function PhoneVerification({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             phoneNumber: formattedPhone,

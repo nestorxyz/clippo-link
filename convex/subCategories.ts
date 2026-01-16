@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getAuthUserId } from '@convex-dev/auth/server';
+import { getUserId } from './users';
 
 export const getByUser = query({
   args: { userId: v.id('users') },
@@ -21,7 +21,7 @@ export const create = mutation({
     categoryId: v.id('categories'),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const subCategoryId = await ctx.db.insert('subCategories', {
@@ -43,7 +43,7 @@ export const update = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const subCategory = await ctx.db.get(args.id);
@@ -60,7 +60,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('subCategories') },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const subCategory = await ctx.db.get(args.id);

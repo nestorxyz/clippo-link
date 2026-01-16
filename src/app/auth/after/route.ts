@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
   if (!user) {
     const qs = searchParams.toString();
-    return NextResponse.redirect(`${origin}/login${qs ? `?${qs}` : ''}`);
+    return NextResponse.redirect(`${origin}/sign-in${qs ? `?${qs}` : ''}`);
   }
 
   if (intent !== 'checkout' || (plan !== 'monthly' && plan !== 'annual')) {

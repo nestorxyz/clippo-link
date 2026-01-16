@@ -27,7 +27,7 @@ export const PricingSection = () => {
       featuresTitle: 'What you’ll get:',
       ctaText: 'Get Started',
       ctaVariant: 'outlined',
-      href: '/login?plan=monthly&intent=checkout&msg=areYouReadyToAction',
+      href: '/sign-in?plan=monthly&intent=checkout&msg=areYouReadyToAction',
       features: [
         'Up to 200 link saving & organization',
         'Smart AI tagging & search',
@@ -46,7 +46,7 @@ export const PricingSection = () => {
       featuresTitle: 'What you’ll get:',
       ctaText: 'Start Free Trial',
       ctaVariant: 'filled',
-      href: '/login?plan=annual&intent=checkout&msg=areYouReadyToAction',
+      href: '/sign-in?plan=annual&intent=checkout&msg=areYouReadyToAction',
       features: [
         'Everything in Monthly, plus:',
         'Priority feature access',

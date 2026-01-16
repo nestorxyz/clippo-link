@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useConvexAuth } from 'convex/react';
+import { SignIn } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 import {
   Loader2,
   Bookmark,
@@ -204,7 +206,7 @@ export default function AuthPage() {
 
       {/* Main Content */}
       <div className="relative z-10 -mt-5 flex flex-col justify-center items-center h-full text-center p-4 sm:p-8">
-        <main className="w-full max-w-md mx-auto">
+        <main className="w-full max-w-md mx-auto flex flex-col items-center">
           <div className="mb-8">
             <Link
               href="/"
@@ -223,6 +225,22 @@ export default function AuthPage() {
               <span className="text-[#EBEBEB]">effortlessly</span>
             </h1>
           </div>
+
+          {/* <SignIn
+            appearance={{
+              theme: dark,
+              layout: {
+                termsPageUrl: '/terms',
+                privacyPageUrl: '/privacy',
+              },
+              variables: {
+                colorBackground: 'transparent',
+                colorBorder: 'white',
+                fontSize: 'xs',
+              },
+            }}
+            withSignUp={false}
+          /> */}
 
           <AuthForm />
 
