@@ -3,8 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +29,8 @@ import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from '../../convex/_generated/api';
+import { useUser, useClerk, useAuth } from '@clerk/nextjs';
+import { env } from '@/env';
 
 interface LeftNavProps {
   categories: Category[];
@@ -41,7 +41,7 @@ interface LeftNavProps {
     subCategoryId: string | null,
     categoryId: string | null
   ) => void;
-  session: Session | null;
+  // Session prop removed
 }
 
 const LeftNav: React.FC<LeftNavProps> = ({
@@ -50,8 +50,11 @@ const LeftNav: React.FC<LeftNavProps> = ({
   selectedSubCategoryId,
   onSelectCategory,
   onSelectSubCategory,
-  session,
 }) => {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const { getToken } = useAuth();
+
   const [localCategories, setLocalCategories] =
     useState<Category[]>(categories);
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
@@ -65,12 +68,8 @@ const LeftNav: React.FC<LeftNavProps> = ({
     }
   }, [categories, lastCreatedId]);
 
-  const email = session?.user?.email ?? '';
-  const userMetadata = (session?.user?.user_metadata ?? {}) as {
-    avatar_url?: string;
-    picture?: string;
-  };
-  const avatarUrl = userMetadata.avatar_url || userMetadata.picture || null;
+  const email = user?.primaryEmailAddress?.emailAddress ?? '';
+  const avatarUrl = user?.imageUrl || null;
   const avatarFallback = useMemo(
     () => (email ? email.charAt(0).toUpperCase() : 'U'),
     [email]
@@ -81,13 +80,12 @@ const LeftNav: React.FC<LeftNavProps> = ({
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      // In Next.js App Router, a hard refresh ensures UI state resets
-      window.location.href = '/auth';
+      await signOut();
     } catch (e) {
       console.error('Failed to sign out', e);
     }
   };
+
   return (
     <aside className="h-screen w-[252px] flex-shrink-0 bg-background">
       <div className="flex flex-col h-full">
@@ -96,10 +94,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
         </div>
 
         <div className="px-2 pb-2">
-          <AddCategoryButton
-            session={session}
-            onCreated={(newId) => setLastCreatedId(newId)}
-          />
+          <AddCategoryButton onCreated={(newId) => setLastCreatedId(newId)} />
         </div>
 
         <div className="flex-1 overflow-y-auto py-2">
@@ -171,13 +166,11 @@ const LeftNav: React.FC<LeftNavProps> = ({
                 <DropdownMenuItem
                   onClick={async () => {
                     try {
-                      const { data: sessionRes } =
-                        await supabase.auth.getSession();
-                      const token = sessionRes.session?.access_token;
+                      const token = await getToken({ template: 'convex' });
                       if (!token) throw new Error('No session');
                       const res = await fetch(
                         `${
-                          process.env.NEXT_PUBLIC_BACKEND_URL || ''
+                          env.NEXT_PUBLIC_BACKEND_URL || ''
                         }/api/billing/portal`,
                         { headers: { Authorization: `Bearer ${token}` } }
                       );
@@ -201,7 +194,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
                       window.dispatchEvent(new CustomEvent('open-pricing'));
                     } catch (e) {
                       window.location.href =
-                        '/login?plan=monthly&intent=checkout&msg=areYouReadyToAction';
+                        '/sign-in?plan=monthly&intent=checkout&msg=areYouReadyToAction';
                     }
                   }}
                   className="cursor-pointer focus:bg-[#2A2A2A]"
@@ -239,12 +232,11 @@ const LeftNav: React.FC<LeftNavProps> = ({
 };
 
 const AddCategoryButton = ({
-  session,
   onCreated,
 }: {
-  session: Session | null;
   onCreated: (newId: string) => void;
 }) => {
+  const { isSignedIn } = useUser();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -316,7 +308,7 @@ const AddCategoryButton = ({
           <DialogFooter>
             <Button
               type="submit"
-              disabled={!session || !name.trim() || submitting}
+              disabled={!isSignedIn || !name.trim() || submitting}
               className="ml-auto"
             >
               {submitting ? 'Creating…' : 'Create'}

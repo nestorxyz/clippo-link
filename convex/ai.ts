@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { action } from './_generated/server';
 import { api } from './_generated/api';
-import { getAuthUserId } from '@convex-dev/auth/server';
+
 import { google } from '@ai-sdk/google';
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
@@ -15,8 +15,9 @@ export const processChatMessage = action({
     timeZone: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error('Unauthorized');
+    const user = await ctx.runQuery(api.users.current);
+    if (!user) throw new Error('Unauthorized');
+    const userId = user._id;
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY is not set');

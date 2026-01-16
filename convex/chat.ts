@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getAuthUserId } from '@convex-dev/auth/server';
+import { getUserId } from './users';
 
 // Backend usage: Add message without checking auth (trusting backend to pass correct sessionId)
 export const saveMessage = mutation({
@@ -22,7 +22,7 @@ export const saveMessage = mutation({
 export const getOrCreateSession = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const existing = await ctx.db
@@ -45,7 +45,7 @@ export const getOrCreateSession = mutation({
 export const getMessages = query({
   args: { sessionId: v.id('chatSessions') },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     // Verify session belongs to user
@@ -72,7 +72,7 @@ export const addMessage = mutation({
     parts: v.any(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const session = await ctx.db.get(args.sessionId);
@@ -90,7 +90,7 @@ export const addMessage = mutation({
 export const clearHistory = mutation({
   args: { sessionId: v.id('chatSessions') },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
     const session = await ctx.db.get(args.sessionId);

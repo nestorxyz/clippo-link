@@ -7,7 +7,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Providers } from '@/components/providers';
 import ConvexClientProvider from '@/components/ConvexClientProvider';
-import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
+import { ClerkProvider } from '@clerk/nextjs';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ConvexAuthNextjsServerProvider>
+    <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           <Providers>
@@ -34,6 +34,6 @@ export default function RootLayout({
           </Providers>
         </body>
       </html>
-    </ConvexAuthNextjsServerProvider>
+    </ClerkProvider>
   );
 }

@@ -51,7 +51,7 @@ export const NavigationHeader = () => {
           {/* App Store Button - Desktop */}
           <div className="hidden md:block">
             <Link
-              href="/login"
+              href="/sign-in"
               className="inline-flex items-center px-6 py-3 bg-[#EA64D3] text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
             >
               Login
@@ -98,7 +98,7 @@ export const NavigationHeader = () => {
                 Contact
               </a>
               <Link
-                href="/login"
+                href="/sign-in"
                 className="inline-flex items-center px-6 py-3 bg-[#EA64D3] text-white text-base font-medium rounded-md hover:bg-blue-600 hover:shadow-lg transform hover:scale-105 transition-all duration-150 ease-in-out"
               >
                 Login

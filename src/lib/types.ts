@@ -2,18 +2,18 @@
 export interface Tag {
   id: string;
   name: string;
-  color?: string | null;
+  color?: string;
 }
 
 export interface Link {
   id: string;
   url: string;
   title: string;
-  description: string | null;
-  createdAt: string;
+  description?: string;
+  createdAt?: string;
   tags: Tag[];
-  source?: string | null;
-  imgPreview?: string | null;
+  source?: string;
+  imgPreview?: string;
 }
 
 export interface SubCategory {

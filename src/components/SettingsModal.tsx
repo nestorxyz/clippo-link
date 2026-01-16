@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
@@ -20,53 +18,29 @@ import { toast } from 'sonner';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePlan } from '@/hooks/usePlan';
+import { useUser, useClerk, useAuth } from '@clerk/nextjs';
+import { env } from '@/env';
 
 type SettingsTab = 'profile' | 'integrations' | 'billing';
 
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
-  session: Session;
 }
 
-export default function SettingsModal({
-  open,
-  onClose,
-  session,
-}: SettingsModalProps) {
+export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
-  const [fullName, setFullName] = useState<string>('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { phoneStatus, refresh: refreshPhoneStatus } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
-  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [planLabel, setPlanLabel] = useState<'free' | 'premium' | null>(null);
   const { data: plan } = usePlan();
 
-  const email = session.user.email ?? '';
-  const displayName = useMemo(() => {
-    return (
-      fullName ||
-      (session.user.user_metadata?.full_name as string | undefined) ||
-      (session.user.user_metadata?.name as string | undefined) ||
-      ''
-    );
-  }, [fullName, session.user.user_metadata]);
-
-  const displayAvatarUrl = useMemo(() => {
-    return (
-      avatarUrl ||
-      (session.user.user_metadata?.avatar_url as string | undefined) ||
-      (session.user.user_metadata?.picture as string | undefined) ||
-      null
-    );
-  }, [avatarUrl, session.user.user_metadata]);
-
-  const avatarFallback = useMemo(
-    () => (email ? email.charAt(0).toUpperCase() : 'U'),
-    [email]
-  );
+  const email = user?.primaryEmailAddress?.emailAddress ?? '';
+  const displayName = user?.fullName || user?.firstName || '';
+  const displayAvatarUrl = user?.imageUrl || null;
 
   useEffect(() => {
     if (!open) return;
@@ -77,37 +51,18 @@ export default function SettingsModal({
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadProfile() {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', session.user.id)
-        .single();
-      if (!cancelled && !error && data) {
-        setFullName(data.full_name || '');
-        setAvatarUrl(data.avatar_url || null);
-      }
-    }
-    if (open) loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, session.user.id]);
-
   const title =
     activeTab === 'profile'
       ? 'Profile'
       : activeTab === 'integrations'
-      ? 'Integrations'
-      : 'Billing';
+        ? 'Integrations'
+        : 'Billing';
   const subtitle =
     activeTab === 'profile'
       ? 'Manage your profile'
       : activeTab === 'integrations'
-      ? 'Connect your apps'
-      : 'Manage your subscription and plan';
+        ? 'Connect your apps'
+        : 'Manage your subscription and plan';
   useEffect(() => {
     if (plan) setPlanLabel(plan.plan);
   }, [plan]);
@@ -177,7 +132,7 @@ export default function SettingsModal({
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-[#A5A5A5] hover:text-white hover:bg-[#1D1D1D]"
-                  onClick={() => supabase.auth.signOut()}
+                  onClick={() => signOut()}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Log out
@@ -247,7 +202,6 @@ export default function SettingsModal({
                 {activeTab === 'profile' && (
                   <div className="max-w-xl">
                     <AccountForm
-                      session={session}
                       showWhatsAppSection={false}
                       showSignOutButton={false}
                     />
@@ -329,44 +283,15 @@ export default function SettingsModal({
                                 plan.trialEndsAt
                               ).toLocaleDateString()}`
                             : plan.renewsAt
-                            ? `Renews on ${new Date(
-                                plan.renewsAt
-                              ).toLocaleDateString()}`
-                            : null}
+                              ? `Renews on ${new Date(
+                                  plan.renewsAt
+                                ).toLocaleDateString()}`
+                              : null}
                         </div>
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="default"
-                        disabled={isOpeningPortal}
-                        onClick={async () => {
-                          try {
-                            setIsOpeningPortal(true);
-                            const { data: sessionRes } =
-                              await supabase.auth.getSession();
-                            const token = sessionRes.session?.access_token;
-                            if (!token) throw new Error('No session');
-                            const res = await fetch(
-                              `${
-                                process.env.NEXT_PUBLIC_BACKEND_URL || ''
-                              }/api/billing/portal`,
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            );
-                            const json = await res.json();
-                            const url = json?.url as string | undefined;
-                            if (url) window.location.href = url;
-                            else toast.error('No billing portal available');
-                          } catch (e) {
-                            console.error(e);
-                            toast.error('Failed to open billing portal');
-                          } finally {
-                            setIsOpeningPortal(false);
-                          }
-                        }}
-                      >
-                        Manage subscription
-                      </Button>
+                      <PortalButton />
                       <Button
                         variant="secondary"
                         onClick={() =>
@@ -384,5 +309,37 @@ export default function SettingsModal({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function PortalButton() {
+  const { getToken } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const handleOpen = async () => {
+    try {
+      setLoading(true);
+      const token = await getToken({ template: 'convex' });
+      if (!token) throw new Error('No session');
+      const res = await fetch(
+        `${env.NEXT_PUBLIC_BACKEND_URL}/api/billing/portal`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const json = await res.json();
+      const url = json?.url as string | undefined;
+      if (url) window.location.href = url;
+      else toast.error('No billing portal available');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to open billing portal');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="default" disabled={loading} onClick={handleOpen}>
+      Manage subscription
+    </Button>
   );
 }

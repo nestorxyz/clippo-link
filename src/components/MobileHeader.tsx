@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Session } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -10,21 +9,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Sparkles } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
+import { useUser, useClerk, useAuth } from '@clerk/nextjs';
+import { env } from '@/env';
 
-interface MobileHeaderProps {
-  session: Session | null;
-}
+interface MobileHeaderProps {}
 
-const MobileHeader: React.FC<MobileHeaderProps> = ({ session }) => {
-  const email = session?.user?.email ?? '';
-  const userMetadata = (session?.user?.user_metadata ?? {}) as {
-    avatar_url?: string;
-    picture?: string;
-  };
-  const avatarUrl = userMetadata.avatar_url || userMetadata.picture || null;
+const MobileHeader: React.FC<MobileHeaderProps> = () => {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const { getToken } = useAuth();
+
+  const email = user?.primaryEmailAddress?.emailAddress ?? '';
+  const avatarUrl = user?.imageUrl || null;
   const avatarFallback = useMemo(
     () => (email ? email.charAt(0).toUpperCase() : 'U'),
     [email]
@@ -33,8 +31,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ session }) => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      window.location.href = '/auth';
+      await signOut();
     } catch (e) {
       console.error('Failed to sign out', e);
     }
@@ -67,14 +64,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ session }) => {
               <DropdownMenuItem
                 onClick={async () => {
                   try {
-                    const { data: sessionRes } =
-                      await supabase.auth.getSession();
-                    const token = sessionRes.session?.access_token;
+                    const token = await getToken({ template: 'convex' });
                     if (!token) throw new Error('No session');
                     const res = await fetch(
-                      `${
-                        process.env.NEXT_PUBLIC_BACKEND_URL || ''
-                      }/api/billing/portal`,
+                      `${env.NEXT_PUBLIC_BACKEND_URL || ''}/api/billing/portal`,
                       { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const json = await res.json();
@@ -97,7 +90,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ session }) => {
                     window.dispatchEvent(new CustomEvent('open-pricing'));
                   } catch (e) {
                     window.location.href =
-                      '/login?plan=monthly&intent=checkout&msg=areYouReadyToAction';
+                      '/sign-in?plan=monthly&intent=checkout&msg=areYouReadyToAction';
                   }
                 }}
                 className="cursor-pointer"

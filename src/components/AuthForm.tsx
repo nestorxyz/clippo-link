@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { useSignIn } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -30,15 +30,17 @@ const GoogleIcon = () => (
 );
 
 export const AuthForm = () => {
-  const { signIn } = useAuthActions();
+  const { signIn, isLoaded } = useSignIn();
   const [loading, setLoading] = useState<'google' | null>(null);
 
   const signInWithGoogle = async () => {
+    if (!isLoaded) return;
     setLoading('google');
     try {
-      await signIn('google', {
-        redirectTo:
-          'https://tremendous-egret-179.convex.site/api/auth/callback/google',
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: '/sign-in/sso-callback',
+        redirectUrlComplete: '/dashboard',
       });
     } catch (error) {
       toast.error('Error with Google Sign-in', {

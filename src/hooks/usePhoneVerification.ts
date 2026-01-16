@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { env } from '@/env';
+import { useAuth } from '@clerk/nextjs';
 
 const BACKEND_URL = env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
@@ -17,6 +17,8 @@ export function usePhoneVerification() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  const { getToken, userId, isLoaded } = useAuth();
+
   // Prevent multiple simultaneous calls
   const isCheckingRef = useRef(false);
   // Debounce timer
@@ -24,6 +26,8 @@ export function usePhoneVerification() {
 
   const checkPhoneStatus = useCallback(
     async (forceRefresh = false) => {
+      if (!isLoaded) return;
+
       // Prevent duplicate calls unless forcing refresh
       if (isCheckingRef.current && !forceRefresh) {
         return;
@@ -33,11 +37,7 @@ export function usePhoneVerification() {
         isCheckingRef.current = true;
         setError(null);
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
+        if (!userId) {
           setPhoneStatus(null);
           setCurrentUserId(null);
           setLoading(false);
@@ -45,21 +45,26 @@ export function usePhoneVerification() {
         }
 
         // Only fetch if user changed or force refresh
-        if (session.user.id === currentUserId && !forceRefresh) {
+        if (userId === currentUserId && !forceRefresh) {
           setLoading(false);
           return;
         }
 
         setLoading(true);
-        setCurrentUserId(session.user.id);
+        setCurrentUserId(userId);
+
+        const token = await getToken({ template: 'convex' });
+        if (!token) throw new Error('No authenticated session');
 
         const response = await fetch(`${BACKEND_URL}/api/auth/phone-status`, {
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
+          // If 401/403, maybe token expired or backend check failed.
+          // We'll throw.
           throw new Error('Failed to fetch phone status');
         }
 
@@ -79,47 +84,22 @@ export function usePhoneVerification() {
         isCheckingRef.current = false;
       }
     },
-    [currentUserId]
+    [userId, isLoaded, getToken, currentUserId]
   );
 
   // Debounced version for auth state changes
   const debouncedCheckPhoneStatus = useCallback(() => {
-    // Clear existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-
-    // Set new timeout
     timeoutRef.current = setTimeout(() => {
       checkPhoneStatus();
-    }, 300); // 300ms debounce
+    }, 300);
   }, [checkPhoneStatus]);
 
   useEffect(() => {
-    // Initial check
     checkPhoneStatus();
-
-    // Subscribe to auth state changes with debouncing
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only check on meaningful auth events
-      if (
-        event === 'SIGNED_IN' ||
-        event === 'SIGNED_OUT' ||
-        event === 'TOKEN_REFRESHED'
-      ) {
-        debouncedCheckPhoneStatus();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [checkPhoneStatus, debouncedCheckPhoneStatus]);
+  }, [checkPhoneStatus]);
 
   const refresh = useCallback(() => {
     checkPhoneStatus(true); // Force refresh
