@@ -113,7 +113,7 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded && isSignedIn) {
+    if (isLoaded && isSignedIn) {
       redirect('/dashboard');
     }
   }, [isSignedIn, isLoaded]);

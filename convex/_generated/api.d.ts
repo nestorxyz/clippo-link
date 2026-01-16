@@ -9,12 +9,12 @@
  */
 
 import type * as ai from "../ai.js";
-import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as chat from "../chat.js";
-import type * as http from "../http.js";
 import type * as import_data from "../import_data.js";
 import type * as links from "../links.js";
+import type * as profiles from "../profiles.js";
+import type * as storage from "../storage.js";
 import type * as subCategories from "../subCategories.js";
 import type * as tags from "../tags.js";
 import type * as users from "../users.js";
@@ -27,12 +27,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
-  auth: typeof auth;
   categories: typeof categories;
   chat: typeof chat;
-  http: typeof http;
   import_data: typeof import_data;
   links: typeof links;
+  profiles: typeof profiles;
+  storage: typeof storage;
   subCategories: typeof subCategories;
   tags: typeof tags;
   users: typeof users;
