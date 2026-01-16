@@ -96,7 +96,8 @@ export const create = mutation({
       name: args.name,
       description: args.description,
       userId,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     return categoryId;
@@ -120,6 +121,7 @@ export const update = mutation({
     await ctx.db.patch(args.id, {
       name: args.name,
       description: args.description,
+      updatedAt: Date.now(),
     });
   },
 });

@@ -42,6 +42,8 @@ export const create = mutation({
       name: args.name,
       color: args.color,
       userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     return tagId;
@@ -64,6 +66,7 @@ export const update = mutation({
     await ctx.db.patch(args.id, {
       name: args.name,
       color: args.color,
+      updatedAt: Date.now(),
     });
   },
 });
