@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import LeftNav from '@/components/LeftNav';
+import LeftNav from './_components/LeftNav';
 import RightPreviewSidebar from '@/components/RightPreviewSidebar';
 import Chat from '@/components/Chat';
 import { useCategories } from '@/hooks/useCategories';
@@ -32,6 +32,8 @@ export default function DashboardPage() {
   // useCategories now returns simple data
   const { data: categories = [], isLoading: isLoadingCategories } =
     useCategories();
+
+  console.log('categories', categories);
 
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<ActiveView>('chat');

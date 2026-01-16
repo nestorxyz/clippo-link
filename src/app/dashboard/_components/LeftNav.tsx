@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -28,12 +27,12 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
-import { api } from '../../convex/_generated/api';
+import { api } from 'convex/_generated/api';
 import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
 
 interface LeftNavProps {
-  categories: Category[];
+  categories: Category;
   selectedCategoryId: string | null;
   selectedSubCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
@@ -67,6 +66,8 @@ const LeftNav: React.FC<LeftNavProps> = ({
       setLocalCategories(categories);
     }
   }, [categories, lastCreatedId]);
+
+  console.log('localCategories', localCategories);
 
   const email = user?.primaryEmailAddress?.emailAddress ?? '';
   const avatarUrl = user?.imageUrl || null;

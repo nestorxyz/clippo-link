@@ -10,7 +10,7 @@ export interface Link {
   url: string;
   title: string;
   description?: string;
-  createdAt?: string;
+  createdAt?: number;
   tags: Tag[];
   source?: string;
   imgPreview?: string;
