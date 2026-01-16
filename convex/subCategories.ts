@@ -1,6 +1,18 @@
 import { v } from 'convex/values';
-import { mutation } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import { getAuthUserId } from '@convex-dev/auth/server';
+
+export const getByUser = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    // Backend usage
+    const subCategories = await ctx.db
+      .query('subCategories')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .collect();
+    return subCategories;
+  },
+});
 
 export const create = mutation({
   args: {

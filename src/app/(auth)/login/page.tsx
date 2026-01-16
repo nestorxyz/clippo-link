@@ -51,6 +51,7 @@ const floatingElements = [
 
 export default function AuthPage() {
   const auth = useConvexAuth();
+  console.log('auth', auth);
   const { isAuthenticated, isLoading } = auth || {
     isAuthenticated: false,
     isLoading: true,
