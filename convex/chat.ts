@@ -2,6 +2,23 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { getAuthUserId } from '@convex-dev/auth/server';
 
+// Backend usage: Add message without checking auth (trusting backend to pass correct sessionId)
+export const saveMessage = mutation({
+  args: {
+    sessionId: v.id('chatSessions'),
+    role: v.string(),
+    parts: v.any(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert('chatMessages', {
+      sessionId: args.sessionId,
+      role: args.role,
+      parts: args.parts,
+      createdAt: new Date().toISOString(),
+    });
+  },
+});
+
 export const getOrCreateSession = mutation({
   args: {},
   handler: async (ctx) => {

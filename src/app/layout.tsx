@@ -7,6 +7,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Providers } from '@/components/providers';
 import ConvexClientProvider from '@/components/ConvexClientProvider';
+import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,16 +22,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>
-          <ConvexClientProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-          </ConvexClientProvider>
-          <Toaster />
-          <Sonner />
-        </Providers>
-      </body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <Providers>
+            <ConvexClientProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+            </ConvexClientProvider>
+            <Toaster />
+            <Sonner />
+          </Providers>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

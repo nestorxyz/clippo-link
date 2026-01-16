@@ -2,6 +2,18 @@ import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
 import { getAuthUserId } from '@convex-dev/auth/server';
 
+export const getByUser = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    // Backend usage
+    const tags = await ctx.db
+      .query('tags')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .collect();
+    return tags.map((tag) => ({ ...tag, id: tag._id }));
+  },
+});
+
 export const get = query({
   args: {},
   handler: async (ctx) => {

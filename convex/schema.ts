@@ -65,5 +65,7 @@ export default defineSchema({
     phoneVerified: v.optional(v.boolean()),
     phoneVerifiedAt: v.optional(v.string()),
     updatedAt: v.optional(v.string()),
-  }).index('by_user', ['userId']),
+  })
+    .index('by_user', ['userId'])
+    .index('by_phone', ['phoneNumber']),
 });
