@@ -32,7 +32,7 @@ import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
 
 interface LeftNavProps {
-  categories: Category;
+  categories: Category[];
   selectedCategoryId: string | null;
   selectedSubCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;

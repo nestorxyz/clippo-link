@@ -27,7 +27,8 @@ export const getOrCreateByPhone = mutation({
       if (!profile.phoneVerified) {
         await ctx.db.patch(profile._id, {
           phoneVerified: true,
-          phoneVerifiedAt: new Date().toISOString(),
+          phoneVerifiedAt: Date.now(),
+          updatedAt: Date.now(),
         });
         profile = (await ctx.db.get(profile._id))!;
       }
@@ -48,8 +49,8 @@ export const getOrCreateByPhone = mutation({
       userId,
       phoneNumber: formattedPhone,
       phoneVerified: true,
-      phoneVerifiedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      phoneVerifiedAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     profile = (await ctx.db.get(profileId))!;

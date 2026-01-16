@@ -22,7 +22,8 @@ export const create = mutation({
       imgPreview: args.imgPreview,
       subCategoryId: args.subCategoryId,
       userId,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     if (args.tagIds?.length) {
@@ -31,6 +32,7 @@ export const create = mutation({
           ctx.db.insert('linkTags', {
             linkId,
             tagId,
+            createdAt: Date.now(),
           })
         )
       );
@@ -64,6 +66,7 @@ export const update = mutation({
       ...(args.description && { description: args.description }),
       ...(args.imgPreview && { imgPreview: args.imgPreview }),
       ...(args.subCategoryId && { subCategoryId: args.subCategoryId }),
+      updatedAt: Date.now(),
     });
 
     if (args.tagIds !== undefined) {
@@ -79,6 +82,7 @@ export const update = mutation({
           ctx.db.insert('linkTags', {
             linkId: args.id,
             tagId,
+            createdAt: Date.now(),
           })
         )
       );
@@ -137,7 +141,8 @@ export const registerLinkForBackend = mutation({
       const catId = await ctx.db.insert('categories', {
         name: args.category,
         userId,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       category = (await ctx.db.get(catId))!;
     }
@@ -160,7 +165,8 @@ export const registerLinkForBackend = mutation({
         name: subCategoryName,
         categoryId: category!._id,
         userId,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       subCategory = (await ctx.db.get(subId))!;
     }
@@ -173,7 +179,10 @@ export const registerLinkForBackend = mutation({
       subCategoryId: subCategory._id,
       userId,
       imgPreview: args.imgPreview,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: args.source,
+      content: args.content,
     });
 
     // 4. Handle Tags
@@ -195,6 +204,8 @@ export const registerLinkForBackend = mutation({
             name: normalized,
             userId,
             color,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           });
           tag = (await ctx.db.get(tagId))!;
         }
@@ -202,6 +213,7 @@ export const registerLinkForBackend = mutation({
         await ctx.db.insert('linkTags', {
           linkId,
           tagId: tag._id,
+          createdAt: Date.now(),
         });
       }
     }
@@ -237,7 +249,8 @@ export const register = mutation({
       const catId = await ctx.db.insert('categories', {
         name: args.category,
         userId,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       category = (await ctx.db.get(catId))!;
     }
@@ -260,7 +273,8 @@ export const register = mutation({
         name: subCategoryName,
         categoryId: category!._id,
         userId,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       subCategory = (await ctx.db.get(subId))!;
     }
@@ -273,7 +287,10 @@ export const register = mutation({
       subCategoryId: subCategory._id,
       userId,
       imgPreview: args.imgPreview,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: args.source,
+      content: args.content,
     });
 
     // 4. Handle Tags
@@ -295,6 +312,8 @@ export const register = mutation({
             name: normalized,
             userId,
             color,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           });
           tag = (await ctx.db.get(tagId))!;
         }
@@ -302,6 +321,7 @@ export const register = mutation({
         await ctx.db.insert('linkTags', {
           linkId,
           tagId: tag._id,
+          createdAt: Date.now(),
         });
       }
     }

@@ -14,7 +14,7 @@ export const saveMessage = mutation({
       sessionId: args.sessionId,
       role: args.role,
       parts: args.parts,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     });
   },
 });
@@ -35,7 +35,8 @@ export const getOrCreateSession = mutation({
 
     const id = await ctx.db.insert('chatSessions', {
       userId,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     return await ctx.db.get(id);
@@ -82,7 +83,7 @@ export const addMessage = mutation({
       sessionId: args.sessionId,
       role: args.role,
       parts: args.parts,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     });
   },
 });
