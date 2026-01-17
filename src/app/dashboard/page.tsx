@@ -23,7 +23,7 @@ type ActiveView = 'links' | 'chat';
 export default function DashboardPage() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<
     string | null
@@ -154,7 +154,7 @@ export default function DashboardPage() {
         <div
           className={cn(
             'flex-1 flex flex-col bg-[#111111] border border-[#1D1D1D] m-2 rounded-sm overflow-hidden',
-            !isMobile && 'transition-all duration-300'
+            !isMobile && 'transition-all duration-300',
           )}
         >
           <main className="flex-1 overflow-hidden">
