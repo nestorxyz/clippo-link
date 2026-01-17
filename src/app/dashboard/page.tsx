@@ -37,6 +37,9 @@ export default function DashboardPage() {
 
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<ActiveView>('chat');
+  const [viewMode, setViewMode] = useState<
+    'inbox' | 'favorites' | 'read-later' | 'category'
+  >('inbox');
   const { needsPhoneVerification, refresh: refreshPhoneStatus } =
     usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
@@ -134,10 +137,22 @@ export default function DashboardPage() {
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             selectedSubCategoryId={selectedSubCategoryId}
-            onSelectCategory={(id) => setSelectedCategoryId(id)}
+            viewMode={viewMode}
+            onSelectCategory={(id) => {
+              setSelectedCategoryId(id);
+              setViewMode('category');
+            }}
             onSelectSubCategory={(subId, catId) => {
               setSelectedSubCategoryId(subId);
               setSelectedCategoryId(catId);
+              setViewMode('category');
+            }}
+            onViewChange={(mode) => {
+              setViewMode(mode);
+              if (mode !== 'category') {
+                setSelectedCategoryId(null);
+                setSelectedSubCategoryId(null);
+              }
             }}
           />
         )}
@@ -146,6 +161,7 @@ export default function DashboardPage() {
           <RightPreviewSidebar
             categories={categories}
             selectedSubCategoryId={selectedSubCategoryId}
+            viewMode={viewMode}
           />
         )}
 

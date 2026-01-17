@@ -1,5 +1,19 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { getUserId } from './users';
+
+export const currentProfile = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return null;
+
+    return await ctx.db
+      .query('profiles')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first();
+  },
+});
 
 export const getByPhoneNumber = query({
   args: { phoneNumber: v.string() },

@@ -42,6 +42,8 @@ export default defineSchema({
     updatedAt: v.number(),
     source: v.optional(v.string()),
     content: v.optional(v.string()),
+    isFavorite: v.boolean(),
+    isReadLater: v.boolean(),
   })
     .index('by_subCategory', ['subCategoryId'])
     .index('by_user', ['userId']),
