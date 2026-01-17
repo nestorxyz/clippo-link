@@ -6,7 +6,15 @@ import {
   useDeferredValue,
   useMemo,
 } from 'react';
-import { Send, RefreshCw } from 'lucide-react';
+import {
+  Send,
+  RefreshCw,
+  Link as LinkIcon,
+  Smartphone,
+  Folder,
+  X,
+  Lightbulb,
+} from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +30,8 @@ import remarkGfm from 'remark-gfm';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
+import Image from 'next/image';
+import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 
 interface ChatProps {
   categories: Category[];
@@ -49,7 +59,7 @@ const MessageList = memo(
                 'rounded-lg border p-4',
                 message.sender === 'user'
                   ? 'bg-[#141414] border-[#1D1D1D]'
-                  : 'bg-transparent border-0'
+                  : 'bg-transparent border-0',
               )}
             >
               {message.sender === 'bot' || message.role === 'model' ? (
@@ -87,7 +97,7 @@ const MessageList = memo(
         <div ref={messagesEndRef} />
       </div>
     );
-  }
+  },
 );
 
 const Chat = ({ onLinkAdded }: ChatProps) => {
@@ -98,6 +108,9 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
   const clearHistory = useMutation(api.chat.clearHistory);
   const processMessage = useAction(api.ai.processChatMessage);
 
+  const { phoneStatus, loading: dateLoading } = usePhoneVerification();
+  const [showNotification, setShowNotification] = useState(true);
+
   // Initial session load
   useEffect(() => {
     getOrCreateSession().then((session) => setSessionId(session._id));
@@ -105,7 +118,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
 
   const rawMessages = useQuery(
     api.chat.getMessages,
-    sessionId ? { sessionId } : 'skip'
+    sessionId ? { sessionId } : 'skip',
   );
 
   // Convert Convex messages to UI Message type
@@ -135,63 +148,42 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
             role: m.role as any,
           };
         }),
-    [rawMessages]
-  );
-
-  // If no messages, show welcome
-  const displayMessages = useMemo(
-    () =>
-      messages.length > 0
-        ? messages
-        : [
-            {
-              id: 'welcome',
-              text: "Hello! I'm your AI link organizer. How can I assist you right now? You can ask me to `add a new link` or `show me my links`.",
-              sender: 'bot',
-            } as Message,
-          ],
-    [messages]
+    [rawMessages],
   );
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const deferredMessages = useDeferredValue(displayMessages);
+  const deferredMessages = useDeferredValue(messages);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
-  }, [displayMessages, isBotTyping]);
+  }, [messages, isBotTyping]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isBotTyping || !sessionId) return;
+  const handleSendMessage = async (
+    e: React.FormEvent,
+    customInput?: string,
+  ) => {
+    e?.preventDefault();
+    const messageToSend = customInput || input;
 
-    // Optimistic UI update could be done here, but Convex is fast enough usually.
-    // Actually, we should probably add the user message via mutation immediately for better UX
-    // But api.ai.processChatMessage handles adding the user message.
-    // Start typing indicator
+    if (!messageToSend.trim() || isBotTyping || !sessionId) return;
+
     setIsBotTyping(true);
-    const currentInput = input;
-    setInput('');
+    if (!customInput) setInput('');
 
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const result = await processMessage({
-        message: currentInput,
+        message: messageToSend,
         sessionId,
         timeZone,
       });
 
-      // No client-side tool execution needed anymore
       if (result.reply) {
-        // Optionally trigger a refresh if we know a link was added?
-        // Since we don't know for sure without parsing toolResults (which we didn't return),
-        // we can just blindly refresh or rely on real-time subscriptions if the list is subscribed.
-        // But onLinkAdded callback was passed to Chat, maybe we should call it just in case?
-        // Or getting the recent links list will update automatically if it's a Query.
         onLinkAdded();
       }
     } catch (error) {
@@ -216,38 +208,132 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
     }
   };
 
+  const openSettings = () => {
+    try {
+      window.dispatchEvent(new CustomEvent('open-settings'));
+    } catch (e) {
+      console.error('Failed to open settings modal', e);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <header className="px-4 h-12 flex items-center shrink-0 border-b border-[#1D1D1D]">
-        <div className="mx-auto w-full max-w-[720px] flex justify-end">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearChat}
-                disabled={!sessionId || messages.length === 0 || isBotTyping}
+    <div className="flex flex-col h-full relative">
+      {/* Top Notification Bar */}
+      {showNotification && phoneStatus && !phoneStatus.whatsappEnabled && (
+        <div className="bg-[#1D1D1D] text-white px-4 py-2 flex items-center justify-between text-sm absolute top-4 left-4 right-4 z-20 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+            <span>
+              Pro tip: Forward links directly from WhatsApp to save them
+              instantly.
+              <button
+                onClick={openSettings}
+                className="text-blue-400 hover:text-blue-300 ml-1 font-medium hover:underline"
               >
-                <RefreshCw className="h-5 w-5" />
-                <span className="sr-only">Clear chat history</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Clear chat history</p>
-            </TooltipContent>
-          </Tooltip>
+                Connect Now →
+              </button>
+            </span>
+          </div>
+          <button
+            onClick={() => setShowNotification(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      </header>
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[720px] px-4 py-6">
-          <MessageList
-            messages={deferredMessages}
-            isBotTyping={isBotTyping}
-            messagesEndRef={messagesEndRef}
-          />
+      )}
+
+      {messages.length === 0 ? (
+        // Blank State
+        <div className="flex-1 flex flex-col items-center justify-center p-4 pb-20 fade-in zoom-in duration-500">
+          <div className="mb-8 relative opacity-80">
+            <Image
+              src="/isologo.png"
+              width={260}
+              height={48}
+              alt="DoryAI"
+              className="opacity-10"
+            />
+          </div>
+
+          <h1 className="text-2xl md:text-3xl font-semibold text-white mb-2 text-center">
+            Welcome to DoryAI!
+          </h1>
+          <p className="text-[#A5A5A5] text-lg mb-10 text-center">
+            I'm ready to organize your short content links
+          </p>
+
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Button
+              variant="outline"
+              className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
+              onClick={() =>
+                handleSendMessage(
+                  {} as any,
+                  'Save a test link: https://example.com',
+                )
+              }
+            >
+              <LinkIcon className="h-4 w-4" />
+              Save a test link
+            </Button>
+            <Button
+              variant="outline"
+              className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
+              onClick={openSettings}
+            >
+              <Smartphone className="h-4 w-4" />
+              Connect WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
+              onClick={() =>
+                handleSendMessage({} as any, 'How does DoryAI work?')
+              }
+            >
+              <Folder className="h-4 w-4" />
+              See how it works
+            </Button>
+          </div>
         </div>
-      </div>
-      <div className="sticky bottom-16 md:bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
+      ) : (
+        <>
+          <header className="px-4 h-12 flex items-center shrink-0 border-b border-[#1D1D1D]">
+            <div className="mx-auto w-full max-w-[720px] flex justify-end">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClearChat}
+                    disabled={
+                      !sessionId || messages.length === 0 || isBotTyping
+                    }
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="sr-only">Clear chat history</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Clear chat history</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </header>
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[720px] px-4 py-6">
+              <MessageList
+                messages={deferredMessages}
+                isBotTyping={isBotTyping}
+                messagesEndRef={messagesEndRef}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
         <div className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
         <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3 pb-[calc(8px+env(safe-area-inset-bottom))]">
           <form onSubmit={handleSendMessage} className="relative">
