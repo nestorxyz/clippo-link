@@ -22,6 +22,8 @@ export const create = mutation({
       imgPreview: args.imgPreview,
       subCategoryId: args.subCategoryId,
       userId,
+      isFavorite: false,
+      isReadLater: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -33,8 +35,8 @@ export const create = mutation({
             linkId,
             tagId,
             createdAt: Date.now(),
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -83,8 +85,8 @@ export const update = mutation({
             linkId: args.id,
             tagId,
             createdAt: Date.now(),
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -155,8 +157,8 @@ export const registerLinkForBackend = mutation({
       .filter((q) =>
         q.and(
           q.eq(q.field('name'), subCategoryName),
-          q.eq(q.field('categoryId'), category!._id)
-        )
+          q.eq(q.field('categoryId'), category!._id),
+        ),
       )
       .first();
 
@@ -179,6 +181,8 @@ export const registerLinkForBackend = mutation({
       subCategoryId: subCategory._id,
       userId,
       imgPreview: args.imgPreview,
+      isFavorite: false,
+      isReadLater: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: args.source,
@@ -263,8 +267,8 @@ export const register = mutation({
       .filter((q) =>
         q.and(
           q.eq(q.field('name'), subCategoryName),
-          q.eq(q.field('categoryId'), category!._id)
-        )
+          q.eq(q.field('categoryId'), category!._id),
+        ),
       )
       .first();
 
@@ -287,6 +291,8 @@ export const register = mutation({
       subCategoryId: subCategory._id,
       userId,
       imgPreview: args.imgPreview,
+      isFavorite: false,
+      isReadLater: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: args.source,
@@ -359,9 +365,37 @@ export const getRecentLinksForUser = query({
           subCategory,
           category,
         };
-      })
+      }),
     );
 
     return enrichedLinks;
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { linkId: v.id('links') },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error('Unauthorized');
+    const link = await ctx.db.get(args.linkId);
+    if (!link || link.userId !== userId) throw new Error('Link not found');
+    await ctx.db.patch(args.linkId, {
+      isFavorite: !link.isFavorite,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const toggleReadLater = mutation({
+  args: { linkId: v.id('links') },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error('Unauthorized');
+    const link = await ctx.db.get(args.linkId);
+    if (!link || link.userId !== userId) throw new Error('Link not found');
+    await ctx.db.patch(args.linkId, {
+      isReadLater: !link.isReadLater,
+      updatedAt: Date.now(),
+    });
   },
 });

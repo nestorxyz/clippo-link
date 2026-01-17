@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogOut, Settings, Sparkles } from 'lucide-react';
+import { LogOut, Settings, Sparkles, Inbox, Star, Clock } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
@@ -38,7 +38,11 @@ interface LeftNavProps {
   onSelectCategory: (categoryId: string | null) => void;
   onSelectSubCategory: (
     subCategoryId: string | null,
-    categoryId: string | null
+    categoryId: string | null,
+  ) => void;
+  viewMode: 'inbox' | 'favorites' | 'read-later' | 'category';
+  onViewChange: (
+    mode: 'inbox' | 'favorites' | 'read-later' | 'category',
   ) => void;
   // Session prop removed
 }
@@ -47,8 +51,10 @@ const LeftNav: React.FC<LeftNavProps> = ({
   categories,
   selectedCategoryId,
   selectedSubCategoryId,
+  viewMode,
   onSelectCategory,
   onSelectSubCategory,
+  onViewChange,
 }) => {
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -73,7 +79,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
   const avatarUrl = user?.imageUrl || null;
   const avatarFallback = useMemo(
     () => (email ? email.charAt(0).toUpperCase() : 'U'),
-    [email]
+    [email],
   );
 
   // Fetch plan to show current status and to wire billing/upgrade actions
@@ -94,7 +100,49 @@ const LeftNav: React.FC<LeftNavProps> = ({
           <Image src="/isologo.png" width={130} height={24} alt="DoryAI" />
         </div>
 
+        <div className="px-2 pb-2 space-y-1">
+          <button
+            onClick={() => onViewChange('inbox')}
+            className={cn(
+              'w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-3 transition-colors',
+              viewMode === 'inbox'
+                ? 'bg-[#1D1D1D] text-white'
+                : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white',
+            )}
+          >
+            <Inbox className="h-4 w-4" />
+            <span>Inbox</span>
+          </button>
+          <button
+            onClick={() => onViewChange('favorites')}
+            className={cn(
+              'w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-3 transition-colors',
+              viewMode === 'favorites'
+                ? 'bg-[#1D1D1D] text-white'
+                : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white',
+            )}
+          >
+            <Star className="h-4 w-4" />
+            <span>Favorites</span>
+          </button>
+          <button
+            onClick={() => onViewChange('read-later')}
+            className={cn(
+              'w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-3 transition-colors',
+              viewMode === 'read-later'
+                ? 'bg-[#1D1D1D] text-white'
+                : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white',
+            )}
+          >
+            <Clock className="h-4 w-4" />
+            <span>Read Later</span>
+          </button>
+        </div>
+
         <div className="px-2 pb-2">
+          <div className="px-3 pt-4 pb-2 text-[10px] uppercase tracking-wider text-[#646363]">
+            Categories
+          </div>
           <AddCategoryButton onCreated={(newId) => setLastCreatedId(newId)} />
         </div>
 
@@ -117,7 +165,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
                       className={cn(
                         'w-full text-left px-3 py-1.5 text-[#A5A5A5] text-sm rounded-md flex items-center justify-between',
                         'hover:bg-[#1D1D1D] hover:text-white',
-                        isSelected && 'bg-[#1D1D1D] text-white'
+                        isSelected && 'bg-[#1D1D1D] text-white',
                       )}
                     >
                       <span className="truncate">{sub.name}</span>
@@ -173,7 +221,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
                         `${
                           env.NEXT_PUBLIC_BACKEND_URL || ''
                         }/api/billing/portal`,
-                        { headers: { Authorization: `Bearer ${token}` } }
+                        { headers: { Authorization: `Bearer ${token}` } },
                       );
                       const json = await res.json();
                       const url = json?.url as string | undefined;
@@ -242,7 +290,7 @@ const AddCategoryButton = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const { mutate: createCategory, isLoading: submitting } = useConvexMutation(
-    api.categories.create
+    api.categories.create,
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -257,7 +305,7 @@ const AddCategoryButton = ({
         {
           successMessage: 'Category created',
           errorMessage: 'Failed to create category',
-        }
+        },
       );
       if (categoryId) {
         onCreated(categoryId);

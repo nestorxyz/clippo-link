@@ -14,6 +14,8 @@ export interface Link {
   tags: Tag[];
   source?: string;
   imgPreview?: string;
+  isFavorite: boolean;
+  isReadLater: boolean;
 }
 
 export interface SubCategory {
