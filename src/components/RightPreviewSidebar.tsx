@@ -4,6 +4,7 @@ import { Star, Clock, Bookmark } from 'lucide-react';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from 'convex/_generated/api';
 import { cn } from '@/lib/utils';
+import SocialMediaPlaceholders from '@/components/SocialMediaPlaceholders';
 
 interface RightPreviewSidebarProps {
   categories: Category[];
@@ -58,11 +59,15 @@ const RightPreviewSidebar: React.FC<RightPreviewSidebarProps> = ({
     <aside className="h-screen w-[360px] flex-shrink-0 bg-background">
       <div className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto p-3">
-          <div className="grid grid-cols-2 gap-3">
-            {links.map((link) => (
-              <PreviewCard key={link.id} link={link} />
-            ))}
-          </div>
+          {links.length === 0 ? (
+            <SocialMediaPlaceholders />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {links.map((link) => (
+                <PreviewCard key={link.id} link={link} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </aside>

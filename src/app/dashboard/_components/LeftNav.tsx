@@ -144,6 +144,11 @@ const LeftNav: React.FC<LeftNavProps> = ({
             Categories
           </div>
           <AddCategoryButton onCreated={(newId) => setLastCreatedId(newId)} />
+          {localCategories.length === 0 && (
+            <div className="px-3 pt-4 pb-2 text-[10px] uppercase tracking-wider text-[#646363]">
+              Your AI generated categories will appear here
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto py-2">
