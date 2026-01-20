@@ -13,6 +13,9 @@ import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
 import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
+
+const settingsTabs = ['profile', 'integrations', 'billing'] as const;
 
 interface MobileHeaderProps {}
 
@@ -20,6 +23,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { getToken } = useAuth();
+  const [, setSettingsTab] = useQueryState(
+    'settings',
+    parseAsStringLiteral(settingsTabs)
+  );
 
   const email = user?.primaryEmailAddress?.emailAddress ?? '';
   const avatarUrl = user?.imageUrl || null;
@@ -100,13 +107,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = () => {
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
-              onClick={() => {
-                try {
-                  window.dispatchEvent(new CustomEvent('open-settings'));
-                } catch (e) {
-                  console.error('Failed to open settings modal', e);
-                }
-              }}
+              onClick={() => setSettingsTab('profile')}
               className="cursor-pointer"
             >
               <Settings className="h-4 w-4 mr-2" />

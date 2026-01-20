@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
-  Settings,
   User as UserIcon,
   MessageCircle,
   CheckCircle2,
@@ -20,23 +19,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePlan } from '@/hooks/usePlan';
 import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
 
-type SettingsTab = 'profile' | 'integrations' | 'billing';
+const settingsTabs = ['profile', 'integrations', 'billing'] as const;
+type SettingsTab = (typeof settingsTabs)[number];
 
-interface SettingsModalProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+export default function SettingsModal() {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [settingsTab, setSettingsTab] = useQueryState(
+    'settings',
+    parseAsStringLiteral(settingsTabs)
+  );
   const { phoneStatus, refresh: refreshPhoneStatus } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [planLabel, setPlanLabel] = useState<'free' | 'premium' | null>(null);
   const { data: plan } = usePlan();
+
+  const open = settingsTab !== null;
+  const activeTab: SettingsTab = settingsTab ?? 'profile';
+  const onClose = () => setSettingsTab(null);
 
   const email = user?.primaryEmailAddress?.emailAddress ?? '';
   const displayName = user?.fullName || user?.firstName || '';
@@ -49,7 +52,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  }, [open]);
 
   const title =
     activeTab === 'profile'
@@ -96,7 +99,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         ? 'bg-[#1D1D1D] text-white'
                         : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white'
                     }`}
-                    onClick={() => setActiveTab('profile')}
+                    onClick={() => setSettingsTab('profile')}
                   >
                     Profile
                   </button>
@@ -111,7 +114,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         ? 'bg-[#1D1D1D] text-white'
                         : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white'
                     }`}
-                    onClick={() => setActiveTab('integrations')}
+                    onClick={() => setSettingsTab('integrations')}
                   >
                     Integrations
                   </button>
@@ -121,7 +124,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         ? 'bg-[#1D1D1D] text-white'
                         : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white'
                     }`}
-                    onClick={() => setActiveTab('billing')}
+                    onClick={() => setSettingsTab('billing')}
                   >
                     Billing
                   </button>

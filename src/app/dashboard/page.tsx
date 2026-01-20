@@ -53,16 +53,12 @@ export default function DashboardPage() {
         return false;
       }
     });
-  const [showSettings, setShowSettings] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
 
   useEffect(() => {
-    const open = () => setShowSettings(true);
-    window.addEventListener('open-settings', open as EventListener);
     const openPricing = () => setShowPricing(true);
     window.addEventListener('open-pricing', openPricing as EventListener);
     return () => {
-      window.removeEventListener('open-settings', open as EventListener);
       window.removeEventListener('open-pricing', openPricing as EventListener);
     };
   }, []);
@@ -101,10 +97,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <SettingsModal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
+      <SettingsModal />
       <PricingModal open={showPricing} onClose={() => setShowPricing(false)} />
       {showPhoneVerification && (
         <PhoneVerification

@@ -32,6 +32,9 @@ import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
+
+const settingsTabs = ['profile', 'integrations', 'billing'] as const;
 
 interface ChatProps {
   categories: Category[];
@@ -103,6 +106,10 @@ const MessageList = memo(
 const Chat = ({ onLinkAdded }: ChatProps) => {
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<Id<'chatSessions'> | null>(null);
+  const [, setSettingsTab] = useQueryState(
+    'settings',
+    parseAsStringLiteral(settingsTabs)
+  );
 
   const getOrCreateSession = useMutation(api.chat.getOrCreateSession);
   const clearHistory = useMutation(api.chat.clearHistory);
@@ -209,11 +216,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
   };
 
   const openSettings = () => {
-    try {
-      window.dispatchEvent(new CustomEvent('open-settings'));
-    } catch (e) {
-      console.error('Failed to open settings modal', e);
-    }
+    setSettingsTab('integrations');
   };
 
   return (
