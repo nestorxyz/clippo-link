@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Providers } from '@/components/providers';
 import ConvexClientProvider from '@/components/ConvexClientProvider';
 import { ClerkProvider } from '@clerk/nextjs';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,7 +26,9 @@ export default function RootLayout({
         <body className={inter.className}>
           <Providers>
             <ConvexClientProvider>
-              <TooltipProvider>{children}</TooltipProvider>
+              <TooltipProvider>
+                <NuqsAdapter>{children}</NuqsAdapter>
+              </TooltipProvider>
             </ConvexClientProvider>
             <Sonner />
           </Providers>

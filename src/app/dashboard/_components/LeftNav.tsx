@@ -30,6 +30,9 @@ import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from 'convex/_generated/api';
 import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
+
+const settingsTabs = ['profile', 'integrations', 'billing'] as const;
 
 interface LeftNavProps {
   categories: Category[];
@@ -59,6 +62,10 @@ const LeftNav: React.FC<LeftNavProps> = ({
   const { user } = useUser();
   const { signOut } = useClerk();
   const { getToken } = useAuth();
+  const [, setSettingsTab] = useQueryState(
+    'settings',
+    parseAsStringLiteral(settingsTabs)
+  );
 
   const [localCategories, setLocalCategories] =
     useState<Category[]>(categories);
@@ -258,13 +265,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
-                onClick={() => {
-                  try {
-                    window.dispatchEvent(new CustomEvent('open-settings'));
-                  } catch (e) {
-                    console.error('Failed to open settings modal', e);
-                  }
-                }}
+                onClick={() => setSettingsTab('profile')}
                 className="cursor-pointer focus:bg-[#2A2A2A]"
               >
                 <Settings className="h-4 w-4 mr-2" />
