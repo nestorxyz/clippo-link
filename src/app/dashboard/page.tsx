@@ -16,12 +16,14 @@ import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import PricingModal from '@/components/PricingModal';
 import MobileHeader from '@/components/MobileHeader';
 import LinksGrid from '@/components/LinksGrid';
-import { useConvexAuth } from 'convex/react';
+import { useConvexAuth, useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 type ActiveView = 'links' | 'chat';
 
 export default function DashboardPage() {
   const { isLoading, isAuthenticated } = useConvexAuth();
+  const currentUser = useQuery(api.users.current);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
@@ -85,7 +87,7 @@ export default function DashboardPage() {
     return null; // Will redirect
   }
 
-  if (isLoadingCategories) {
+  if (isLoading || isLoadingCategories || currentUser === undefined) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
