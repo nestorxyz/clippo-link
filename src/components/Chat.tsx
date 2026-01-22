@@ -108,7 +108,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
   const [sessionId, setSessionId] = useState<Id<'chatSessions'> | null>(null);
   const [, setSettingsTab] = useQueryState(
     'settings',
-    parseAsStringLiteral(settingsTabs)
+    parseAsStringLiteral(settingsTabs),
   );
 
   const getOrCreateSession = useMutation(api.chat.getOrCreateSession);
@@ -170,11 +170,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
     });
   }, [messages, isBotTyping]);
 
-  const handleSendMessage = async (
-    e: React.FormEvent,
-    customInput?: string,
-  ) => {
-    e?.preventDefault();
+  const handleSendMessage = async (customInput?: string) => {
     const messageToSend = customInput || input;
 
     if (!messageToSend.trim() || isBotTyping || !sessionId) return;
@@ -269,19 +265,16 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
           <div className="flex flex-wrap gap-3 justify-center">
             <Button
               variant="outline"
+              type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
-              onClick={() =>
-                handleSendMessage(
-                  {} as any,
-                  'Save a test link: https://example.com',
-                )
-              }
+              onClick={() => handleSendMessage('hello how can i save a link?')}
             >
               <LinkIcon className="h-4 w-4" />
               Save a test link
             </Button>
             <Button
               variant="outline"
+              type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
               onClick={openSettings}
             >
@@ -290,10 +283,9 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
             </Button>
             <Button
               variant="outline"
+              type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
-              onClick={() =>
-                handleSendMessage({} as any, 'How does DoryAI work?')
-              }
+              onClick={() => handleSendMessage('How does DoryAI work?')}
             >
               <Folder className="h-4 w-4" />
               See how it works
@@ -339,7 +331,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
       <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
         <div className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
         <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3 pb-[calc(8px+env(safe-area-inset-bottom))]">
-          <form onSubmit={handleSendMessage} className="relative">
+          <form onSubmit={() => handleSendMessage()} className="relative">
             <div className="relative rounded-[28px] md:rounded-full border border-[#1D1D1D] bg-[#1A1A1A] shadow-sm">
               <Textarea
                 ref={textareaRef}
@@ -351,7 +343,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSendMessage(e);
+                    handleSendMessage();
                   }
                 }}
               />
