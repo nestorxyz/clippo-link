@@ -33,8 +33,6 @@ export default function DashboardPage() {
   const { data: categories = [], isLoading: isLoadingCategories } =
     useCategories();
 
-  console.log('categories', categories);
-
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<ActiveView>('chat');
   const [viewMode, setViewMode] = useState<
