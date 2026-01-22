@@ -19,8 +19,8 @@ export const processChatMessage = action({
     if (!user) throw new Error('Unauthorized');
     const userId = user._id;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not set');
 
     // 1. Get User Context (Categories, etc.)
     const categories = await ctx.runQuery(api.categories.get, {});
@@ -32,7 +32,7 @@ export const processChatMessage = action({
       categories?.map((c) => c.name).join('\n- ') || 'personal';
     const subCategoriesList: string[] = [];
     categories?.forEach((c) =>
-      c.subCategories.forEach((s) => subCategoriesList.push(s.name))
+      c.subCategories.forEach((s) => subCategoriesList.push(s.name)),
     );
     const subCategoryNames = subCategoriesList.join('\n- ') || 'general';
     const tagNames = tags?.map((t) => t.name).join('\n- ') || '';
@@ -95,7 +95,7 @@ export const processChatMessage = action({
         };
       })
       .filter(
-        (m) => m.content && (m.role === 'user' || m.role === 'assistant')
+        (m) => m.content && (m.role === 'user' || m.role === 'assistant'),
       );
 
     // 5. Generate Text with Tools

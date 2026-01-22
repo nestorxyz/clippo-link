@@ -18,8 +18,8 @@ const SocialMediaPlaceholders = () => {
     },
     {
       name: 'Twitter',
-      url: 'https://twitter.com',
-      color: 'bg-[#1DA1F2]',
+      url: 'https://x.com',
+      color: 'bg-black',
       icon: (
         <svg
           viewBox="0 0 24 24"
