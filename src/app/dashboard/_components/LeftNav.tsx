@@ -64,7 +64,7 @@ const LeftNav: React.FC<LeftNavProps> = ({
   const { getToken } = useAuth();
   const [, setSettingsTab] = useQueryState(
     'settings',
-    parseAsStringLiteral(settingsTabs)
+    parseAsStringLiteral(settingsTabs),
   );
 
   const [localCategories, setLocalCategories] =
@@ -79,8 +79,6 @@ const LeftNav: React.FC<LeftNavProps> = ({
       setLocalCategories(categories);
     }
   }, [categories, lastCreatedId]);
-
-  console.log('localCategories', localCategories);
 
   const email = user?.primaryEmailAddress?.emailAddress ?? '';
   const avatarUrl = user?.imageUrl || null;
