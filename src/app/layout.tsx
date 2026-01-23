@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: 'Your clipboard manager app',
 };
 
+import { UserProvider } from '@/context/UserContext';
+
 export default function RootLayout({
   children,
 }: {
@@ -26,9 +28,11 @@ export default function RootLayout({
         <body className={inter.className}>
           <Providers>
             <ConvexClientProvider>
-              <TooltipProvider>
-                <NuqsAdapter>{children}</NuqsAdapter>
-              </TooltipProvider>
+              <UserProvider>
+                <TooltipProvider>
+                  <NuqsAdapter>{children}</NuqsAdapter>
+                </TooltipProvider>
+              </UserProvider>
             </ConvexClientProvider>
             <Sonner />
           </Providers>

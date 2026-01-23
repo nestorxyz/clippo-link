@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { action } from './_generated/server';
 import { api } from './_generated/api';
 
@@ -9,6 +9,12 @@ export const processChatMessage = action({
     timeZone: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (identity === null) {
+      throw new ConvexError('Unauthenticated call to mutation');
+    }
+
     const user = await ctx.runQuery(api.users.current);
     if (!user) throw new Error('Unauthorized');
     const userId = user._id;
