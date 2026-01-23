@@ -142,3 +142,23 @@ export const getOrCreateSessionForBackend = mutation({
     return await ctx.db.get(id);
   },
 });
+
+export const getMessagesForBackend = query({
+  args: {
+    sessionId: v.id('chatSessions'),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
+    const messages = await ctx.db
+      .query('chatMessages')
+      .withIndex('by_session', (q) => q.eq('sessionId', args.sessionId))
+      .order('desc')
+      .take(50); // Limit to last 50 messages to prevent context overflow
+
+    return messages;
+  },
+});
