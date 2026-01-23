@@ -3,8 +3,16 @@ import { query, mutation } from './_generated/server';
 import { getUserId } from './users';
 
 export const getByUser = query({
-  args: { userId: v.id('users') },
+  args: {
+    userId: v.id('users'),
+    secret: v.string(),
+  },
   handler: async (ctx, args) => {
+    // Security check
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
     // Backend usage
     const tags = await ctx.db
       .query('tags')

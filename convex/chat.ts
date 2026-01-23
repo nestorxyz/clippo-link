@@ -8,8 +8,14 @@ export const saveMessage = mutation({
     sessionId: v.id('chatSessions'),
     role: v.string(),
     parts: v.any(),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
+    // Security check
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
     await ctx.db.insert('chatMessages', {
       sessionId: args.sessionId,
       role: args.role,
