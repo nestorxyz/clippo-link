@@ -12,10 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { env } from '@/env';
-import { useUser, useAuth } from '@clerk/nextjs';
-
-const BACKEND_URL = env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+import { useUser } from '@clerk/nextjs';
+import { useMutation, useAction } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 interface PhoneVerificationProps {
   isOpen: boolean;
@@ -39,17 +38,21 @@ export function PhoneVerification({
   } | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
-  const { getToken } = useAuth();
 
   useEffect(() => {
     if (cooldownSeconds > 0) {
       const timer = setTimeout(
         () => setCooldownSeconds(cooldownSeconds - 1),
-        1000
+        1000,
       );
       return () => clearTimeout(timer);
     }
   }, [cooldownSeconds]);
+
+  // Convex mutations/actions
+  const sendOtpAction = useAction(api.auth.sendOtp);
+  const verifyOtpMutation = useMutation(api.auth.verifyOtp);
+  const consolidateAccountMutation = useMutation(api.users.consolidateAccount);
 
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters except +
@@ -63,33 +66,30 @@ export function PhoneVerification({
     return cleaned;
   };
 
+  const getErrorMessage = (err: unknown): string => {
+    const message = err instanceof Error ? err.message : 'An error occurred';
+    // Remove "Uncaught Error: " which Convex sometimes adds
+    // Also remove "Error: " if present
+    return message
+      .replace(/^Uncaught Error: /, '')
+      .replace(/^Error: /, '')
+      .replace(/ at handler .+$/, ''); // Remove stack trace info if present
+  };
+
   const sendOTP = async () => {
     if (!user) return;
     setLoading(true);
     setError(null);
 
     try {
-      const token = await getToken({ template: 'convex' });
-      if (!token) throw new Error('No authenticated session');
-
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
-      const response = await fetch(`${BACKEND_URL}/api/auth/send-otp-web`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          phoneNumber: formattedPhone,
-          userId: user.id,
-        }),
+      const result = await sendOtpAction({
+        phoneNumber: formattedPhone,
       });
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to send OTP');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send OTP');
       }
 
       setStep('otp');
@@ -99,7 +99,7 @@ export function PhoneVerification({
         description: 'Check your WhatsApp for the verification code.',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -111,36 +111,23 @@ export function PhoneVerification({
     setError(null);
 
     try {
-      const token = await getToken({ template: 'convex' });
-      if (!token) throw new Error('No authenticated session');
-
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
-      const response = await fetch(`${BACKEND_URL}/api/auth/verify-otp-web`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          phoneNumber: formattedPhone,
-          userId: user.id,
-          otpCode,
-        }),
+      const result = await verifyOtpMutation({
+        phoneNumber: formattedPhone,
+        otpCode,
       });
 
-      const data = await response.json();
-
-      if (!data.success) {
+      if (!result.success) {
         // Check if it's a consolidation required error
-        if (data.error === 'CONSOLIDATION_REQUIRED') {
+        if (result.error === 'CONSOLIDATION_REQUIRED') {
           setConsolidationData({
-            whatsappAccountId: data.data.whatsappAccountId,
+            whatsappAccountId: result.data.whatsappAccountId,
           });
           setStep('consolidation');
           return;
         }
-        throw new Error(data.message || 'Invalid OTP');
+        throw new Error(result.error || 'Invalid OTP');
       }
 
       toast({
@@ -148,9 +135,9 @@ export function PhoneVerification({
         description: 'Your WhatsApp number has been linked to your account.',
       });
 
-      onVerified(data.data.phoneNumber);
+      onVerified(result.data.phoneNumber);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -170,31 +157,15 @@ export function PhoneVerification({
     setError(null);
 
     try {
-      const token = await getToken({ template: 'convex' });
-      if (!token) throw new Error('No authenticated session');
-
       const formattedPhone = formatPhoneNumber(phoneNumber);
 
-      const response = await fetch(
-        `${BACKEND_URL}/api/auth/consolidate-account`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            phoneNumber: formattedPhone,
-            userId: user.id,
-            whatsappAccountId: consolidationData?.whatsappAccountId,
-          }),
-        }
-      );
+      const result = await consolidateAccountMutation({
+        phoneNumber: formattedPhone,
+        whatsappAccountId: consolidationData!.whatsappAccountId as any, // ID string casting
+      });
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to consolidate accounts');
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to consolidate accounts');
       }
 
       toast({
@@ -203,9 +174,9 @@ export function PhoneVerification({
           'Your WhatsApp data has been successfully merged with your account.',
       });
 
-      onVerified(data.data.phone_number);
+      onVerified(result.data.phone_number);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
