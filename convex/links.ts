@@ -128,8 +128,14 @@ export const registerLinkForBackend = mutation({
     source: v.optional(v.string()),
     imgPreview: v.optional(v.string()),
     content: v.optional(v.string()),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
+    // Security check
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
     const userId = args.userId; // Trust the backend
 
     // 1. Get or create category
@@ -340,8 +346,14 @@ export const getRecentLinksForUser = query({
   args: {
     userId: v.id('users'),
     limit: v.number(),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
+    // Security check
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
     const links = await ctx.db
       .query('links')
       .withIndex('by_user', (q) => q.eq('userId', args.userId))

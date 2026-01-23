@@ -3,8 +3,16 @@ import { query, mutation } from './_generated/server';
 import { getUserId } from './users';
 
 export const getByUser = query({
-  args: { userId: v.id('users') },
+  args: {
+    userId: v.id('users'),
+    secret: v.string(), // Require secret
+  },
   handler: async (ctx, args) => {
+    // Security check: Verify backend secret
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
     // Backend usage: allow fetching by userId directly
     const categories = await ctx.db
       .query('categories')
@@ -37,7 +45,7 @@ export const get = query({
             const links = await ctx.db
               .query('links')
               .withIndex('by_subCategory', (q) =>
-                q.eq('subCategoryId', sub._id)
+                q.eq('subCategoryId', sub._id),
               )
               .collect();
 
@@ -52,7 +60,7 @@ export const get = query({
                   linkTags.map(async (lt) => {
                     const tag = await ctx.db.get(lt.tagId);
                     return tag ? { ...tag, id: tag._id } : null;
-                  })
+                  }),
                 );
 
                 return {
@@ -60,7 +68,7 @@ export const get = query({
                   id: link._id,
                   tags: tags.filter((t) => t !== null),
                 };
-              })
+              }),
             );
 
             return {
@@ -68,7 +76,7 @@ export const get = query({
               id: sub._id,
               links: linksWithTags,
             };
-          })
+          }),
         );
 
         return {
@@ -76,7 +84,7 @@ export const get = query({
           id: category._id,
           subCategories: subCategoriesWithLinks,
         };
-      })
+      }),
     );
 
     return categoriesWithDetails;
