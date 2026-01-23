@@ -129,5 +129,5 @@ export default defineSchema({
     signature: v.optional(v.string()),
     receivedAt: v.number(),
     duplicate: v.boolean(),
-  }),
+  }).index('by_event_key', ['eventKey']),
 });
