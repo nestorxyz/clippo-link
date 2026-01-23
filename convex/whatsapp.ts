@@ -26,9 +26,9 @@ export const sendOTP = internalAction({
       to: cleanPhone,
       type: 'template',
       template: {
-        name: 'verify_code',
+        name: 'doryai_verify', // 1. Nombre actualizado según tu imagen
         language: {
-          code: 'en_US',
+          code: 'en', // 2. Ojo aquí: Tu imagen dice "English" (puede ser 'en' o 'en_US')
         },
         components: [
           {
@@ -36,18 +36,7 @@ export const sendOTP = internalAction({
             parameters: [
               {
                 type: 'text',
-                text: otpCode,
-              },
-            ],
-          },
-          {
-            type: 'button',
-            sub_type: 'url',
-            index: '0',
-            parameters: [
-              {
-                type: 'text',
-                text: otpCode,
+                text: otpCode, // 3. Tu código se inyecta en la variable {{1}} del texto
               },
             ],
           },
