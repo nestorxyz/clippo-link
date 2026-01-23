@@ -16,8 +16,14 @@ export const currentProfile = query({
 });
 
 export const getByPhoneNumber = query({
-  args: { phoneNumber: v.string() },
+  args: {
+    phoneNumber: v.string(),
+    secret: v.string(),
+  },
   handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
     return await ctx.db
       .query('profiles')
       .withIndex('by_phone', (q) => q.eq('phoneNumber', args.phoneNumber))
@@ -26,8 +32,14 @@ export const getByPhoneNumber = query({
 });
 
 export const getOrCreateByPhone = mutation({
-  args: { phoneNumber: v.string() },
+  args: {
+    phoneNumber: v.string(),
+    secret: v.string(),
+  },
   handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
     const formattedPhone = args.phoneNumber;
 
     // 1. Check if profile exists
