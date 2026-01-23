@@ -1,39 +1,7 @@
-import { Category, Tag, Link, SubCategory } from '@/lib/types';
-import {
-  ChevronRight,
-  Folder,
-  Link2,
-  Star,
-  User,
-  Briefcase,
-  PanelLeftClose,
-  PanelLeftOpen,
-  FileText,
-  Trash2,
-  Loader2,
-} from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Category, Link, SubCategory } from '@/lib/types';
+import { Folder, Link2, Star, User, Briefcase } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Session } from '@retired-provider/retired-provider-js';
-import { Badge } from '@/components/ui/badge';
-import { getContrastColor } from '@/lib/colorUtils';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import {
   DndContext,
   DragEndEvent,
@@ -48,11 +16,8 @@ import {
   KeyboardSensor,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { retired-provider } from '@/integrations/retired-provider/client';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 import DroppableCategory from './DroppableCategory';
-import DraggableLink from './DraggableLink';
 
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from '../../convex/_generated/api';
@@ -62,7 +27,6 @@ interface SidebarProps {
   categories: Category[];
   isCollapsed: boolean;
   toggleSidebar: () => void;
-  session: Session | null;
   isMobile?: boolean;
 }
 
@@ -75,35 +39,22 @@ const categoryIcons: {
   default: Folder,
 };
 
-const CategoryIcon = ({ name }: { name: string }) => {
-  const Icon = categoryIcons[name] || categoryIcons.default;
-  return <Icon className="h-4 w-4" />;
-};
-
-const Sidebar = ({
-  categories,
-  isCollapsed,
-  toggleSidebar,
-  session,
-  isMobile = false,
-}: SidebarProps) => {
+const Sidebar = ({ categories }: SidebarProps) => {
   const [openCategories, setOpenCategories] = useState<string[]>(
-    categories.map((c) => c.id)
+    categories.map((c) => c.id),
   );
   const [draggedLink, setDraggedLink] = useState<Link | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(
-    null
+    null,
   );
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { mutate: updateLink } = useConvexMutation(api.links.update);
   const { mutate: deleteLink } = useConvexMutation(api.links.remove);
   const { mutate: createSubCategory } = useConvexMutation(
-    api.subCategories.create
+    api.subCategories.create,
   );
-
-  console.log('categories', categories);
 
   // Set up sensors for drag and drop
   const sensors = useSensors(
@@ -120,13 +71,13 @@ const Sidebar = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const toggleCategory = (id: string) => {
     if (isDragging) return; // Prevent accordion toggle during drag
     setOpenCategories((prev) =>
-      prev.includes(id) ? prev.filter((catId) => catId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((catId) => catId !== id) : [...prev, id],
     );
   };
 
@@ -201,7 +152,7 @@ const Sidebar = ({
     setDraggedLink(null);
     // Don't close the category yet - keep it open during drop processing
 
-    if (!over || !session) {
+    if (!over) {
       // No valid drop target, close the category
       setHoveredCategoryId(null);
       return;
@@ -231,7 +182,7 @@ const Sidebar = ({
 
         // Check if category has a "general" subcategory
         const generalSubCategory = category.subCategories.find(
-          (sub: SubCategory) => sub.name.toLowerCase() === 'general'
+          (sub: SubCategory) => sub.name.toLowerCase() === 'general',
         );
 
         if (!generalSubCategory) {
@@ -261,7 +212,7 @@ const Sidebar = ({
           setOpenCategories((prev) =>
             prev.includes(droppedOnCategoryId!)
               ? prev
-              : [...prev, droppedOnCategoryId!]
+              : [...prev, droppedOnCategoryId!],
           );
         }
       }
@@ -280,7 +231,7 @@ const Sidebar = ({
     try {
       await deleteLink(
         { id: linkId as Id<'links'> },
-        { successMessage: 'Link deleted successfully!' }
+        { successMessage: 'Link deleted successfully!' },
       );
       // Toast handled by mutation hook
     } catch (error: unknown) {

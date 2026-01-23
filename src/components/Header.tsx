@@ -1,12 +1,11 @@
-import * as React from 'react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { User, Link as LinkIcon } from 'lucide-react';
-import { Session } from '@retired-provider/retired-provider-js';
-interface HeaderProps {
-  session: Session | null;
-}
-const Header = ({ session }: HeaderProps) => {
+import { useUser } from '@clerk/nextjs';
+
+const Header = () => {
+  const { isSignedIn } = useUser();
+
   return (
     <header className="px-6 h-16 flex items-center shrink-0">
       <Link
@@ -17,7 +16,7 @@ const Header = ({ session }: HeaderProps) => {
         <span className="font-semibold tracking-tight text-2xl">DoryAI</span>
       </Link>
       <div className="flex items-center gap-2">
-        <Link href={session ? '/account' : '/auth'}>
+        <Link href={isSignedIn ? '/account' : '/auth'}>
           <Button variant="ghost">
             <User className="h-5 w-5 mr-2" />
             Account

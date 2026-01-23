@@ -14,11 +14,13 @@ export const importCategory = mutation({
     // We can insert and potentially store the original ID in a separate mapping table if we wanted to be super robust,
     // but for now, we'll just insert and return the new ID.
     // The script will maintain the map of Old ID -> New ID.
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     const newId = await ctx.db.insert('categories', {
       name: args.name,
       description: args.description,
       userId: args.userId,
-      createdAt: args.createdAt,
+      createdAt: ts,
+      updatedAt: ts,
     });
     return newId;
   },
@@ -33,12 +35,14 @@ export const importSubCategory = mutation({
     createdAt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     return await ctx.db.insert('subCategories', {
       name: args.name,
       description: args.description,
       categoryId: args.categoryId,
       userId: args.userId,
-      createdAt: args.createdAt,
+      createdAt: ts,
+      updatedAt: ts,
     });
   },
 });
@@ -48,12 +52,16 @@ export const importTag = mutation({
     name: v.string(),
     color: v.string(),
     userId: v.id('users'),
+    createdAt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     return await ctx.db.insert('tags', {
       name: args.name,
       color: args.color,
       userId: args.userId,
+      createdAt: ts,
+      updatedAt: ts,
     });
   },
 });
@@ -70,6 +78,7 @@ export const importLink = mutation({
     tagIds: v.optional(v.array(v.id('tags'))), // Pass resolved Tag IDs
   },
   handler: async (ctx, args) => {
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     const linkId = await ctx.db.insert('links', {
       url: args.url,
       title: args.title,
@@ -77,7 +86,10 @@ export const importLink = mutation({
       imgPreview: args.imgPreview,
       subCategoryId: args.subCategoryId,
       userId: args.userId,
-      createdAt: args.createdAt,
+      createdAt: ts,
+      updatedAt: ts,
+      isFavorite: false,
+      isReadLater: false,
     });
 
     if (args.tagIds) {
@@ -85,6 +97,7 @@ export const importLink = mutation({
         await ctx.db.insert('linkTags', {
           linkId,
           tagId,
+          createdAt: ts,
         });
       }
     }
@@ -100,11 +113,12 @@ export const importChatMessage = mutation({
     createdAt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     return await ctx.db.insert('chatMessages', {
       sessionId: args.sessionId,
       role: args.role,
       parts: args.parts,
-      createdAt: args.createdAt,
+      createdAt: ts,
     });
   },
 });
@@ -115,9 +129,11 @@ export const importChatSession = mutation({
     createdAt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const ts = args.createdAt ? Date.parse(args.createdAt) : Date.now();
     return await ctx.db.insert('chatSessions', {
       userId: args.userId,
-      createdAt: args.createdAt,
+      createdAt: ts,
+      updatedAt: ts,
     });
   },
 });
@@ -177,13 +193,18 @@ export const importProfile = mutation({
       .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .first();
 
+    const verifiedAt = args.phoneVerifiedAt
+      ? Date.parse(args.phoneVerifiedAt)
+      : undefined;
+    const updatedAt = args.updatedAt ? Date.parse(args.updatedAt) : Date.now();
+
     if (existing) {
       // Update existing profile
       return await ctx.db.patch(existing._id, {
         phoneNumber: args.phoneNumber,
         phoneVerified: args.phoneVerified,
-        phoneVerifiedAt: args.phoneVerifiedAt,
-        updatedAt: args.updatedAt,
+        phoneVerifiedAt: verifiedAt,
+        updatedAt: updatedAt,
       });
     }
 
@@ -191,8 +212,8 @@ export const importProfile = mutation({
       userId: args.userId,
       phoneNumber: args.phoneNumber,
       phoneVerified: args.phoneVerified,
-      phoneVerifiedAt: args.phoneVerifiedAt,
-      updatedAt: args.updatedAt,
+      phoneVerifiedAt: verifiedAt,
+      updatedAt: updatedAt,
     });
   },
 });
