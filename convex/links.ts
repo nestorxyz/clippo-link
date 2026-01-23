@@ -411,3 +411,21 @@ export const toggleReadLater = mutation({
     });
   },
 });
+
+export const updateLinkPreviewForBackend = mutation({
+  args: {
+    linkId: v.id('links'),
+    imgPreview: v.string(),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
+    await ctx.db.patch(args.linkId, {
+      imgPreview: args.imgPreview,
+      updatedAt: Date.now(),
+    });
+  },
+});
