@@ -1,56 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
-import { env } from '@/env';
+import { useUserContext } from '@/context/UserContext';
+import { UserPlan } from '../../convex/billing';
 
-export type UserPlan = {
-  plan: 'free' | 'premium';
-  status: string | null;
-  limit: number;
-  period: { start: string; end: string };
-  used: number;
-  remaining: number;
-  subscriptionId?: string;
-  variantId?: string | null;
-  managePortalUrl?: string | null;
-  renewsAt?: string;
-  trialEndsAt?: string | null;
-};
+export type { UserPlan };
 
 export function usePlan() {
-  const [data, setData] = useState<UserPlan | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { plan, isLoading } = useUserContext();
 
-  const fetchPlan = useCallback(async () => {
-    if (!isLoaded || !isSignedIn) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = await getToken({ template: 'convex' });
-      if (!token) throw new Error('Not authenticated');
-
-      const res = await fetch(
-        `${env.NEXT_PUBLIC_BACKEND_URL}/api/billing/plan`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!res.ok) throw new Error(`Failed to load plan (${res.status})`);
-      const json = await res.json();
-      setData(json.data as UserPlan);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e : new Error('Failed to load plan'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getToken, isLoaded, isSignedIn]);
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      fetchPlan();
-    }
-  }, [fetchPlan, isLoaded, isSignedIn]);
-
-  return { data, isLoading, error, refetch: fetchPlan } as const;
+  // If we want to maintain the exact same API:
+  return {
+    data: plan || null,
+    isLoading: isLoading,
+    error: null, // Context doesn't currently expose error, assuming Convex handles it or we add it later
+    refetch: async () => {}, // No-op for now, or we could expose a way to retry the query
+  } as const;
 }

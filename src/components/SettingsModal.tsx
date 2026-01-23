@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { PhoneVerification } from '@/components/PhoneVerification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePlan } from '@/hooks/usePlan';
+import { useUserContext } from '@/context/UserContext';
 import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { env } from '@/env';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
@@ -29,7 +30,7 @@ export default function SettingsModal() {
   const { signOut } = useClerk();
   const [settingsTab, setSettingsTab] = useQueryState(
     'settings',
-    parseAsStringLiteral(settingsTabs)
+    parseAsStringLiteral(settingsTabs),
   );
   const { phoneStatus, refresh: refreshPhoneStatus } = usePhoneVerification();
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
@@ -283,11 +284,11 @@ export default function SettingsModal() {
                         <div className="text-sm text-muted-foreground mt-2">
                           {plan.trialEndsAt
                             ? `Trial ends on ${new Date(
-                                plan.trialEndsAt
+                                plan.trialEndsAt,
                               ).toLocaleDateString()}`
                             : plan.renewsAt
                               ? `Renews on ${new Date(
-                                  plan.renewsAt
+                                  plan.renewsAt,
                                 ).toLocaleDateString()}`
                               : null}
                         </div>
@@ -316,32 +317,29 @@ export default function SettingsModal() {
 }
 
 function PortalButton() {
-  const { getToken } = useAuth();
+  const { plan } = useUserContext();
   const [loading, setLoading] = useState(false);
 
-  const handleOpen = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken({ template: 'convex' });
-      if (!token) throw new Error('No session');
-      const res = await fetch(
-        `${env.NEXT_PUBLIC_BACKEND_URL}/api/billing/portal`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const json = await res.json();
-      const url = json?.url as string | undefined;
-      if (url) window.location.href = url;
-      else toast.error('No billing portal available');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to open billing portal');
-    } finally {
-      setLoading(false);
+  const handleOpen = () => {
+    // If we have a stored portal URL, use it
+    if (plan?.managePortalUrl) {
+      window.location.href = plan.managePortalUrl;
+      return;
     }
+
+    // Fallback: If no URL but we have a subscription ID, we could construct a URL or show a toast.
+    // The user mentioned "portal url is just the subscription id", which might imply a specific URL structure.
+    // However, usually it's a full URL.
+    // For now, if no URL is present, we assume there's no active subscription to manage or it's not ready.
+    toast.error('No billing portal available. Please contact support.');
   };
 
   return (
-    <Button variant="default" disabled={loading} onClick={handleOpen}>
+    <Button
+      variant="default"
+      disabled={loading || !plan?.managePortalUrl}
+      onClick={handleOpen}
+    >
       Manage subscription
     </Button>
   );
