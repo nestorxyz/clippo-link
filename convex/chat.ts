@@ -111,3 +111,34 @@ export const clearHistory = mutation({
     await Promise.all(messages.map((msg) => ctx.db.delete(msg._id)));
   },
 });
+
+export const getOrCreateSessionForBackend = mutation({
+  args: {
+    userId: v.id('users'),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
+    const existing = await ctx.db
+      .query('chatSessions')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .order('desc')
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { updatedAt: Date.now() });
+      return { ...existing, updatedAt: Date.now() };
+    }
+
+    const id = await ctx.db.insert('chatSessions', {
+      userId: args.userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    return await ctx.db.get(id);
+  },
+});

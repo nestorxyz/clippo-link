@@ -1,4 +1,5 @@
 import { query } from './_generated/server';
+import { v } from 'convex/values';
 
 // Billing / quota configuration and helper utilities
 export const FREE_MONTHLY_LIMIT = 500;
@@ -109,7 +110,6 @@ export const getPlan = query({
     // Sort by renewsAt descending
     sub.sort((a, b) => b.renewsAt - a.renewsAt);
 
-    // Logic from SubscriptionService: maybeSingle(), then checks
     const data = sub[0]; // "maybeSingle" equivalent of the top one
 
     let userPlan: UserPlan;
@@ -179,6 +179,105 @@ export const getPlan = query({
     // Optimization: If many links, this might be slow, but for now it matches the backend logic.
     // Actually, SQL did: .gte('created_at', periodStartIso).lt('created_at', periodEndIso) which is efficient.
     // In Convex with just 'by_user', we have to iterate.
+    const links = await ctx.db
+      .query('links')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field('createdAt'), startMs),
+          q.lt(q.field('createdAt'), endMs),
+        ),
+      )
+      .collect();
+
+    const used = links.length;
+    userPlan.used = used;
+    userPlan.remaining = Math.max(userPlan.limit - used, 0);
+
+    return userPlan;
+  },
+});
+
+export const getPlanForBackend = query({
+  args: {
+    userId: v.id('users'),
+    secret: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Validate secret
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized');
+    }
+
+    const { userId } = args;
+
+    // Get Active Subscription Logic
+    const sub = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    // Sort by renewsAt descending
+    sub.sort((a, b) => b.renewsAt - a.renewsAt);
+
+    const data = sub[0];
+
+    let userPlan: UserPlan; // Use the interface from above
+
+    const isPremium = (() => {
+      if (!data) return false;
+      const now = Date.now();
+      const endsAt = data.endsAt || 0;
+      // In grace period?
+      const inGrace = endsAt
+        ? (now - endsAt) / 1000 / 3600 < GRACE_PERIOD_HOURS
+        : true;
+
+      const status = data.status;
+      const premiumEligible =
+        (PREMIUM_STATUSES.includes(status) || status === 'cancelled') &&
+        inGrace;
+
+      return premiumEligible;
+    })();
+
+    if (!isPremium || !data) {
+      const period = getCalendarMonthPeriodUtc();
+      userPlan = {
+        plan: 'free',
+        status: 'free',
+        limit: FREE_MONTHLY_LIMIT,
+        period,
+        used: 0,
+        remaining: FREE_MONTHLY_LIMIT,
+      };
+    } else {
+      const renewsAtIso = new Date(data.renewsAt).toISOString();
+      const periodEnd = renewsAtIso;
+      const periodStart = getPreviousIntervalStart(data.variantId, renewsAtIso);
+      const limit = PREMIUM_MONTHLY_LIMIT;
+
+      userPlan = {
+        plan: 'premium',
+        status: data.status,
+        limit,
+        period: { start: periodStart, end: periodEnd },
+        used: 0,
+        remaining: limit,
+        subscriptionId: data.lemonSubscriptionId,
+        variantId: data.variantId,
+        managePortalUrl: data.customerPortalUrl,
+        renewsAt: renewsAtIso,
+        trialEndsAt: data.trialEndsAt
+          ? new Date(data.trialEndsAt).toISOString()
+          : null,
+      };
+    }
+
+    // Calculate usage
+    const startMs = new Date(userPlan.period.start).getTime();
+    const endMs = new Date(userPlan.period.end).getTime();
+
     const links = await ctx.db
       .query('links')
       .withIndex('by_user', (q) => q.eq('userId', userId))
