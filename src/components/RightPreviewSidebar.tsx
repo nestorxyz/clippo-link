@@ -61,7 +61,7 @@ const RightPreviewSidebar: React.FC<RightPreviewSidebarProps> = ({
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {links.map((link) => (
-                <PreviewCard key={link.id} link={link} variant="sidebar" />
+                <PreviewCard key={link.id} link={link} />
               ))}
             </div>
           )}
