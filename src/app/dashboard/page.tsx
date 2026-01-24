@@ -15,7 +15,7 @@ import { PhoneVerification } from '@/components/PhoneVerification';
 import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import PricingModal from '@/components/PricingModal';
 import MobileHeader from '@/components/MobileHeader';
-import LinksGrid from '@/components/LinksGrid';
+import LinksGrid from './_components/LinksGrid';
 import { useConvexAuth, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
