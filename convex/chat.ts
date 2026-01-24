@@ -157,7 +157,7 @@ export const getMessagesForBackend = query({
       .query('chatMessages')
       .withIndex('by_session', (q) => q.eq('sessionId', args.sessionId))
       .order('desc')
-      .take(50); // Limit to last 50 messages to prevent context overflow
+      .take(25); // Limit to last 25 messages to prevent context overflow
 
     return messages;
   },
