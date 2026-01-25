@@ -26,14 +26,20 @@ export const saveMessage = mutation({
 });
 
 export const getOrCreateSession = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    source: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
+    const source = args.source ?? 'web';
+
     const existing = await ctx.db
       .query('chatSessions')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .withIndex('by_user_source', (q) =>
+        q.eq('userId', userId).eq('source', source),
+      )
       .order('desc')
       .first();
 
@@ -43,6 +49,7 @@ export const getOrCreateSession = mutation({
       userId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      source,
     });
 
     return await ctx.db.get(id);
@@ -116,15 +123,20 @@ export const getOrCreateSessionForBackend = mutation({
   args: {
     userId: v.id('users'),
     secret: v.string(),
+    source: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
       throw new Error('Unauthorized: Invalid Secret');
     }
 
+    const source = args.source ?? 'web';
+
     const existing = await ctx.db
       .query('chatSessions')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_source', (q) =>
+        q.eq('userId', args.userId).eq('source', source),
+      )
       .order('desc')
       .first();
 
@@ -137,6 +149,7 @@ export const getOrCreateSessionForBackend = mutation({
       userId: args.userId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      source,
     });
 
     return await ctx.db.get(id);
