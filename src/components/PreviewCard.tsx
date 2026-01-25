@@ -62,11 +62,13 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
         </button>
       </div>
 
-      <div className="relative z-10 p-3 mt-auto">
-        <div className="text-sm font-semibold line-clamp-2 mb-1">
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
+
+      <div className="relative z-20 p-3 mt-auto">
+        <div className="text-sm font-semibold line-clamp-2 mb-1 text-white">
           {link.title || link.description || 'Untitled'}
         </div>
-        <div className="text-xs text-[#cdcccc] truncate">
+        <div className="text-xs text-gray-300 truncate">
           {domainFromUrl(link.url)}
         </div>
       </div>
