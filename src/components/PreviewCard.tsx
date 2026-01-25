@@ -25,7 +25,7 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative flex flex-col h-48 bg-card rounded-xl"
+      className="group relative flex flex-col h-48 bg-card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
     >
       <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-100 transition-opacity">
         <button
@@ -78,7 +78,7 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
           referrerPolicy="no-referrer"
           onError={() => setHideImage(true)}
           className={cn(
-            'absolute block inset-0 h-full w-full object-cover z-0 pointer-events-none transform-gpu transition-transform duration-300 ease-out group-hover:scale-105',
+            'absolute block inset-0 h-full w-full object-cover z-0 pointer-events-none transform-gpu transition-transform duration-500 ease-in-out group-hover:scale-110',
             imageOpacity,
           )}
         />
