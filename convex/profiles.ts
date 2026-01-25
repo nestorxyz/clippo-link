@@ -66,7 +66,7 @@ export const getOrCreateByPhone = mutation({
     // 2. Create User
     // We insert a user. In the future, we might want to store more info.
     const userId = await ctx.db.insert('users', {
-      name: `WhatsApp User ${formattedPhone.slice(-4)}`,
+      name: `WhatsApp User ${formattedPhone}`,
       // image: '',
     });
 
@@ -77,6 +77,7 @@ export const getOrCreateByPhone = mutation({
       phoneVerified: true,
       phoneVerifiedAt: Date.now(),
       updatedAt: Date.now(),
+      createdVia: 'whatsapp',
     });
 
     profile = (await ctx.db.get(profileId))!;

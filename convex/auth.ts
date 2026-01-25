@@ -176,9 +176,16 @@ export const verifyOtp = mutation({
       existingProfileWithPhone &&
       existingProfileWithPhone.userId !== user._id
     ) {
-      // If it's a WhatsApp-only account (we'll check createdVia if it exists), offer consolidation.
-      // The original schema had createdVia.
-      if (existingProfileWithPhone.createdVia === 'whatsapp') {
+      // If it's a WhatsApp-only account, offer consolidation.
+      // Check createdVia flag OR if the user has no tokenIdentifier (implicit account)
+      const conflictingUser = await ctx.db.get(existingProfileWithPhone.userId);
+      const isImplicitUser =
+        conflictingUser && !conflictingUser.tokenIdentifier;
+
+      if (
+        existingProfileWithPhone.createdVia === 'whatsapp' ||
+        isImplicitUser
+      ) {
         return {
           success: false,
           error: 'CONSOLIDATION_REQUIRED',
