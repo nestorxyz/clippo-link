@@ -4,6 +4,7 @@ import { Star, Clock } from 'lucide-react';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from 'convex/_generated/api';
 import { cn, domainFromUrl } from '@/lib/utils';
+import { getPlatformByUrl } from '@/lib/social-platforms';
 
 interface PreviewCardProps {
   link: Link;
@@ -19,6 +20,8 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
   );
 
   const imageOpacity = 'opacity-80';
+  const platform = React.useMemo(() => getPlatformByUrl(link.url), [link.url]);
+  const showPlatformFallback = (!link.imgPreview || hideImage) && platform;
 
   return (
     <a
@@ -72,6 +75,7 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
           {domainFromUrl(link.url)}
         </div>
       </div>
+
       {link.imgPreview && !hideImage ? (
         <img
           src={link.imgPreview}
@@ -84,6 +88,15 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
             imageOpacity,
           )}
         />
+      ) : showPlatformFallback ? (
+        <div
+          className={cn(
+            'absolute inset-0 flex items-center justify-center z-0 transition-transform duration-500 ease-in-out group-hover:scale-110',
+            platform?.color,
+          )}
+        >
+          <div className="transform scale-150 opacity-50">{platform?.icon}</div>
+        </div>
       ) : null}
     </a>
   );
