@@ -68,7 +68,10 @@ export default defineSchema({
     userId: v.id('users'),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index('by_user', ['userId']),
+    source: v.optional(v.string()), // 'web', 'whatsapp', etc.
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_source', ['userId', 'source']),
 
   chatMessages: defineTable({
     sessionId: v.id('chatSessions'),
