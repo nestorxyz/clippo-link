@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-**Product Name:** DoryAI (internally "Clippo")
+**Product Name:** DoryAI
 **Goal:** To be the ultimate personal knowledge base for links and short content.
 **Core Value Proposition:**
 

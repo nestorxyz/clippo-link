@@ -149,7 +149,7 @@ export const Navigation = ({ className }: NavigationProps) => {
                     <Button
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-body font-medium rounded-xl"
                       onClick={() => {
-                        window.open('https://app.clippo.ai', '_blank');
+                        window.open('https://app.dory.ai', '_blank');
                         setMobileMenuOpen(false);
                       }}
                     >
