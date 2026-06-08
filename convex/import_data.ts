@@ -178,42 +178,4 @@ export const importUser = mutation({
   },
 });
 
-export const importProfile = mutation({
-  args: {
-    userId: v.id('users'),
-    phoneNumber: v.optional(v.string()),
-    phoneVerified: v.optional(v.boolean()),
-    phoneVerifiedAt: v.optional(v.string()),
-    updatedAt: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // Check if profile exists for user
-    const existing = await ctx.db
-      .query('profiles')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .first();
 
-    const verifiedAt = args.phoneVerifiedAt
-      ? Date.parse(args.phoneVerifiedAt)
-      : undefined;
-    const updatedAt = args.updatedAt ? Date.parse(args.updatedAt) : Date.now();
-
-    if (existing) {
-      // Update existing profile
-      return await ctx.db.patch(existing._id, {
-        phoneNumber: args.phoneNumber,
-        phoneVerified: args.phoneVerified,
-        phoneVerifiedAt: verifiedAt,
-        updatedAt: updatedAt,
-      });
-    }
-
-    return await ctx.db.insert('profiles', {
-      userId: args.userId,
-      phoneNumber: args.phoneNumber,
-      phoneVerified: args.phoneVerified,
-      phoneVerifiedAt: verifiedAt,
-      updatedAt: updatedAt,
-    });
-  },
-});

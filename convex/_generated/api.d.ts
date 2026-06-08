@@ -9,7 +9,6 @@
  */
 
 import type * as ai from "../ai.js";
-import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
 import type * as categories from "../categories.js";
 import type * as chat from "../chat.js";
@@ -18,12 +17,10 @@ import type * as import_data from "../import_data.js";
 import type * as lemon from "../lemon.js";
 import type * as links from "../links.js";
 import type * as migrations from "../migrations.js";
-import type * as profiles from "../profiles.js";
 import type * as storage from "../storage.js";
 import type * as subCategories from "../subCategories.js";
 import type * as tags from "../tags.js";
 import type * as users from "../users.js";
-import type * as whatsapp from "../whatsapp.js";
 
 import type {
   ApiFromModules,
@@ -33,7 +30,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
-  auth: typeof auth;
   billing: typeof billing;
   categories: typeof categories;
   chat: typeof chat;
@@ -42,12 +38,10 @@ declare const fullApi: ApiFromModules<{
   lemon: typeof lemon;
   links: typeof links;
   migrations: typeof migrations;
-  profiles: typeof profiles;
   storage: typeof storage;
   subCategories: typeof subCategories;
   tags: typeof tags;
   users: typeof users;
-  whatsapp: typeof whatsapp;
 }>;
 
 /**

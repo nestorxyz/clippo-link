@@ -11,18 +11,16 @@ import {
 import { LogOut, Settings, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
-import { useUser, useClerk, useAuth } from '@clerk/nextjs';
-import { env } from '@/env';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
 
-const settingsTabs = ['profile', 'integrations', 'billing'] as const;
+const settingsTabs = ['profile', 'billing'] as const;
 
 interface MobileHeaderProps {}
 
 const MobileHeader: React.FC<MobileHeaderProps> = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const { getToken } = useAuth();
   const [, setSettingsTab] = useQueryState(
     'settings',
     parseAsStringLiteral(settingsTabs)
@@ -69,22 +67,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = () => {
             <DropdownMenuSeparator />
             {plan?.plan === 'premium' ? (
               <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    const token = await getToken({ template: 'convex' });
-                    if (!token) throw new Error('No session');
-                    const res = await fetch(
-                      `${env.NEXT_PUBLIC_BACKEND_URL || ''}/api/billing/portal`,
-                      { headers: { Authorization: `Bearer ${token}` } }
-                    );
-                    const json = await res.json();
-                    const url = json?.url as string | undefined;
-                    if (url) window.location.href = url;
-                    else toast.error('No portal URL available');
-                  } catch (e) {
-                    console.error(e);
-                    toast.error('Failed to open billing portal');
-                  }
+                onClick={() => {
+                  const url = plan?.managePortalUrl;
+                  if (url) window.location.href = url;
+                  else toast.error('No portal URL available');
                 }}
                 className="cursor-pointer"
               >

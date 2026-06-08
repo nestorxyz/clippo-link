@@ -10,10 +10,7 @@ import {
   Send,
   RefreshCw,
   Link as LinkIcon,
-  Smartphone,
   Folder,
-  X,
-  Lightbulb,
 } from 'lucide-react';
 import { Category, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -31,10 +28,9 @@ import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
-import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
 
-const settingsTabs = ['profile', 'integrations', 'billing'] as const;
+const settingsTabs = ['profile', 'billing'] as const;
 
 interface ChatProps {
   categories: Category[];
@@ -115,12 +111,9 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
   const clearHistory = useMutation(api.chat.clearHistory);
   const processMessage = useAction(api.ai.processChatMessage);
 
-  const { phoneStatus, loading: dateLoading } = usePhoneVerification();
-  const [showNotification, setShowNotification] = useState(true);
-
   // Initial session load
   useEffect(() => {
-    getOrCreateSession().then((session) => setSessionId(session._id));
+    getOrCreateSession({}).then((session) => setSessionId(session!._id));
   }, []);
 
   const rawMessages = useQuery(
@@ -212,35 +205,11 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
   };
 
   const openSettings = () => {
-    setSettingsTab('integrations');
+    setSettingsTab('profile');
   };
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Top Notification Bar */}
-      {showNotification && phoneStatus && !phoneStatus.whatsappEnabled && (
-        <div className="bg-[#1D1D1D] text-white px-4 py-2 flex items-center justify-between text-sm absolute top-4 left-4 right-4 z-20 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-            <span>
-              Pro tip: Forward links directly from WhatsApp to save them
-              instantly.
-              <button
-                onClick={openSettings}
-                className="text-blue-400 hover:text-blue-300 ml-1 font-medium hover:underline"
-              >
-                Connect Now →
-              </button>
-            </span>
-          </div>
-          <button
-            onClick={() => setShowNotification(false)}
-            className="text-gray-400 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
 
       {messages.length === 0 ? (
         // Blank State
@@ -272,15 +241,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
               <LinkIcon className="h-4 w-4" />
               Save a test link
             </Button>
-            <Button
-              variant="outline"
-              type="button"
-              className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
-              onClick={openSettings}
-            >
-              <Smartphone className="h-4 w-4" />
-              Connect WhatsApp
-            </Button>
+
             <Button
               variant="outline"
               type="button"
