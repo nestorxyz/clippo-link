@@ -11,8 +11,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import BottomNavbar from '@/components/BottomNavbar';
 import SettingsModal from '@/components/SettingsModal';
-import { PhoneVerification } from '@/components/PhoneVerification';
-import { usePhoneVerification } from '@/hooks/usePhoneVerification';
 import PricingModal from '@/components/PricingModal';
 import MobileHeader from '@/components/MobileHeader';
 import LinksGrid from './_components/LinksGrid';
@@ -40,19 +38,6 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<
     'inbox' | 'favorites' | 'read-later' | 'category'
   >('inbox');
-  const { needsPhoneVerification, refresh: refreshPhoneStatus } =
-    usePhoneVerification();
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
-
-  const [dismissedPhoneVerification, setDismissedPhoneVerification] =
-    useState<boolean>(() => {
-      if (typeof window === 'undefined') return false;
-      try {
-        return sessionStorage.getItem('dismissed_phone_verification') === '1';
-      } catch {
-        return false;
-      }
-    });
   const [showPricing, setShowPricing] = useState(false);
 
   useEffect(() => {
@@ -69,11 +54,6 @@ export default function DashboardPage() {
     }
   }, [isLoading, isAuthenticated]);
 
-  useEffect(() => {
-    if (needsPhoneVerification && !dismissedPhoneVerification) {
-      setShowPhoneVerification(true);
-    }
-  }, [needsPhoneVerification, dismissedPhoneVerification]);
 
   if (isLoading) {
     return (
@@ -99,30 +79,6 @@ export default function DashboardPage() {
     <>
       <SettingsModal />
       <PricingModal open={showPricing} onClose={() => setShowPricing(false)} />
-      {showPhoneVerification && (
-        <PhoneVerification
-          isOpen={showPhoneVerification}
-          onVerified={() => {
-            setShowPhoneVerification(false);
-            setDismissedPhoneVerification(true);
-            try {
-              sessionStorage.setItem('dismissed_phone_verification', '1');
-            } catch {
-              // ignore storage errors
-            }
-            refreshPhoneStatus();
-          }}
-          onClose={() => {
-            setShowPhoneVerification(false);
-            setDismissedPhoneVerification(true);
-            try {
-              sessionStorage.setItem('dismissed_phone_verification', '1');
-            } catch {
-              // ignore storage errors
-            }
-          }}
-        />
-      )}
 
       <div className="flex h-screen flex-col md:flex-row">
         {!isMobile && (

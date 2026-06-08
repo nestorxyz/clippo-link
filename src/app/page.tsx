@@ -8,7 +8,6 @@ import { CustomerReviews } from './_components/sections/reviews';
 import { PricingSection } from './_components/sections/pricing';
 import { Footer } from './_components/sections/footer';
 import { ClippoInAction } from '@/app/_components/ClippoInAction';
-import { WhatsAppCTA } from './_components/sections/whatsapp-cta';
 
 export default function Home() {
   return (
@@ -24,7 +23,6 @@ export default function Home() {
        */}
         <ClippoInAction />
         <PricingSection />
-        <WhatsAppCTA />
       </main>
       <Footer />
     </div>

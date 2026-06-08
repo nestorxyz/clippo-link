@@ -80,28 +80,7 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_session', ['sessionId']),
 
-  profiles: defineTable({
-    userId: v.id('users'),
-    phoneNumber: v.optional(v.string()),
-    phoneVerified: v.optional(v.boolean()),
-    phoneVerifiedAt: v.optional(v.number()),
-    updatedAt: v.optional(v.number()),
-    fullName: v.optional(v.string()),
-    avatarUrl: v.optional(v.string()),
-    createdVia: v.optional(v.string()),
-  })
-    .index('by_user', ['userId'])
-    .index('by_phone', ['phoneNumber']),
 
-  otpAttempts: defineTable({
-    userId: v.id('users'),
-    phoneNumber: v.string(),
-    otpCode: v.string(),
-    attemptType: v.string(),
-    verified: v.boolean(),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-  }).index('by_user', ['userId']),
 
   subscriptions: defineTable({
     userId: v.id('users'),
