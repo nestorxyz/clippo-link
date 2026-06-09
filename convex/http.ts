@@ -20,16 +20,21 @@ http.route({
     if (!storageId) {
       return new Response(null, { status: 400, statusText: 'Missing id' });
     }
-    const blob = await ctx.storage.get(storageId as Id<'_storage'>);
-    if (!blob) {
-      return new Response(null, { status: 404, statusText: 'Image not found' });
+    try {
+      const blob = await ctx.storage.get(storageId as Id<'_storage'>);
+      if (!blob) {
+        return new Response(null, { status: 404, statusText: 'Image not found' });
+      }
+      return new Response(blob, {
+        headers: {
+          'Content-Type': blob.type,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    } catch (error) {
+      console.warn('Invalid storage ID:', storageId);
+      return new Response(null, { status: 404, statusText: 'Invalid image ID' });
     }
-    return new Response(blob, {
-      headers: {
-        'Content-Type': blob.type,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
   }),
 });
 
