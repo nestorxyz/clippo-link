@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/integrations/retired-provider/server';
+import { currentUser } from '@clerk/nextjs/server';
 
 const LEMON_MONTHLY =
   'https://misfitlabs.lemonsqueezy.com/buy/a1200a99-d915-43a1-94c7-26ccace2382d';
@@ -27,21 +27,21 @@ export async function GET(request: Request) {
   const plan = searchParams.get('plan');
   const intent = searchParams.get('intent');
 
-  const retired-provider = await createClient();
-  const {
-    data: { user },
-  } = await retired-provider.auth.getUser();
+  const user = await currentUser();
 
   if (!user) {
-    const qs = searchParams.toString();
-    return NextResponse.redirect(`${origin}/sign-in${qs ? `?${qs}` : ''}`);
+    const afterUrl = `/auth/after?plan=${plan}&intent=${intent}`;
+    const signInUrl = new URL(`${origin}/sign-in`);
+    signInUrl.searchParams.set('redirect_url', afterUrl);
+    return NextResponse.redirect(signInUrl.toString());
   }
 
   if (intent !== 'checkout' || (plan !== 'monthly' && plan !== 'annual')) {
     return NextResponse.redirect(`${origin}/dashboard`);
   }
 
+  const email = user.primaryEmailAddress?.emailAddress;
   const base = plan === 'annual' ? LEMON_ANNUAL : LEMON_MONTHLY;
-  const dest = buildCheckoutUrl(base, user.email);
+  const dest = buildCheckoutUrl(base, email);
   return NextResponse.redirect(dest);
 }
