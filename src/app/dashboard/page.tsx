@@ -118,8 +118,10 @@ export default function DashboardPage() {
 
         <div
           className={cn(
-            'flex-1 flex flex-col bg-[#111111] border border-[#1D1D1D] m-2 rounded-sm overflow-hidden',
-            !isMobile && 'transition-all duration-300',
+            'flex-1 flex flex-col bg-[#111111] border border-[#1D1D1D] rounded-sm overflow-hidden mx-2 mt-2',
+            isMobile
+              ? 'mb-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)]'
+              : 'mb-2 transition-all duration-300',
           )}
         >
           <main className="flex-1 overflow-hidden">

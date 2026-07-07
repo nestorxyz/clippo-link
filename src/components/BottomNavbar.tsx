@@ -16,8 +16,8 @@ const BottomNavbar = ({ activeView, setActiveView }: BottomNavbarProps) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-20 md:hidden">
-      <div className="flex justify-around items-center h-16 pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-20 md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex justify-around items-center h-16">
         {navItems.map((item) => (
           <Button
             key={item.view}
