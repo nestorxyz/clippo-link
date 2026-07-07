@@ -58,23 +58,18 @@ export default function SettingsModal() {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed left-0 top-0 z-modal flex h-full w-full bg-[#0F0F0F] z-50"
+          className="fixed left-0 top-0 z-[60] flex flex-col md:flex-row h-full w-full bg-[#0F0F0F] overflow-hidden"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
         >
           {/* Sidebar */}
-          <aside
-            className="hidden-scrollbar h-full flex-1 overflow-y-scroll bg-gray-75 px-6 transition-colors"
-            style={{
-              flexBasis: '320px',
-            }}
-          >
-            <div className="ml-auto flex w-48 flex-col py-12">
-              <nav className="space-y-6 text-sm">
-                <div>
-                  <div className="px-2 text-[11px] uppercase tracking-wider text-[#646363] mb-2">
+          <aside className="hidden-scrollbar flex-none w-full md:w-[320px] md:h-full overflow-x-auto md:overflow-y-auto bg-transparent px-4 md:px-6 border-b md:border-b-0 md:border-r border-[#1D1D1D] transition-colors shrink-0">
+            <div className="md:ml-auto flex md:w-48 flex-row md:flex-col py-4 md:py-12 gap-2 md:gap-0 h-full items-center md:items-stretch pr-12 md:pr-0">
+              <nav className="flex flex-row md:flex-col md:space-y-6 text-sm gap-2 md:gap-0 flex-1">
+                <div className="flex-none">
+                  <div className="px-2 text-[11px] uppercase tracking-wider text-[#646363] mb-2 hidden md:block">
                     Personal Settings
                   </div>
                   <button
@@ -88,12 +83,12 @@ export default function SettingsModal() {
                     Profile
                   </button>
                 </div>
-                <div>
-                  <div className="px-2 text-[11px] uppercase tracking-wider text-[#646363] mb-2">
+                <div className="flex-none">
+                  <div className="px-2 text-[11px] uppercase tracking-wider text-[#646363] mb-2 hidden md:block">
                     App Settings
                   </div>
                   <button
-                    className={`w-full text-left px-2 py-1.5 rounded-md ${
+                    className={`w-full text-left px-4 md:px-2 py-2 md:py-1.5 rounded-md transition-colors ${
                       activeTab === 'billing'
                         ? 'bg-[#1D1D1D] text-white'
                         : 'text-[#A5A5A5] hover:bg-[#1D1D1D] hover:text-white'
@@ -105,39 +100,34 @@ export default function SettingsModal() {
                 </div>
               </nav>
 
-              <div className="mt-auto pt-4">
+              <div className="mt-0 md:mt-auto pt-0 md:pt-4 flex items-center md:items-start ml-auto md:ml-0">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-[#A5A5A5] hover:text-white hover:bg-[#1D1D1D]"
+                  className="w-auto md:w-full justify-start text-[#A5A5A5] hover:text-white hover:bg-[#1D1D1D] px-3 md:px-4"
                   onClick={() => signOut()}
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Log out
+                  <LogOut className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Log out</span>
                 </Button>
               </div>
             </div>
           </aside>
 
-          <div className="fixed right-10 top-10 z-20 flex flex-col items-center justify-center gap-1.5">
+          <div className="fixed right-4 top-4 md:right-10 md:top-10 z-20 flex flex-col items-center justify-center gap-1.5">
             <button
-              className="rounded-full p-2 hover:bg-[#1D1D1D]"
+              className="rounded-full p-2 hover:bg-[#1D1D1D] bg-[#111111] md:bg-transparent shadow-sm border border-[#1D1D1D] md:border-transparent"
               onClick={onClose}
               aria-label="Close"
             >
               <X className="h-5 w-5" />
             </button>
-            <span className="text-[10px] uppercase tracking-wider text-[#7A7A7A]">
+            <span className="hidden md:block text-[10px] uppercase tracking-wider text-[#7A7A7A]">
               ESC
             </span>
           </div>
           {/* Content */}
-          <div
-            className="hidden-scrollbar relative h-full flex-1 overflow-y-scroll transition-colors"
-            style={{
-              flexBasis: '888px',
-            }}
-          >
-            <div className="flex min-h-full w-full min-w-[520px] max-w-[900px] flex-col px-12 py-12">
+          <div className="hidden-scrollbar relative h-full flex-1 overflow-y-scroll transition-colors">
+            <div className="flex min-h-full w-full max-w-[900px] flex-col px-4 md:px-12 py-8 md:py-12 pb-32">
               {/* Title */}
               <div className="pt-8">
                 <h1 className="text-xl font-semibold">{title}</h1>
@@ -147,9 +137,9 @@ export default function SettingsModal() {
               {/* Header banner */}
               {activeTab === 'profile' && (
                 <div className="pt-6">
-                  <div className="relative rounded-xl border border-[#1D1D1D] bg-gradient-to-b from-[#121212] to-[#0F0F0F] p-6">
-                    <div className="flex items-center gap-6">
-                      <Avatar className="h-20 w-20 ring-2 ring-primary/30">
+                  <div className="relative rounded-xl border border-[#1D1D1D] bg-gradient-to-b from-[#121212] to-[#0F0F0F] p-4 md:p-6 overflow-hidden">
+                    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
+                      <Avatar className="h-16 w-16 md:h-20 md:w-20 ring-2 ring-primary/30 shrink-0">
                         {displayAvatarUrl && !avatarLoadError ? (
                           <AvatarImage
                             src={displayAvatarUrl}
