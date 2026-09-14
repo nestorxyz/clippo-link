@@ -55,12 +55,15 @@ the normal application startup contract.
 
 ```sh
 npm run dev
+npm run test
 npm run build
+npm run check
 npm run start
 ```
 
-There is not yet a repository test command. The backend owns the first source
-URL classification tests while the web test harness is established.
+`npm run check` runs focused Vitest coverage and the production build. The first
+web tests preserve the current billing redirect boundary before the separately
+gated Polar migration changes it.
 
 ## Architecture boundary
 

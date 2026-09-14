@@ -7,20 +7,24 @@ This checklist prepares the repository; it does not authorize making it public.
 - [x] Replaced stale Lovable/Vite instructions with the current Next.js,
       Clerk, Convex, and backend setup.
 - [x] Added a secret-safe `.env.example`.
-- [x] Added a build-based `npm run check` command and CI definition.
+- [x] Added focused billing-boundary tests, an `npm run check` command, and CI.
 - [x] Added contributor and security guidance.
 - [x] Current changed-file credential-pattern scan found no credential-shaped
       values.
 - [x] Bounded Git-history string scan found no credential-shaped values; its
       only service-role match is the new placeholder example.
+- [x] `npm audit --audit-level=low` reports zero known vulnerabilities.
+- [x] Direct dependency manifests expose only MIT, Apache-2.0, BSD-2-Clause, or
+      ISC licenses; detailed evidence is in `docs/DEPENDENCY_REVIEW.md`.
 
 ## Required before public visibility
 
 - [ ] Choose and approve an open-source license.
-- [ ] Add focused web tests for auth-independent logic and critical UI behavior.
+- [ ] Extend focused web tests to critical onboarding, chat, and link-management
+      behavior.
 - [ ] Run a dedicated full-history secret scanner and resolve every finding.
-- [ ] Review dependency licenses, fonts, screenshots, generated assets, and
-      third-party branding rights.
+- [ ] Review transitive dependency licenses, fonts, screenshots, generated
+      assets, and third-party branding rights.
 - [ ] Remove or document legacy retired-provider migration code and duplicate landing
       components.
 - [ ] Replace hard-coded billing product URLs/IDs with a reviewed configuration

@@ -1,26 +1,9 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-
-const LEMON_MONTHLY =
-  'https://misfitlabs.lemonsqueezy.com/buy/a1200a99-d915-43a1-94c7-26ccace2382d';
-const LEMON_ANNUAL =
-  'https://misfitlabs.lemonsqueezy.com/buy/a9367717-b49e-4255-b831-541b9c63fdd2';
-const DISCOUNT = 'BETALAUNCH';
-
-function buildCheckoutUrl(base: string, email?: string | null) {
-  try {
-    const url = new URL(base);
-    if (email) url.searchParams.set('checkout[email]', email);
-    url.searchParams.set('checkout[discount_code]', DISCOUNT);
-    return url.toString();
-  } catch {
-    const sep = base.includes('?') ? '&' : '?';
-    const q = new URLSearchParams();
-    if (email) q.set('checkout[email]', email);
-    q.set('checkout[discount_code]', DISCOUNT);
-    return `${base}${sep}${q.toString()}`;
-  }
-}
+import {
+  buildLegacyCheckoutUrl,
+  isLegacyBillingPlan,
+} from '@/server/billing/legacy-lemon-checkout';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -36,12 +19,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(signInUrl.toString());
   }
 
-  if (intent !== 'checkout' || (plan !== 'monthly' && plan !== 'annual')) {
+  if (intent !== 'checkout' || !isLegacyBillingPlan(plan)) {
     return NextResponse.redirect(`${origin}/dashboard`);
   }
 
   const email = user.primaryEmailAddress?.emailAddress;
-  const base = plan === 'annual' ? LEMON_ANNUAL : LEMON_MONTHLY;
-  const dest = buildCheckoutUrl(base, email);
+  const dest = buildLegacyCheckoutUrl(plan, email);
   return NextResponse.redirect(dest);
 }
