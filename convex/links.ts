@@ -372,10 +372,19 @@ export const getRecentLinksForUser = query({
           }
         }
 
+        const linkTags = await ctx.db
+          .query('linkTags')
+          .withIndex('by_link', (q) => q.eq('linkId', link._id))
+          .collect();
+        const tags = (
+          await Promise.all(linkTags.map(({ tagId }) => ctx.db.get(tagId)))
+        ).filter((tag) => tag !== null);
+
         return {
           ...link,
           subCategory,
           category,
+          tags,
         };
       }),
     );
