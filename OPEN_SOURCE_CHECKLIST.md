@@ -16,13 +16,17 @@ This checklist prepares the repository; it does not authorize making it public.
 - [x] `npm audit --audit-level=low` reports zero known vulnerabilities.
 - [x] Direct dependency manifests expose only MIT, Apache-2.0, BSD-2-Clause, or
       ISC licenses; detailed evidence is in `docs/DEPENDENCY_REVIEW.md`.
+- [x] Dedicated Gitleaks full-history scan completed with redacted output; the
+      sanitized review is in `docs/SECURITY_HISTORY_REVIEW.md`.
 
 ## Required before public visibility
 
 - [ ] Choose and approve an open-source license.
 - [ ] Extend focused web tests to critical onboarding, chat, and link-management
       behavior.
-- [ ] Run a dedicated full-history secret scanner and resolve every finding.
+- [ ] Resolve the shared historical retired-provider anon JWT finding by verifying the
+      private project and rotating its key or decommissioning it; rerun Gitleaks
+      to zero unresolved findings.
 - [ ] Review transitive dependency licenses, fonts, screenshots, generated
       assets, and third-party branding rights.
 - [ ] Remove or document legacy retired-provider migration code and duplicate landing
