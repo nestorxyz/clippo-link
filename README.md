@@ -1,73 +1,86 @@
-# Welcome to your Lovable project
+# DoryAI web app
 
-## Project info
+The DoryAI web product: Next.js UI, Clerk authentication, and Convex data/actions
+for saving, organizing, searching, and chatting with a personal link library.
 
-**URL**: https://lovable.dev/projects/2b968d68-8560-4df9-a4f0-0353d2989747
+The GitHub repository retains the historical `clippo-link` name. DoryAI is the
+current product name.
 
-## How can I edit this code?
+## Stack
 
-There are several ways of editing your application.
+- Next.js 16 and React 18
+- TypeScript and Tailwind CSS
+- Clerk authentication
+- Convex database, actions, storage, and billing state
+- A separate Express/Gemini service at `../backend`
 
-**Use Lovable**
+## Local setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2b968d68-8560-4df9-a4f0-0353d2989747) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requirements: a current Node.js LTS release, npm, a Clerk application, a Convex
+deployment, and the DoryAI backend.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
+cp .env.example .env.local
+npx convex dev
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Fill `.env.local` before starting Next.js. Never commit real values.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```dotenv
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_REDACTED
+NEXT_PUBLIC_CONVEX_URL=https://replace-me.convex.cloud
+CLERK_SECRET_KEY=pk_test_REDACTED
+```
 
-**Use GitHub Codespaces**
+Set the server-only Convex environment separately:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npx convex env set BACKEND_URL http://localhost:3000
+npx convex env set CONVEX_BACKEND_SECRET replace-with-a-shared-random-secret
+npx convex env set CLERK_JWT_ISSUER_DOMAIN https://replace-me.clerk.accounts.dev
+```
 
-## What technologies are used for this project?
+`LEMON_WEBHOOK_SIGNING_SECRET` is additionally required to exercise the current
+Lemon Squeezy webhook. Billing is under review; do not change production billing
+or subscriber state from local setup.
 
-This project is built with:
+The retired-provider variables referenced by `scripts/migrate.ts` and the legacy
+`src/integrations/retired-provider` directory are migration-only. They are not part of
+the normal application startup contract.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Commands
 
-## How can I deploy this project?
+```sh
+npm run dev
+npm run build
+npm run start
+```
 
-Simply open [Lovable](https://lovable.dev/projects/2b968d68-8560-4df9-a4f0-0353d2989747) and click on Share -> Publish.
+There is not yet a repository test command. The backend owns the first source
+URL classification tests while the web test harness is established.
 
-## Can I connect a custom domain to my Lovable project?
+## Architecture boundary
 
-Yes, you can!
+Authenticated browser calls go to Convex. The `convex/ai.ts` action forwards a
+user-bound request to the backend with `CONVEX_BACKEND_SECRET`; the backend uses
+the same secret for privileged Convex operations. Never expose this shared
+secret through a `NEXT_PUBLIC_*` variable or weaken the checks for development.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Verification
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```sh
+npm run build
+```
+
+A passing build verifies compilation and static generation only. It does not
+prove authentication, live Convex/backend communication, billing, deployment,
+or the rendered desktop/mobile experience.
+
+## Publication
+
+Repository visibility, license selection, production deployment, and billing
+changes require explicit owner approval plus secret/history and release
+readbacks.
