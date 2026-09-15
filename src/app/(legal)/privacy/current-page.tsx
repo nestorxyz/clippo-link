@@ -32,7 +32,7 @@ export function CurrentPrivacyPage() {
           </li>
           <li>
             Plan, usage, and subscription-event state needed to enforce limits
-            and process the current Lemon Squeezy billing flow.
+            and process the current Polar billing flow.
           </li>
           <li>
             Limited operational errors. Routine application logs are designed
@@ -63,7 +63,7 @@ export function CurrentPrivacyPage() {
             captions for a link you submit.
           </li>
           <li>
-            Lemon Squeezy handles the current checkout and subscription-event
+            Polar handles the current checkout and subscription-event
             flow when you choose a paid plan.
           </li>
         </ul>

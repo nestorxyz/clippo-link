@@ -1,21 +1,18 @@
 # Polar billing migration
 
-Status: implemented behind configuration; not activated or verified against a
-Polar account.
+Status: Polar-only implementation; sandbox activation still needs provider
+credentials and live verification.
 
 Last reviewed: 2026-09-15
 
 ## Current boundary
 
-DoryAI continues to use the existing Lemon Squeezy checkout unless
-`DORYAI_BILLING_PROVIDER=polar` is set. Selecting Polar without complete
-configuration returns a service-unavailable response; it does not silently
-fall back to a different checkout.
+DoryAI uses Polar exclusively. Incomplete configuration returns a
+service-unavailable response; it never falls back to another checkout.
 
 Polar defaults to its sandbox server. Production requires the explicit pair:
 
 ```text
-DORYAI_BILLING_PROVIDER=polar
 POLAR_SERVER=production
 ```
 
@@ -52,9 +49,8 @@ production. Do not commit any of these values.
 7. Premium Polar users receive `/api/billing/portal` as their management URL;
    that authenticated route creates a short-lived portal session.
 
-Lemon records remain readable. New fields are optional so the schema change
-does not require rewriting existing subscription rows before a migration is
-approved.
+Legacy subscription fields remain optional in the schema only to permit a safe
+production data migration; no active route reads or writes them.
 
 ## Entitlement rules
 
@@ -64,10 +60,8 @@ premium access. `incomplete`, `past_due`, `unpaid`, and `paused` do not. A
 access ends immediately. The existing 24-hour webhook grace rule remains in
 place for other ended records.
 
-There is one unresolved product decision: the current code grants 500 monthly
-saves to free users and only 200 to premium users. Do not activate or advertise
-the Polar plans until the owner approves coherent free and paid quotas and the
-same values appear in product configuration, UI copy, and enforcement tests.
+The approved limits are 20 monthly saves for free users and 500 for premium
+users. Product configuration, UI copy, and enforcement tests must stay aligned.
 
 ## Sandbox verification
 
@@ -92,15 +86,5 @@ approved sandbox account and credentials:
 - Cancel at period end and verify access remains until the period end; then
   verify revocation removes access.
 
-Only after those readbacks, existing-subscriber obligations, legal copy, and an
-owner-approved production cutover plan are complete should the production
-provider variables change.
-
-## Rollback
-
-Unset `DORYAI_BILLING_PROVIDER` (or set it to `lemon`) in the web runtime to
-restore the legacy checkout path. This does not delete Polar customers,
-subscriptions, or Convex evidence. A production rollback therefore also needs
-an explicit decision about already-created Polar subscriptions; never leave
-paying customers active at one provider while DoryAI reads entitlement only
-from another.
+Only after those readbacks, existing-subscriber obligations, and approved legal
+copy are complete should `POLAR_SERVER=production` be configured.

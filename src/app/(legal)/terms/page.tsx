@@ -19,7 +19,7 @@ export default function TermsPage() {
               Terms of Service
             </h1>
             <p className="text-sm text-gray-500 mt-2">
-              Last Revised: August 13, 2025
+              Last Revised: September 15, 2026
             </p>
           </header>
 
@@ -67,7 +67,13 @@ export default function TermsPage() {
               maintaining the security of your account and all activities that
               occur under it.
             </p>
-            <h3 id="s3-3">3.3 Usage Restrictions</h3>
+            <h3 id="s3-3">3.3 Open-source code</h3>
+            <p>
+              Source code published by DoryAI is governed by the license in its
+              repository. These Terms govern use of the hosted Platform and do
+              not reduce permissions granted by that open-source license.
+            </p>
+            <h3 id="s3-4">3.4 Usage Restrictions</h3>
             <p>You agree not to:</p>
             <ul>
               <li>
@@ -78,13 +84,6 @@ export default function TermsPage() {
               <li>
                 Attempt to gain unauthorized access to the Platform or related
                 systems
-              </li>
-              <li>
-                Reverse engineer, decompile, or otherwise attempt to extract
-                source code
-              </li>
-              <li>
-                Use the Platform to develop competing products or services
               </li>
               <li>Violate the rights of any third party</li>
             </ul>
@@ -179,8 +178,8 @@ export default function TermsPage() {
             <h3 id="s7-3">7.3 Effect of Termination</h3>
             <p>
               Upon termination, your right to access the Platform ceases
-              immediately. We will delete your account data in accordance with
-              our Privacy Policy.
+              immediately. Account-data requests are handled according to the
+              controls and limitations described in our Privacy Policy.
             </p>
 
             <h2 id="s8">8. Disclaimer of Warranties</h2>

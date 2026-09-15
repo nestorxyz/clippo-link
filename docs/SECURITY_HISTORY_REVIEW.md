@@ -13,30 +13,26 @@ Tool: Gitleaks `8.30.1`, default rules, full Git history, secrets fully redacted
 - Disposition: verified synthetic Clerk placeholder; ignored by exact Gitleaks
   fingerprint in `.gitleaksignore`.
 
-### Historical retired-provider anon JWT
+### Historical retired-provider anonymous JWT
 
 - Rule: `jwt`
 - Commit: `2075b10c938575444c0e03850a34c7635a044b41`
-- File: `src/integrations/retired-provider/client.ts`, line 6
+- File: a removed integration client, line 6
 - Sanitized inspection: one JWT; `role=anon`; issuer and project reference are
   present; expiry is in 2035. No token, issuer, or project reference is recorded
   here.
-- Current tree: the legacy retired-provider auth route and runtime modules have been
-  removed. The one-off migration script still reads service credentials from
-  environment variables; deleting current files does not remove the historical
-  token from Git history.
+- Current tree: the retired integration, migration script, dependency, examples,
+  comments, and environment keys have been removed. This does not remove the
+  historical token from Git history.
 - Cross-repository evidence: the backend history contains the same historical
-  anon JWT in its old `.env.example`.
+  anonymous JWT in an old environment example.
 
 ## Required disposition before publication
 
-1. Identify the retired-provider project privately and verify whether it still exists.
-2. If it exists, inspect row-level security and rotate the anon key, or
-   deliberately decommission the project. These are external account actions
-   requiring owner approval.
-3. Decide whether a history rewrite is needed after the key is unusable. A
-   rewrite is disruptive and requires separate approval and coordination.
-4. Rerun Gitleaks across all refs and require zero unresolved findings before
+1. The owner confirmed on 2026-09-15 that the old project/key is no longer used.
+2. Obtain explicit approval for the disruptive history rewrite and coordinated
+   force-push.
+3. Rerun Gitleaks across all refs and require zero unresolved findings before
    changing repository visibility.
 
 The repository must remain private while this finding is unresolved.

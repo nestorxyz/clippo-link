@@ -1,16 +1,9 @@
 import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
-import { processWebhook } from './lemon';
 import { processWebhook as processPolarWebhook } from './polar';
 import { Id } from './_generated/dataModel';
 
 const http = httpRouter();
-
-http.route({
-  path: '/lemon',
-  method: 'POST',
-  handler: processWebhook,
-});
 
 http.route({
   path: '/polar',

@@ -45,7 +45,7 @@ export function CurrentSecurityPage() {
           <p>
             DoryAI currently relies on Clerk for authentication, Convex for app
             data and server functions, Google Gemini for AI processing, source
-            websites and media tools for link metadata, and Lemon Squeezy for
+            websites and media tools for link metadata, and Polar for
             the existing billing path. Their infrastructure and data practices
             are governed by their own terms.
           </p>
@@ -66,8 +66,8 @@ export function CurrentSecurityPage() {
               labeled result instead of claiming unavailable post content.
             </li>
             <li>
-              The implementation repositories remain private while a known
-              historical credential finding and license decision are resolved.
+              Publication remains blocked until the historical credential
+              finding, license choice, and asset-rights review are resolved.
             </li>
           </ul>
 

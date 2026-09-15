@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { GRACE_PERIOD_HOURS, subscriptionIsPremium } from './billing';
+import {
+  FREE_MONTHLY_LIMIT,
+  GRACE_PERIOD_HOURS,
+  PREMIUM_MONTHLY_LIMIT,
+  subscriptionIsPremium,
+} from './billing';
 
 describe('subscription entitlement', () => {
   const now = Date.UTC(2026, 8, 15);
@@ -22,9 +27,8 @@ describe('subscription entitlement', () => {
     },
   );
 
-  it('preserves the existing Lemon status vocabulary', () => {
-    expect(subscriptionIsPremium({ status: 'on_trial' }, now)).toBe(true);
-    expect(subscriptionIsPremium({ status: 'cancelled' }, now)).toBe(true);
+  it('does not grant premium access without the Polar provider', () => {
+    expect(subscriptionIsPremium({ status: 'active' }, now)).toBe(false);
   });
 
   it('ends access after the webhook grace period', () => {
@@ -32,5 +36,12 @@ describe('subscription entitlement', () => {
     expect(
       subscriptionIsPremium({ provider: 'polar', status: 'active', endsAt }, now),
     ).toBe(false);
+  });
+});
+
+describe('monthly link quotas', () => {
+  it('uses the approved free and premium limits', () => {
+    expect(FREE_MONTHLY_LIMIT).toBe(20);
+    expect(PREMIUM_MONTHLY_LIMIT).toBe(500);
   });
 });

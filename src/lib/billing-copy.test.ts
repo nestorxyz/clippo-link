@@ -11,9 +11,10 @@ describe('paid plan copy', () => {
     ]);
   });
 
-  it('does not advertise unresolved quotas or unsupported service tiers', () => {
+  it('advertises the approved quota without unsupported service tiers', () => {
     const renderedCopy = JSON.stringify(PAID_PLAN_COPY).toLowerCase();
 
+    expect(renderedCopy).toContain('500');
     expect(renderedCopy).not.toContain('200');
     expect(renderedCopy).not.toContain('vip');
     expect(renderedCopy).not.toContain('priority');

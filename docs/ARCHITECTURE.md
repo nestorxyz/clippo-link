@@ -15,9 +15,8 @@ system; roadmap items are labeled explicitly rather than presented as shipped.
    processing that should not execute in the browser or a Convex mutation.
 5. **Gemini and source platforms** are external processors/sources. Their
    availability and responses are not controlled by DoryAI.
-6. **Lemon Squeezy** remains the default billing provider. A Polar implementation
-   is available behind an explicit provider switch and defaults to Polar's
-   sandbox; changing billing providers remains approval-gated.
+6. **Polar** is the sole billing provider and defaults to its sandbox outside
+   production.
 
 ## Trust and request flow
 
@@ -53,9 +52,6 @@ scope: privileged calls still carry and validate the intended user/session.
 
 - Convex owns current users, links, categories, subcategories, tags, chat
   sessions/messages, storage references, plan state, and webhook idempotency.
-- `scripts/migrate.ts` and its development-only retired-provider SDK are retained solely
-  for a one-off retired-provider-to-Convex migration. retired-provider is not a runtime owner or
-  authentication provider.
 - The backend is stateless apart from bounded in-memory aggregation/deduplication
   and temporary media files. In-memory state is not durable or horizontally
   shared.
@@ -81,16 +77,10 @@ evidence.
 
 ## Billing state
 
-The `/auth/after` route selects a monthly or annual checkout through a
-server-owned provider boundary. Lemon Squeezy remains the default and preserves
-its existing email and beta-discount behavior.
-
-Polar checkout, stable Clerk-derived customer identity, customer portal,
+The `/auth/after` route creates monthly or annual Polar checkout through a
+server-owned boundary. Stable Clerk-derived customer identity, customer portal,
 signature-verified webhook handling, idempotency, and stale-event protection are
-implemented behind `BILLING_PROVIDER=polar`. Polar defaults to sandbox. No
-provider change is release-ready until products, entitlements, existing
-subscriber obligations, and a sandbox end-to-end readback are approved and
-verified.
+implemented. Polar defaults to sandbox. Incomplete configuration fails closed.
 
 ## Verification boundaries
 
@@ -109,7 +99,6 @@ verified.
 - Search currently uses a fixed lexical evaluation and a bounded recent-link
   candidate window; semantic retrieval remains open.
 - Authenticated live save, retrieval, and chat failure readbacks remain open.
-- The Vercel Preview deployment currently lacks Convex deployment
-  configuration and fails before the Next.js build begins.
-- No canonical production domain is currently verified; `doryai.app` did not
-  resolve on September 15, 2026.
+- The Vercel Preview deployment still needs its own scoped Convex configuration.
+- `https://www.doryai.xyz` is the canonical production origin; the apex redirects
+  to it.

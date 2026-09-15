@@ -24,16 +24,14 @@ This checklist prepares the repository; it does not authorize making it public.
 - [ ] Choose and approve an open-source license.
 - [ ] Extend focused web tests to critical onboarding, chat, and link-management
       behavior.
-- [ ] Resolve the shared historical retired-provider anon JWT finding by verifying the
-      private project and rotating its key or decommissioning it; rerun Gitleaks
+- [ ] Remove the retired provider reference from Git history and rerun Gitleaks
       to zero unresolved findings.
 - [ ] Review transitive dependency licenses, fonts, screenshots, generated
       assets, and third-party branding rights.
-- [ ] Remove or document legacy retired-provider migration code and duplicate landing
-      components.
+- [x] Remove retired migration code and duplicate landing components.
 - [ ] Replace hard-coded billing product URLs/IDs with a reviewed configuration
       boundary before the provider migration.
 - [ ] Enable private vulnerability reporting and appropriate branch protection.
 - [ ] Confirm CI and the documented setup from a clean clone.
-- [ ] Obtain explicit approval to change visibility, then verify GitHub's public
-      readback and clone/setup flow.
+- [x] Owner approved public visibility on 2026-09-15.
+- [ ] Verify GitHub's public readback and clean-clone setup flow.

@@ -113,7 +113,7 @@ The schema in `convex/schema.ts` defines the application's brain.
 - **`tags` / `linkTags`**: flexible tagging system.
 - **`chatSessions` / `chatMessages`**: Stores conversation history for both Web Chat and WhatsApp.
 - **`profiles`**: Links users to Phone Numbers for the WhatsApp integration.
-- **`subscriptions`**: Functionality for Lemon Squeezy billing.
+- **`subscriptions`**: Polar billing and entitlement state.
 
 ---
 

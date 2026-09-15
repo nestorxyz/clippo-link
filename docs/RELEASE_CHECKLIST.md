@@ -25,8 +25,8 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 - [x] Web and backend setup/environment documentation matches current runtime
   boundaries.
-- [x] The reachable legacy retired-provider auth callback and unused runtime helpers
-  were removed; only the one-off migration script retains a development SDK.
+- [x] Retired database auth/runtime helpers, migration script, SDK, examples,
+  comments, local environment keys, and generated cache references were removed.
 - [x] Unreferenced template landing components, including fabricated creator,
   video-production, sales, ROI, and funding claims, were removed.
 - [x] The unreachable legacy drag-and-drop sidebar and management screens, their
@@ -36,11 +36,11 @@ readback. A build, test, or Preview URL does not substitute for another box.
   real app entrypoints; 25 unused direct dependencies and 81 packages from the
   audited install graph were removed.
 - [x] Exact implementation patches passed redacted Gitleaks scans.
-- [ ] Identify and rotate or decommission the historical retired-provider anonymous JWT
-  retained once in each repository's history.
+- [ ] Rewrite the retired provider reference from both repositories' history,
+  then rerun the full-history secret scan.
 - [ ] Review transitive dependency and bundled asset rights.
 - [ ] Obtain owner approval for a license and apply it.
-- [ ] Obtain explicit approval before changing either repository's visibility.
+- [x] Owner approved changing both repositories to public on 2026-09-15.
 
 ## Core save and find flow
 
@@ -74,16 +74,15 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 ## Billing
 
-- [x] The current Lemon Squeezy checkout URL boundary has focused tests.
 - [x] Read-only checkout-page inspection confirmed the displayed `$4.99`
   monthly and `$34.99` annual prices. Public and in-app pricing now share one
   catalog and omit the unresolved quota plus unsupported VIP/priority claims.
 - [x] Polar checkout, customer identity, signed webhook, idempotency,
-  out-of-order event, and portal boundaries are implemented behind an explicit
-  provider switch that defaults Polar to sandbox.
-- [ ] Owner approves Polar or explicitly approves retaining Lemon Squeezy.
-- [ ] Owner approves coherent free and premium quotas; current enforcement is
-  500 monthly saves for free and 200 for premium.
+  out-of-order event, and portal boundaries are implemented; sandbox is the
+  default and incomplete configuration fails closed.
+- [x] Owner approved Polar as the sole provider on 2026-09-15.
+- [x] Owner approved and tests enforce 20 monthly saves for free and 500 for
+  premium.
 - [ ] Sandbox checkout succeeds with a signed, idempotent webhook readback.
 - [ ] Entitlement and customer-portal state match the sandbox purchase.
 - [ ] Existing subscriber/data obligations are documented before any migration.
@@ -95,8 +94,8 @@ readback. A build, test, or Preview URL does not substitute for another box.
 - [x] Rendered Privacy/Security pages name current processors and do not contain
   the previously identified unsupported security/compliance promises.
 - [ ] Owner or qualified reviewer approves Privacy Policy and Terms for release.
-- [ ] Set and verify the intended canonical production domain; `doryai.app` did
-  not resolve on 2026-09-15.
+- [x] Owner selected `doryai.xyz`; HTTPS readback shows the apex redirects to
+  canonical `https://www.doryai.xyz`, which returns 200.
 - [ ] Configure a scoped Convex deployment for Vercel Preview. Deployment
   `6463349271` for web `54fbb1f` failed because no deployment key or self-hosted
   configuration was available.
@@ -104,8 +103,8 @@ readback. A build, test, or Preview URL does not substitute for another box.
   the backend revision.
 - [ ] Verify Preview health plus authenticated save, duplicate, retrieval,
   history, and billing-sandbox readbacks on the deployed revisions.
-- [ ] Obtain explicit approval for production deployment, then verify the exact
-  final production revisions and health.
+- [x] Owner approved production deployment on 2026-09-15.
+- [ ] Verify the exact final production revisions and health.
 
 ## Mobile decision
 

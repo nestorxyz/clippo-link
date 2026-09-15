@@ -4,7 +4,6 @@ import {
   buildPolarPortalRequest,
   isBillingPlan,
   resolvePolarBillingConfig,
-  usesPolarBilling,
 } from './polar';
 
 describe('Polar billing configuration', () => {
@@ -13,12 +12,6 @@ describe('Polar billing configuration', () => {
     expect(isBillingPlan('annual')).toBe(true);
     expect(isBillingPlan('free')).toBe(false);
     expect(isBillingPlan(null)).toBe(false);
-  });
-
-  it('keeps Polar disabled until explicitly selected', () => {
-    expect(usesPolarBilling({})).toBe(false);
-    expect(usesPolarBilling({ DORYAI_BILLING_PROVIDER: 'lemon' })).toBe(false);
-    expect(usesPolarBilling({ DORYAI_BILLING_PROVIDER: 'polar' })).toBe(true);
   });
 
   it('defaults a configured Polar integration to sandbox', () => {

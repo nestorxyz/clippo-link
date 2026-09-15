@@ -23,6 +23,7 @@ export const PAID_PLAN_COPY: readonly PaidPlanCopy[] = [
       'Pay month to month for DoryAI’s current save, organize, and search experience.',
     featuresTitle: 'Included:',
     features: [
+      'Save up to 500 links each month',
       'Save and organize useful links',
       'AI-assisted tagging and retrieval',
       'Use DoryAI in your web browser',
@@ -40,6 +41,7 @@ export const PAID_PLAN_COPY: readonly PaidPlanCopy[] = [
       'The same DoryAI access, billed once per year at the lower annual price.',
     featuresTitle: 'Included:',
     features: [
+      'Save up to 500 links each month',
       'The same product access as monthly',
       'One annual payment',
       'Trial and renewal terms shown before payment',

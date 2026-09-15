@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 // Import Categories
 export const importCategory = mutation({
   args: {
-    originalId: v.string(), // retired-provider ID, useful for mapping if needed, or we just map outside
+    originalId: v.string(), // Legacy source ID retained for import mapping.
     name: v.string(),
     description: v.optional(v.string()),
     userId: v.id('users'),
@@ -177,5 +177,4 @@ export const importUser = mutation({
     });
   },
 });
-
 

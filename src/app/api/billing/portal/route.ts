@@ -1,9 +1,6 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import {
-  createPolarPortalUrl,
-  usesPolarBilling,
-} from '@/server/billing/polar';
+import { createPolarPortalUrl } from '@/server/billing/polar';
 
 export async function GET(request: Request) {
   const { origin } = new URL(request.url);
@@ -13,10 +10,6 @@ export async function GET(request: Request) {
     const signInUrl = new URL(`${origin}/sign-in`);
     signInUrl.searchParams.set('redirect_url', '/api/billing/portal');
     return NextResponse.redirect(signInUrl);
-  }
-
-  if (!usesPolarBilling()) {
-    return NextResponse.redirect(`${origin}/dashboard`);
   }
 
   try {

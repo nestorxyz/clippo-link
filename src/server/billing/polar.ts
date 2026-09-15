@@ -46,10 +46,6 @@ export function isBillingPlan(value: string | null): value is BillingPlan {
   return value === 'monthly' || value === 'annual';
 }
 
-export function usesPolarBilling(env: PolarEnvironment = process.env): boolean {
-  return env.DORYAI_BILLING_PROVIDER === 'polar';
-}
-
 export function resolvePolarBillingConfig(
   env: PolarEnvironment = process.env,
 ): PolarBillingConfig {

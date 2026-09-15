@@ -2,14 +2,10 @@ import { query } from './_generated/server';
 import { v } from 'convex/values';
 
 // Billing / quota configuration and helper utilities
-export const FREE_MONTHLY_LIMIT = 500;
-export const PREMIUM_MONTHLY_LIMIT = 200; // temporary cap
+export const FREE_MONTHLY_LIMIT = 20;
+export const PREMIUM_MONTHLY_LIMIT = 500;
 
-// Lemon Squeezy variant IDs
-export const LEMON_MONTHLY_VARIANT_ID = '607784';
-export const LEMON_YEARLY_VARIANT_ID = '607792';
-
-export const PREMIUM_STATUSES = ['active', 'on_trial'];
+export const PREMIUM_STATUSES = ['active', 'trialing', 'canceled'];
 export const GRACE_PERIOD_HOURS = 24; // webhook delay tolerance
 
 export interface PlanPeriod {
@@ -28,7 +24,7 @@ export interface UserPlan {
   subscriptionId?: string;
   variantId?: string | null;
   managePortalUrl?: string | null;
-  renewsAt?: string; // raw renew date from Lemon (ISO)
+  renewsAt?: string; // raw provider renewal date (ISO)
   trialEndsAt?: string | null; // ISO if on trial
 }
 
@@ -40,40 +36,22 @@ export function getCalendarMonthPeriodUtc(date = new Date()): PlanPeriod {
   return { start: periodStart.toISOString(), end: periodEnd.toISOString() };
 }
 
-export function getPreviousIntervalStart(
-  variantId: string | null | undefined,
-  renewsAt: string,
-): string {
+export function getPreviousIntervalStart(renewsAt: string): string {
   // For premium users we base period on subscription cycle, not calendar month.
   // We only store next renews_at, so derive start by subtracting interval length.
   const end = new Date(renewsAt);
   let start: Date;
-  if (variantId === LEMON_YEARLY_VARIANT_ID) {
-    start = new Date(
-      Date.UTC(
-        end.getUTCFullYear() - 1,
-        end.getUTCMonth(),
-        end.getUTCDate(),
-        end.getUTCHours(),
-        end.getUTCMinutes(),
-        end.getUTCSeconds(),
-        end.getUTCMilliseconds(),
-      ),
-    );
-  } else {
-    // default monthly
-    start = new Date(
-      Date.UTC(
-        end.getUTCFullYear(),
-        end.getUTCMonth() - 1,
-        end.getUTCDate(),
-        end.getUTCHours(),
-        end.getUTCMinutes(),
-        end.getUTCSeconds(),
-        end.getUTCMilliseconds(),
-      ),
-    );
-  }
+  start = new Date(
+    Date.UTC(
+      end.getUTCFullYear(),
+      end.getUTCMonth() - 1,
+      end.getUTCDate(),
+      end.getUTCHours(),
+      end.getUTCMinutes(),
+      end.getUTCSeconds(),
+      end.getUTCMilliseconds(),
+    ),
+  );
   return start.toISOString();
 }
 
@@ -92,12 +70,11 @@ export function subscriptionIsPremium(
   const inGrace = subscription.endsAt
     ? (now - subscription.endsAt) / 1000 / 3600 < GRACE_PERIOD_HOURS
     : true;
-  const premiumStatuses =
-    subscription.provider === 'polar'
-      ? ['active', 'trialing', 'canceled']
-      : [...PREMIUM_STATUSES, 'cancelled'];
-
-  return premiumStatuses.includes(subscription.status) && inGrace;
+  return (
+    subscription.provider === 'polar' &&
+    PREMIUM_STATUSES.includes(subscription.status) &&
+    inGrace
+  );
 }
 
 export const getPlan = query({
@@ -155,7 +132,7 @@ export const getPlan = query({
       const periodEnd = renewsAtIso;
       const periodStart = data.currentPeriodStart
         ? new Date(data.currentPeriodStart).toISOString()
-        : getPreviousIntervalStart(data.variantId, renewsAtIso);
+        : getPreviousIntervalStart(renewsAtIso);
       const limit = PREMIUM_MONTHLY_LIMIT;
 
       userPlan = {
@@ -165,14 +142,10 @@ export const getPlan = query({
         period: { start: periodStart, end: periodEnd },
         used: 0,
         remaining: limit,
-        provider: data.provider ?? 'lemon',
-        subscriptionId:
-          data.providerSubscriptionId ?? data.lemonSubscriptionId,
+        provider: 'polar',
+        subscriptionId: data.providerSubscriptionId,
         variantId: data.variantId,
-        managePortalUrl:
-          data.provider === 'polar'
-            ? '/api/billing/portal'
-            : data.customerPortalUrl,
+        managePortalUrl: '/api/billing/portal',
         renewsAt: renewsAtIso,
         trialEndsAt: data.trialEndsAt
           ? new Date(data.trialEndsAt).toISOString()
@@ -257,7 +230,7 @@ export const getPlanForBackend = query({
       const periodEnd = renewsAtIso;
       const periodStart = data.currentPeriodStart
         ? new Date(data.currentPeriodStart).toISOString()
-        : getPreviousIntervalStart(data.variantId, renewsAtIso);
+        : getPreviousIntervalStart(renewsAtIso);
       const limit = PREMIUM_MONTHLY_LIMIT;
 
       userPlan = {
@@ -267,14 +240,10 @@ export const getPlanForBackend = query({
         period: { start: periodStart, end: periodEnd },
         used: 0,
         remaining: limit,
-        provider: data.provider ?? 'lemon',
-        subscriptionId:
-          data.providerSubscriptionId ?? data.lemonSubscriptionId,
+        provider: 'polar',
+        subscriptionId: data.providerSubscriptionId,
         variantId: data.variantId,
-        managePortalUrl:
-          data.provider === 'polar'
-            ? '/api/billing/portal'
-            : data.customerPortalUrl,
+        managePortalUrl: '/api/billing/portal',
         renewsAt: renewsAtIso,
         trialEndsAt: data.trialEndsAt
           ? new Date(data.trialEndsAt).toISOString()

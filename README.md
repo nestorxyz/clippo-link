@@ -35,9 +35,8 @@ NEXT_PUBLIC_CONVEX_URL=https://replace-me.convex.cloud
 CLERK_SECRET_KEY=pk_test_REDACTED
 ```
 
-Set `SITE_URL` to the canonical HTTPS origin only in an intended production
-environment. Vercel's production URL is used when available; local and Preview
-builds remain `noindex` by default.
+Set `SITE_URL=https://www.doryai.xyz` in production. The apex domain redirects
+to this canonical origin; local and Preview builds remain `noindex` by default.
 
 The connected Vercel project currently runs
 `npx convex deploy --cmd 'npm run build'`. Each deployment environment therefore
@@ -53,13 +52,9 @@ npx convex env set CONVEX_BACKEND_SECRET replace-with-a-shared-random-secret
 npx convex env set CLERK_JWT_ISSUER_DOMAIN https://replace-me.clerk.accounts.dev
 ```
 
-`LEMON_WEBHOOK_SIGNING_SECRET` is additionally required to exercise the current
-Lemon Squeezy webhook. Billing is under review; do not change production billing
-or subscriber state from local setup.
-
-The retired-provider variables and SDK referenced by `scripts/migrate.ts` are retained
-only for the one-off retired-provider-to-Convex migration. retired-provider is not part of the
-application runtime or authentication flow.
+Polar is the only billing provider. Use sandbox products and
+`POLAR_SERVER=sandbox` outside production. The matching Convex deployment needs
+`POLAR_WEBHOOK_SECRET`; never copy sandbox billing data into production.
 
 ## Commands
 
@@ -92,6 +87,6 @@ or the rendered desktop/mobile experience.
 
 ## Publication
 
-Repository visibility, license selection, production deployment, and billing
-changes require explicit owner approval plus secret/history and release
-readbacks.
+The owner approved public visibility and production deployment on 2026-09-15.
+Publication still waits for the selected license, asset review, clean history
+scan, and release readbacks.
