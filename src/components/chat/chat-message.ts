@@ -1,7 +1,9 @@
-interface ChatRecord {
+export interface ChatRecord {
   role: string;
   parts: unknown;
 }
+
+export type ActivationStep = 'save' | 'retrieve' | 'complete';
 
 type FunctionResponse = {
   name?: unknown;
@@ -43,4 +45,38 @@ export const formatChatRecord = (record: ChatRecord): string => {
     })
     .filter(Boolean)
     .join('\n');
+};
+
+export const getActivationStep = (records: ChatRecord[]): ActivationStep => {
+  let saved = false;
+
+  for (const record of records) {
+    if (!Array.isArray(record.parts)) continue;
+
+    for (const part of record.parts) {
+      if (!part || typeof part !== 'object') continue;
+      const value = part as Record<string, unknown>;
+      if (!value.functionResponse || typeof value.functionResponse !== 'object') {
+        continue;
+      }
+
+      const { name, response = {} } =
+        value.functionResponse as FunctionResponse;
+      if (name === 'register_link' && response.success === true) {
+        const data = response.data as Record<string, unknown> | undefined;
+        if (data?.duplicate !== true) saved = true;
+      }
+
+      if (
+        saved &&
+        name === 'get_links' &&
+        Array.isArray(response.links) &&
+        response.links.length > 0
+      ) {
+        return 'complete';
+      }
+    }
+  }
+
+  return saved ? 'retrieve' : 'save';
 };

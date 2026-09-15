@@ -13,7 +13,7 @@ import {
   Folder,
 } from 'lucide-react';
 import { Message } from '@/lib/types';
-import { formatChatRecord } from './chat/chat-message';
+import { formatChatRecord, getActivationStep } from './chat/chat-message';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -148,7 +148,17 @@ const Chat = () => {
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const deferredMessages = useDeferredValue(messages);
+  const activationStep = useMemo(
+    () => getActivationStep(rawMessages ?? []),
+    [rawMessages],
+  );
+
+  const startFirstSave = () => {
+    setInput('Save this link: ');
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -209,22 +219,36 @@ const Chat = () => {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-semibold text-white mb-2 text-center">
-            Welcome to DoryAI!
+            Save your first link
           </h1>
-          <p className="text-[#A5A5A5] text-lg mb-10 text-center">
-            I'm ready to organize your short content links
+          <p className="max-w-xl text-[#A5A5A5] text-base md:text-lg mb-6 text-center">
+            Paste any useful webpage or supported social link. DoryAI will
+            analyze and organize it, then you can ask for it in your own words.
           </p>
+
+          <ol
+            className="mb-8 flex items-center gap-3 text-sm text-[#A5A5A5]"
+            aria-label="Getting started"
+          >
+            <li className="rounded-full border border-white/20 px-3 py-1 text-white">
+              1. Save
+            </li>
+            <li aria-hidden="true">→</li>
+            <li className="rounded-full border border-white/20 px-3 py-1">
+              2. Find it
+            </li>
+          </ol>
 
           <div className="flex flex-wrap gap-3 justify-center">
             <Button
               variant="outline"
               type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
-              onClick={() => handleSendMessage('hello how can i save a link?')}
+              onClick={startFirstSave}
               disabled={!sessionId || isBotTyping}
             >
               <LinkIcon className="h-4 w-4" />
-              Save a test link
+              Paste your first link
             </Button>
 
             <Button
@@ -242,7 +266,15 @@ const Chat = () => {
       ) : (
         <>
           <header className="px-4 h-12 flex items-center shrink-0 border-b border-[#1D1D1D]">
-            <div className="mx-auto w-full max-w-[720px] flex justify-end">
+            <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3">
+              <p className="text-xs text-[#A5A5A5]" role="status">
+                {activationStep === 'save' &&
+                  'Step 1 of 2: send a link to save it.'}
+                {activationStep === 'retrieve' &&
+                  'Step 2 of 2: ask DoryAI to find that link.'}
+                {activationStep === 'complete' &&
+                  'First save and retrieval complete.'}
+              </p>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -317,6 +349,7 @@ const Chat = () => {
           >
             <div className="relative rounded-[28px] md:rounded-full border border-[#1D1D1D] bg-[#1A1A1A] shadow-sm">
               <Textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Talk with DoryAI"
