@@ -17,11 +17,6 @@ export default function Home() {
       <main>
         <HeroSection />
         <FeaturesDemo />
-        {/* <CoreFeatures />
-        <UseCases />
-        <IOSIntegration />
-        <CustomerReviews />
-       */}
         <ClippoInAction />
         <PricingSection />
       </main>

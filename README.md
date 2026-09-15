@@ -57,9 +57,9 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://replace-me.clerk.accounts.dev
 Lemon Squeezy webhook. Billing is under review; do not change production billing
 or subscriber state from local setup.
 
-The retired-provider variables referenced by `scripts/migrate.ts` and the legacy
-`src/integrations/retired-provider` directory are migration-only. They are not part of
-the normal application startup contract.
+The retired-provider variables and SDK referenced by `scripts/migrate.ts` are retained
+only for the one-off retired-provider-to-Convex migration. retired-provider is not part of the
+application runtime or authentication flow.
 
 ## Commands
 
@@ -71,9 +71,7 @@ npm run check
 npm run start
 ```
 
-`npm run check` runs focused Vitest coverage and the production build. The first
-web tests preserve the current billing redirect boundary before the separately
-gated Polar migration changes it.
+`npm run check` runs focused Vitest coverage and the production build.
 
 ## Architecture boundary
 
