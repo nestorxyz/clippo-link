@@ -1,6 +1,11 @@
 {
   "name": "DoryAI",
   "short_name": "DoryAI",
+  "description": "Save and find useful links through chat.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

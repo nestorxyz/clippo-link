@@ -65,15 +65,17 @@ The backend `source-url.ts` boundary recognizes Instagram Reels, TikTok videos,
 YouTube long videos/shorts, LinkedIn, X/Twitter, and general HTTP(S) pages.
 Recognition is not extraction support.
 
-- **Implemented specialized path:** Instagram Reels and TikTok videos, with a
-  metadata-only fallback when the media toolchain is unavailable.
-- **Recognized but planned:** YouTube, LinkedIn, and X.
-- **General page boundary:** classified, but safe fetching/content extraction is
-  not complete.
+- **Specialized paths:** Instagram Reels, TikTok videos, and YouTube long-video
+  metadata plus available public captions.
+- **Restricted-platform paths:** LinkedIn and X first attempt bounded public-page
+  metadata and return a labeled URL-only result when access is blocked.
+- **General page path:** deterministic metadata and a short local excerpt through
+  a transport that blocks local/private targets, revalidates redirects and DNS,
+  and limits time, size, and content type.
 
-Before general fetching ships, it needs private-network and cloud-metadata
-blocking, redirect revalidation, time/size/content-type limits, deterministic
-normalization, and provenance.
+General webpage text is not forwarded wholesale to Gemini. Live authenticated
+save/readback evidence remains separate from fixture and read-only extraction
+evidence.
 
 ## Billing state
 
@@ -101,9 +103,12 @@ sandbox end-to-end readback are designed and verified.
 
 - No durable job queue for long or retryable extraction.
 - In-memory aggregation/deduplication is process-local.
-- General URL fetching does not yet have a complete SSRF/resource-control
-  boundary.
-- Search lacks a fixed evaluation corpus and measurable ranking contract.
-- Chat tool execution lacks a fully specified idempotency/result model.
+- Search currently uses a fixed lexical evaluation and a bounded recent-link
+  candidate window; semantic retrieval remains open.
+- Authenticated live save, retrieval, and chat failure readbacks remain open.
+- The Vercel Preview deployment currently lacks Convex deployment
+  configuration and fails before the Next.js build begins.
+- No canonical production domain is currently verified; `doryai.app` did not
+  resolve on September 15, 2026.
 - The web code still carries migration-era retired-provider modules and duplicated
   landing components that need deliberate removal or consolidation.

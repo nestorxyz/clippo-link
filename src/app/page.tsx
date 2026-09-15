@@ -1,13 +1,14 @@
+import type { Metadata } from 'next';
 import { NavigationHeader } from './_components/sections/navigation';
 import { HeroSection } from './_components/sections/hero';
 import { FeaturesDemo } from './_components/sections/features-demos';
-import { CoreFeatures } from './_components/sections/core-features';
-import { UseCases } from './_components/sections/use-cases';
-import { IOSIntegration } from './_components/sections/ios-intergrations';
-import { CustomerReviews } from './_components/sections/reviews';
 import { PricingSection } from './_components/sections/pricing';
 import { Footer } from './_components/sections/footer';
 import { ClippoInAction } from '@/app/_components/ClippoInAction';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default function Home() {
   return (

@@ -5,6 +5,7 @@ export const metadata = {
   title: 'Terms of Service • DoryAI',
   description:
     'DoryAI Terms of Service — the legal terms governing your use of our AI-powered link assistant.',
+  alternates: { canonical: '/terms' },
 };
 
 export default function TermsPage() {
@@ -104,19 +105,16 @@ export default function TermsPage() {
             <ul>
               <li>Sell or rent your data</li>
               <li>Use your data for advertising purposes</li>
-              <li>
-                Train AI models on your personal information outside of
-                improving the Platform’s direct functionality
-              </li>
-              <li>
-                Allow human review of your saved data unless necessary for
-                support/security with your explicit consent
-              </li>
             </ul>
+            <p>
+              DoryAI uses external service providers to operate the Platform.
+              Their role and the controls currently available to you are
+              described in the Privacy Policy.
+            </p>
             <h3 id="s4-3">4.3 Revocation Rights</h3>
             <p>
-              You may delete your account and request deletion of your data at
-              any time via your account settings or by contacting us.
+              You may delete individual saved links and clear chat history in
+              the Platform. Contact us for an account-level privacy request.
             </p>
 
             <h2 id="s5">5. User Responsibilities</h2>
@@ -160,15 +158,17 @@ export default function TermsPage() {
             </ul>
             <h3 id="s6-4">6.4 AI/ML Training Restrictions</h3>
             <p>
-              We do not use your User Content to train machine learning models
-              outside of improving DoryAI’s direct functionality.
+              The DoryAI application does not train its own machine-learning
+              model. User Content sent to external AI providers is processed
+              under the applicable provider account terms and settings, as
+              described in the Privacy Policy.
             </p>
 
             <h2 id="s7">7. Termination of Access</h2>
             <h3 id="s7-1">7.1 Termination by You</h3>
             <p>
-              You may terminate your account at any time by discontinuing use of
-              the Platform.
+              You may stop using the Platform or contact us with an
+              account-level deletion request.
             </p>
             <h3 id="s7-2">7.2 Termination by Us</h3>
             <p>
@@ -225,10 +225,8 @@ export default function TermsPage() {
             <p>If you have questions about these Terms, contact us:</p>
             <ul>
               <li>Email: nmamanipantoja@gmail.com</li>
-              <li>Response Time: Within 2 business days</li>
               <li>Company: Misfit Labs</li>
               <li>Product: DoryAI</li>
-              <li>Website: doryai.app</li>
             </ul>
           </article>
         </section>

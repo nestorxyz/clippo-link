@@ -35,6 +35,16 @@ NEXT_PUBLIC_CONVEX_URL=https://replace-me.convex.cloud
 CLERK_SECRET_KEY=pk_test_REDACTED
 ```
 
+Set `SITE_URL` to the canonical HTTPS origin only in an intended production
+environment. Vercel's production URL is used when available; local and Preview
+builds remain `noindex` by default.
+
+The connected Vercel project currently runs
+`npx convex deploy --cmd 'npm run build'`. Each deployment environment therefore
+needs its own valid Convex deployment configuration, such as a scoped
+`CONVEX_DEPLOY_KEY`. Do not copy a production deploy key into Preview merely to
+make a build pass.
+
 Set the server-only Convex environment separately:
 
 ```sh
