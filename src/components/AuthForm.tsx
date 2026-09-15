@@ -3,6 +3,7 @@ import { useSignIn } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { safeInternalRedirect } from '@/lib/safe-redirect';
 
 const GoogleIcon = () => (
   <svg
@@ -37,10 +38,13 @@ export const AuthForm = () => {
     if (!isLoaded) return;
     setLoading('google');
     try {
+      const redirectUrlComplete = safeInternalRedirect(
+        new URLSearchParams(window.location.search).get('redirect_url'),
+      );
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/sign-in/sso-callback',
-        redirectUrlComplete: '/dashboard',
+        redirectUrlComplete,
       });
     } catch (error) {
       toast.error('Error with Google Sign-in', {

@@ -24,6 +24,7 @@ import { redirect } from 'next/navigation';
 import { AuthForm } from '@/components/AuthForm';
 import Link from 'next/link';
 import Image from 'next/image';
+import { safeInternalRedirect } from '@/lib/safe-redirect';
 
 // Floating elements data with different link types and platforms
 const floatingElements = [
@@ -114,7 +115,10 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      redirect('/dashboard');
+      const destination = safeInternalRedirect(
+        new URLSearchParams(window.location.search).get('redirect_url'),
+      );
+      redirect(destination);
     }
   }, [isSignedIn, isLoaded]);
 

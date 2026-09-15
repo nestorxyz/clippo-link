@@ -1,6 +1,7 @@
 {
   "name": "DoryAI",
   "short_name": "DoryAI",
+  "id": "/dashboard",
   "description": "Save and find useful links through chat.",
   "start_url": "/dashboard",
   "scope": "/",
@@ -22,5 +23,14 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

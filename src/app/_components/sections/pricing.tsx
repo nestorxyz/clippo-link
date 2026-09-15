@@ -1,60 +1,10 @@
 'use client';
 
 import { Check } from 'lucide-react';
-
-interface PricingPlan {
-  title: string;
-  price: string;
-  originalPrice?: string;
-  billing: string;
-  isPopular?: boolean;
-  description?: string;
-  featuresTitle?: string;
-  ctaText?: string;
-  ctaVariant?: 'filled' | 'outlined';
-  href?: string;
-  features: string[];
-}
+import { PAID_PLAN_COPY, PaidPlanCopy } from '@/lib/billing-copy';
 
 export const PricingSection = () => {
-  const plans: PricingPlan[] = [
-    {
-      title: '💡 Monthly Plan',
-      price: '$4.99',
-      billing: '/month',
-      description:
-        'Perfect for trying out DoryAI with full flexibility — no commitment, all features.',
-      featuresTitle: 'What you’ll get:',
-      ctaText: 'Get Started',
-      ctaVariant: 'outlined',
-      href: '/auth/after?plan=monthly&intent=checkout',
-      features: [
-        'Up to 200 link saving & organization',
-        'Smart AI tagging & search',
-        'Access from any device',
-        'Cancel anytime',
-      ],
-    },
-    {
-      title: '⚡ Annual Plan',
-      price: '$34.99',
-      originalPrice: '$59.88',
-      billing: '/year (Save 40% vs monthly)',
-      isPopular: true,
-      description:
-        'Unlock the best value — 7-day free trial, premium features, and extra perks.',
-      featuresTitle: 'What you’ll get:',
-      ctaText: 'Start Free Trial',
-      ctaVariant: 'filled',
-      href: '/auth/after?plan=annual&intent=checkout',
-      features: [
-        'Everything in Monthly, plus:',
-        'Priority feature access',
-        'VIP support',
-        'Exclusive productivity tips & updates',
-      ],
-    },
-  ];
+  const plans = PAID_PLAN_COPY;
 
   return (
     <section id="pricing" aria-label="pricing" className="py-20 px-6">
@@ -70,7 +20,7 @@ export const PricingSection = () => {
           <div className="md:hidden">
             {plans
               .slice()
-              .sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0))
+              .sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0))
               .map((plan, index) => (
                 <PricingCard key={plan.title} plan={plan} />
               ))}
@@ -89,7 +39,7 @@ export const PricingSection = () => {
 };
 
 interface PricingCardProps {
-  plan: PricingPlan;
+  plan: PaidPlanCopy;
 }
 
 const PricingCard = ({ plan }: PricingCardProps) => {
@@ -97,12 +47,12 @@ const PricingCard = ({ plan }: PricingCardProps) => {
     <div
       className={
         'relative bg-white rounded-lg border shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-150 ease-in-out mb-8 md:mb-0 ' +
-        (plan.isPopular
+        (plan.popular
           ? 'border-[#007AFF] ring-1 ring-[#007AFF]'
           : 'border-[#E5E7EB]')
       }
     >
-      {plan.isPopular && (
+      {plan.popular && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
           <span className="bg-[#007AFF] text-white px-4 py-1 rounded-full text-sm font-medium">
             Most Popular
@@ -115,11 +65,9 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           {plan.title}
         </h3>
 
-        {plan.description && (
-          <p className="text-[#6B7280] text-sm max-w-sm mx-auto mb-4">
-            {plan.description}
-          </p>
-        )}
+        <p className="text-[#6B7280] text-sm max-w-sm mx-auto mb-4">
+          {plan.description}
+        </p>
 
         <div className="mb-2">
           <span className="text-4xl font-semibold mr-2 text-[#1A1A1A]">
@@ -136,11 +84,9 @@ const PricingCard = ({ plan }: PricingCardProps) => {
       </div>
 
       <div className="bg-[#f9f8f8] rounded-b-lg p-4 px-8">
-        {plan.featuresTitle && (
-          <p className="text-[#1A1A1A] text-sm font-medium mb-3 text-left">
-            {plan.featuresTitle}
-          </p>
-        )}
+        <p className="text-[#1A1A1A] text-sm font-medium mb-3 text-left">
+          {plan.featuresTitle}
+        </p>
         <ul className="space-y-4 mb-8">
           {plan.features.map((feature, index) => (
             <li key={index} className="flex items-start gap-3">
@@ -151,14 +97,14 @@ const PricingCard = ({ plan }: PricingCardProps) => {
         </ul>
 
         <a
-          href={plan.href}
+          href={`/auth/after?plan=${plan.key}&intent=checkout`}
           className={`w-full inline-flex items-center justify-center ${
-            plan.ctaVariant === 'filled'
+            plan.popular
               ? 'bg-[#007AFF] hover:bg-[#0056CC] text-white'
               : 'border border-[#007AFF] bg-white text-[#007AFF] hover:bg-[#F0F7FF]'
           } font-medium py-3 px-6 rounded-md transition-colors duration-150 ease-in-out`}
         >
-          {plan.ctaText ?? 'Get Started'}
+          {plan.cta}
         </a>
       </div>
     </div>

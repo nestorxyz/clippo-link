@@ -29,6 +29,7 @@ import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
+import { extractSharedHttpUrl } from '@/lib/share-target';
 
 // Memoized list to avoid re-rendering the whole chat on each keystroke
 const MessageList = memo(
@@ -159,6 +160,23 @@ const Chat = () => {
     setInput('Save this link: ');
     requestAnimationFrame(() => inputRef.current?.focus());
   };
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const sharedUrl = extractSharedHttpUrl(
+      searchParams.get('shared_url'),
+    );
+    const shareError = searchParams.get('share_error');
+    if (!sharedUrl && shareError !== 'missing_url') return;
+
+    if (sharedUrl) {
+      setInput(`Save this link: ${sharedUrl}`);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } else {
+      toast.error('No web link was found in the shared content.');
+    }
+    window.history.replaceState(null, '', window.location.pathname);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({

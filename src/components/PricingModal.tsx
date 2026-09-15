@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Check } from 'lucide-react';
 import { usePlan } from '@/hooks/usePlan';
+import { PAID_PLAN_COPY, PaidPlanKey } from '@/lib/billing-copy';
 
 type Props = {
   open: boolean;
@@ -13,51 +14,10 @@ type Props = {
 export default function PricingModal({ open, onClose }: Props) {
   const { data: plan } = usePlan();
   const current = plan?.plan === 'premium' ? 'annual-or-monthly' : 'free';
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>(
-    'annual'
-  );
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlanKey>('annual');
+  const plans = PAID_PLAN_COPY;
 
-  const plans = useMemo(
-    () => [
-      {
-        key: 'monthly' as const,
-        title: '💡 Monthly Plan',
-        price: '$4.99',
-        billing: '/month',
-        description:
-          'Perfect for trying out DoryAI with full flexibility — no commitment, all features.',
-        featuresTitle: 'What you’ll get:',
-        features: [
-          'Up to 200 link saving & organization',
-          'Smart AI tagging & search',
-          'Access from any device',
-          'Cancel anytime',
-        ],
-        cta: 'Get Started',
-      },
-      {
-        key: 'annual' as const,
-        title: '⚡ Annual Plan',
-        price: '$34.99',
-        originalPrice: '$59.88',
-        billing: '/year (Save 40% vs monthly)',
-        description:
-          'Unlock the best value — 7-day free trial, premium features, and extra perks.',
-        featuresTitle: 'What you’ll get:',
-        features: [
-          'Everything in Monthly, plus:',
-          'Priority feature access',
-          'VIP support',
-          'Exclusive productivity tips & updates',
-        ],
-        cta: 'Start Free Trial',
-        popular: true,
-      },
-    ],
-    []
-  );
-
-  const handleSelect = (key: 'monthly' | 'annual') => {
+  const handleSelect = (key: PaidPlanKey) => {
     const url = `/auth/after?plan=${key}&intent=checkout&msg=areYouReadyToAction`;
     window.location.href = url;
   };
@@ -70,8 +30,8 @@ export default function PricingModal({ open, onClose }: Props) {
   const monthlyEquivalent = `$${(annualPriceNum / 12).toFixed(2)}`; // e.g. $2.92
   const bottomNote =
     selectedPlan === 'monthly'
-      ? 'Just $4.99 per month'
-      : `Just ${monthlyEquivalent} per month`;
+      ? '$4.99 billed monthly'
+      : `$34.99 billed yearly — ${monthlyEquivalent} per month equivalent`;
 
   return (
     <AnimatePresence>
@@ -263,7 +223,7 @@ export default function PricingModal({ open, onClose }: Props) {
                   >
                     <div className="absolute -top-3 left-3">
                       <span className="bg-white text-black text-[10px] font-semibold px-2 py-1 rounded-full">
-                        7 DAYS FREE
+                        ANNUAL
                       </span>
                     </div>
                     <p className="text-sm text-[#A5A5A5]">Yearly</p>
@@ -287,7 +247,7 @@ export default function PricingModal({ open, onClose }: Props) {
                 <div className="my-5 flex justify-center items-center gap-2 text-[#A5A5A5]">
                   <Check className="h-4 w-4 text-[#A5A5A5]" />
                   <span className="text-sm">
-                    No Commitment – Cancel Anytime
+                    Review billing terms before checkout
                   </span>
                 </div>
                 <button
@@ -297,9 +257,7 @@ export default function PricingModal({ open, onClose }: Props) {
                     isPremium ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
-                  {selectedPlan === 'annual'
-                    ? 'Start 7 days free trial'
-                    : 'Get started'}
+                  Continue to checkout
                 </button>
                 <p className="text-center text-[#A5A5A5] text-sm mt-3">
                   {bottomNote}

@@ -95,7 +95,9 @@ readback. A build, test, or Preview URL does not substitute for another box.
 ## Mobile decision
 
 - [ ] Record responsive-web/PWA evidence against the complete core workflow.
-- [ ] Decide PWA, wrapper, or native from identified capability gaps.
+- [x] Use the responsive installable PWA for V1; `docs/MOBILE_DECISION.md`
+  records the current evidence, unsupported iOS share-target/offline claims,
+  release gates, and the rule for reconsidering native work.
 - [ ] If native remains justified, approve its platform, auth/share, offline,
   privacy, testing, and store criteria before implementation.
 
