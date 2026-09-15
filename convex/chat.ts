@@ -33,6 +33,37 @@ export const getOrCreateSession = mutation({
   },
 });
 
+export const getOrCreateSessionForBackend = mutation({
+  args: {
+    userId: v.id('users'),
+    source: v.optional(v.string()),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid secret');
+    }
+
+    const source = args.source ?? 'web';
+    const existing = await ctx.db
+      .query('chatSessions')
+      .withIndex('by_user_source', (q) =>
+        q.eq('userId', args.userId).eq('source', source),
+      )
+      .order('desc')
+      .first();
+    if (existing) return existing;
+
+    const id = await ctx.db.insert('chatSessions', {
+      userId: args.userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source,
+    });
+    return await ctx.db.get(id);
+  },
+});
+
 export const getMessages = query({
   args: { sessionId: v.id('chatSessions') },
   handler: async (ctx, args) => {
@@ -83,7 +114,7 @@ export const saveMessage = mutation({
     sessionId: v.id('chatSessions'),
     role: v.string(),
     parts: v.any(),
-    secret: v.optional(v.string()),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
     // Authenticate via secret since this is called by the external backend
@@ -124,15 +155,10 @@ export const clearHistory = mutation({
 export const getMessagesForBackend = query({
   args: {
     sessionId: v.id('chatSessions'),
-    secret: v.optional(v.string()),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
-    // Optional: allow it if secret matches
-    // Wait, since some calls don't pass secret, maybe we just don't verify if it's called internally,
-    // but the backend uses ConvexHttpClient so it's a public call.
-    // It's safer to just return the messages for the sessionId.
-    // If strict security is needed, the backend should always pass the secret.
-    if (args.secret && args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
       throw new Error('Unauthorized: Invalid secret');
     }
 
@@ -144,5 +170,4 @@ export const getMessagesForBackend = query({
     return messages;
   },
 });
-
 

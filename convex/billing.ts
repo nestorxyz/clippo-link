@@ -201,7 +201,7 @@ export const getPlan = query({
 export const getPlanForBackend = query({
   args: {
     userId: v.id('users'),
-    secret: v.optional(v.string()),
+    secret: v.string(),
   },
   handler: async (ctx, args) => {
     // Validate secret
