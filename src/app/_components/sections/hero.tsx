@@ -179,9 +179,10 @@ export const HeroSection = ({ className }: HeroSectionProps) => {
             <Image
               src="/product.png"
               alt="DoryAI dashboard"
-              className="inset-0 w-full h-full"
-              width={1200}
-              height={700}
+              className="inset-0 h-auto w-full"
+              width={3014}
+              height={1572}
+              priority
             />
 
             {/* Video Overlay (optional, for styling) */}

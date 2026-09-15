@@ -12,9 +12,10 @@ export const Footer = () => {
             <div className="flex items-center gap-3 mb-4">
               <Image
                 src="/isologo-black.png"
-                alt="April logo"
-                width={200}
-                height={40}
+                alt="DoryAI logo"
+                width={599}
+                height={167}
+                className="h-auto w-[200px]"
               />
             </div>
             <p className="text-gray-600 text-lg leading-relaxed max-w-2xl">

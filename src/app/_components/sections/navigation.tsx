@@ -21,8 +21,9 @@ export const NavigationHeader = () => {
             <Image
               src="/isologo-black.png"
               alt="DoryAI Logo"
-              width={120}
-              height={40}
+              width={599}
+              height={167}
+              className="h-auto w-[120px]"
             />
           </Link>
 
