@@ -41,8 +41,7 @@ export const processChatMessage = action({
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Backend error:', response.status, errorText);
+        console.error('Backend chat request failed:', response.status);
         throw new Error(
           `Failed to process message (Backend: ${response.status})`,
         );

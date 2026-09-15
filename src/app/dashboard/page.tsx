@@ -126,13 +126,7 @@ export default function DashboardPage() {
         >
           <main className="flex-1 overflow-hidden">
             {activeView === 'chat' && (
-              <Chat
-                categories={categories}
-                onLinkAdded={() => {
-                  // Convex queries auto-update, no manual refetch needed usually.
-                  // If Chat needs to trigger something, it can, but useCategories updates automatically.
-                }}
-              />
+              <Chat />
             )}
             {activeView === 'links' && (
               <div className="h-full overflow-y-auto">

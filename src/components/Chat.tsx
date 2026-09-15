@@ -12,7 +12,8 @@ import {
   Link as LinkIcon,
   Folder,
 } from 'lucide-react';
-import { Category, Message } from '@/lib/types';
+import { Message } from '@/lib/types';
+import { formatChatRecord } from './chat/chat-message';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -28,14 +29,6 @@ import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
-import { useQueryState, parseAsStringLiteral } from 'nuqs';
-
-const settingsTabs = ['profile', 'billing'] as const;
-
-interface ChatProps {
-  categories: Category[];
-  onLinkAdded: () => void;
-}
 
 // Memoized list to avoid re-rendering the whole chat on each keystroke
 const MessageList = memo(
@@ -83,7 +76,7 @@ const MessageList = memo(
           </div>
         ))}
         {isBotTyping && (
-          <div className="group">
+          <div className="group" role="status" aria-label="DoryAI is working">
             <div className="rounded-lg p-4">
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -99,22 +92,34 @@ const MessageList = memo(
   },
 );
 
-const Chat = ({ onLinkAdded }: ChatProps) => {
+const Chat = () => {
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<Id<'chatSessions'> | null>(null);
-  const [, setSettingsTab] = useQueryState(
-    'settings',
-    parseAsStringLiteral(settingsTabs),
+  const [sessionError, setSessionError] = useState(false);
+  const [sessionAttempt, setSessionAttempt] = useState(0);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
+    null,
   );
-
   const getOrCreateSession = useMutation(api.chat.getOrCreateSession);
   const clearHistory = useMutation(api.chat.clearHistory);
   const processMessage = useAction(api.ai.processChatMessage);
 
   // Initial session load
   useEffect(() => {
-    getOrCreateSession({}).then((session) => setSessionId(session!._id));
-  }, []);
+    let active = true;
+    setSessionError(false);
+    void getOrCreateSession({})
+      .then((session) => {
+        if (active && session) setSessionId(session._id);
+      })
+      .catch(() => {
+        if (active) setSessionError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [getOrCreateSession, sessionAttempt]);
 
   const rawMessages = useQuery(
     api.chat.getMessages,
@@ -123,38 +128,26 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
 
   // Convert Convex messages to UI Message type
   const messages = useMemo<Message[]>(
-    () =>
-      (rawMessages || [])
-        .filter((m) => m.role !== 'function')
-        .map((m) => {
-          let text = '';
-          const parts = m.parts as any[];
-
-          if (parts && Array.isArray(parts)) {
-            parts.forEach((p) => {
-              if (p.text) {
-                text += p.text;
-              } else if (p.functionCall) {
-                text += `_Used tool: ${p.functionCall.name}_\n`;
-              }
-            });
-          }
-
-          return {
-            id: m._id,
-            text,
-            parts: m.parts as any,
-            sender: m.role === 'model' ? 'bot' : 'user',
-            role: m.role as any,
-          };
-        }),
+    () => {
+      const formattedMessages: Message[] = [];
+      for (const message of rawMessages ?? []) {
+        const text = formatChatRecord(message);
+        if (!text) continue;
+        formattedMessages.push({
+          id: message._id,
+          text,
+          parts: message.parts as any,
+          sender: message.role === 'user' ? 'user' : 'bot',
+          role: message.role as any,
+        });
+      }
+      return formattedMessages;
+    },
     [rawMessages],
   );
 
   const [isBotTyping, setIsBotTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
   const deferredMessages = useDeferredValue(messages);
 
   useEffect(() => {
@@ -169,24 +162,20 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
     if (!messageToSend.trim() || isBotTyping || !sessionId) return;
 
     setIsBotTyping(true);
+    setRequestError(null);
+    setLastFailedMessage(null);
     if (!customInput) setInput('');
 
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const result = await processMessage({
+      await processMessage({
         message: messageToSend,
         sessionId,
         timeZone,
       });
-
-      if (result.reply) {
-        onLinkAdded();
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('An error occurred', {
-        description: "I couldn't process that request. Please try again.",
-      });
+    } catch {
+      setRequestError("DoryAI couldn't finish that request.");
+      setLastFailedMessage(messageToSend);
     } finally {
       setIsBotTyping(false);
     }
@@ -198,19 +187,14 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
       try {
         await clearHistory({ sessionId });
         toast.success('Chat history cleared');
-      } catch (e) {
+      } catch {
         toast.error('Failed to clear history');
       }
     }
   };
 
-  const openSettings = () => {
-    setSettingsTab('profile');
-  };
-
   return (
     <div className="flex flex-col h-full relative">
-
       {messages.length === 0 ? (
         // Blank State
         <div className="flex-1 flex flex-col items-center justify-center p-4 pb-20 fade-in zoom-in duration-500">
@@ -237,6 +221,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
               type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
               onClick={() => handleSendMessage('hello how can i save a link?')}
+              disabled={!sessionId || isBotTyping}
             >
               <LinkIcon className="h-4 w-4" />
               Save a test link
@@ -247,6 +232,7 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
               type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
               onClick={() => handleSendMessage('How does DoryAI work?')}
+              disabled={!sessionId || isBotTyping}
             >
               <Folder className="h-4 w-4" />
               See how it works
@@ -292,10 +278,45 @@ const Chat = ({ onLinkAdded }: ChatProps) => {
       <div className="sticky bottom-0 z-10 border-t border-[#1D1D1D] bg-[#0A0A0A]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/60">
         <div className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
         <div className="relative mx-auto w-full max-w-[720px] px-4 py-4 pt-3 pb-[calc(8px+env(safe-area-inset-bottom))]">
-          <form onSubmit={() => handleSendMessage()} className="relative">
+          {(sessionError || requestError) && (
+            <div
+              className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-100"
+              role="alert"
+            >
+              <span>
+                {sessionError ? 'Chat could not start.' : requestError}
+              </span>
+              {sessionError ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSessionAttempt((attempt) => attempt + 1)}
+                >
+                  Try again
+                </Button>
+              ) : lastFailedMessage ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isBotTyping || !sessionId}
+                  onClick={() => void handleSendMessage(lastFailedMessage)}
+                >
+                  Try again
+                </Button>
+              ) : null}
+            </div>
+          )}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSendMessage();
+            }}
+            className="relative"
+          >
             <div className="relative rounded-[28px] md:rounded-full border border-[#1D1D1D] bg-[#1A1A1A] shadow-sm">
               <Textarea
-                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Talk with DoryAI"
