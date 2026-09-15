@@ -2,7 +2,7 @@
 
 Checklist version: 2026-09-15
 
-Verified web implementation revision: `e039b07`
+Verified web implementation revision: `ad0fa40`
 
 Verified backend implementation revision: `da7c480`
 
@@ -13,7 +13,7 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 ## Automated gates
 
-- [x] Web `npm run check`: 30 tests and 19-route production build passed.
+- [x] Web `npm run check`: 47 tests and 20-route production build passed.
 - [x] Backend `npm run check`: 42 tests and strict TypeScript build passed.
 - [x] Both `npm audit --audit-level=low` runs report zero known vulnerabilities.
 - [x] GitHub Actions passed for web run `34996951076` and backend run
@@ -53,6 +53,8 @@ readback. A build, test, or Preview URL does not substitute for another box.
 - [x] Public landing page rendered locally at desktop width.
 - [x] Public landing page rendered through Chrome at a 390×844 viewport; the
   full page and above-the-fold captures showed no visible horizontal clipping.
+- [x] Safe same-origin post-auth destinations are tested; checkout and mobile
+  share intents no longer collapse unconditionally to `/dashboard`.
 - [ ] Verify matching Clerk publishable/secret configuration for the target
   environment. The local production server reported a session-refresh redirect
   loop consistent with mismatched Clerk keys after the public mobile capture.
@@ -63,6 +65,9 @@ readback. A build, test, or Preview URL does not substitute for another box.
 ## Billing
 
 - [x] The current Lemon Squeezy checkout URL boundary has focused tests.
+- [x] Read-only checkout-page inspection confirmed the displayed `$4.99`
+  monthly and `$34.99` annual prices. Public and in-app pricing now share one
+  catalog and omit the unresolved quota plus unsupported VIP/priority claims.
 - [x] Polar checkout, customer identity, signed webhook, idempotency,
   out-of-order event, and portal boundaries are implemented behind an explicit
   provider switch that defaults Polar to sandbox.
@@ -94,6 +99,10 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 ## Mobile decision
 
+- [x] Local production HTTP readback emitted standalone identity, both declared
+  maskable icons, viewport/safe-area metadata, and the no-auto-save GET share
+  target. Signed-out valid and invalid share inputs redirected to bounded local
+  destinations without writing a link.
 - [ ] Record responsive-web/PWA evidence against the complete core workflow.
 - [x] Use the responsive installable PWA for V1; `docs/MOBILE_DECISION.md`
   records the current evidence, unsupported iOS share-target/offline claims,
