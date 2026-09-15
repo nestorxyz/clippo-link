@@ -1,6 +1,37 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from './_generated/dataModel';
+import { mutation, query, type MutationCtx } from './_generated/server';
+import {
+  normalizeSavedUrl,
+  tryNormalizeSavedUrl,
+} from './lib/normalizeSavedUrl';
 import { getUserId } from './users';
+
+const findExistingLinkByUrl = async (
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  normalizedUrl: string,
+) => {
+  const indexedLink = await ctx.db
+    .query('links')
+    .withIndex('by_user_url', (q) =>
+      q.eq('userId', userId).eq('normalizedUrl', normalizedUrl),
+    )
+    .first();
+  if (indexedLink) return indexedLink;
+
+  const legacyLinks = await ctx.db
+    .query('links')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect();
+  const legacyMatch = legacyLinks.find(
+    (link) => tryNormalizeSavedUrl(link.url) === normalizedUrl,
+  );
+  if (legacyMatch && legacyMatch.normalizedUrl !== normalizedUrl) {
+    await ctx.db.patch(legacyMatch._id, { normalizedUrl });
+  }
+  return legacyMatch ?? null;
+};
 
 export const create = mutation({
   args: {
@@ -15,8 +46,17 @@ export const create = mutation({
     const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
+    const normalizedUrl = normalizeSavedUrl(args.url);
+    const existingLink = await findExistingLinkByUrl(
+      ctx,
+      userId,
+      normalizedUrl,
+    );
+    if (existingLink) return existingLink._id;
+
     const linkId = await ctx.db.insert('links', {
-      url: args.url,
+      url: normalizedUrl,
+      normalizedUrl,
       title: args.title,
       description: args.description,
       imgPreview: args.imgPreview,
@@ -62,8 +102,20 @@ export const update = mutation({
     if (!link || link.userId !== userId)
       throw new Error('Link not found or unauthorized');
 
+    const normalizedUrl = args.url ? normalizeSavedUrl(args.url) : undefined;
+    if (normalizedUrl) {
+      const existingLink = await findExistingLinkByUrl(
+        ctx,
+        userId,
+        normalizedUrl,
+      );
+      if (existingLink && existingLink._id !== args.id) {
+        throw new Error('Link already saved');
+      }
+    }
+
     await ctx.db.patch(args.id, {
-      ...(args.url && { url: args.url }),
+      ...(normalizedUrl && { url: normalizedUrl, normalizedUrl }),
       ...(args.title && { title: args.title }),
       ...(args.description && { description: args.description }),
       ...(args.imgPreview && { imgPreview: args.imgPreview }),
@@ -137,6 +189,15 @@ export const registerLinkForBackend = mutation({
     }
 
     const userId = args.userId; // Trust the backend
+    const normalizedUrl = normalizeSavedUrl(args.url);
+    const existingLink = await findExistingLinkByUrl(
+      ctx,
+      userId,
+      normalizedUrl,
+    );
+    if (existingLink) {
+      return { success: true, linkId: existingLink._id, duplicate: true };
+    }
 
     // 1. Get or create category
     let category = await ctx.db
@@ -181,7 +242,8 @@ export const registerLinkForBackend = mutation({
 
     // 3. Create Link
     const linkId = await ctx.db.insert('links', {
-      url: args.url,
+      url: normalizedUrl,
+      normalizedUrl,
       title: args.title,
       description: args.description,
       subCategoryId: subCategory._id,
@@ -228,7 +290,7 @@ export const registerLinkForBackend = mutation({
       }
     }
 
-    return { success: true, linkId };
+    return { success: true, linkId, duplicate: false };
   },
 });
 
@@ -248,6 +310,16 @@ export const register = mutation({
     const userId = await getUserId(ctx);
     if (!userId) throw new Error('Unauthorized');
 
+    const normalizedUrl = normalizeSavedUrl(args.url);
+    const existingLink = await findExistingLinkByUrl(
+      ctx,
+      userId,
+      normalizedUrl,
+    );
+    if (existingLink) {
+      return { success: true, linkId: existingLink._id, duplicate: true };
+    }
+
     // 1. Get or create category
     let category = await ctx.db
       .query('categories')
@@ -291,7 +363,8 @@ export const register = mutation({
 
     // 3. Create Link
     const linkId = await ctx.db.insert('links', {
-      url: args.url,
+      url: normalizedUrl,
+      normalizedUrl,
       title: args.title,
       description: args.description,
       subCategoryId: subCategory._id,
@@ -338,7 +411,38 @@ export const register = mutation({
       }
     }
 
-    return { success: true, linkId };
+    return { success: true, linkId, duplicate: false };
+  },
+});
+
+export const findLinkByUrlForBackend = query({
+  args: {
+    userId: v.id('users'),
+    url: v.string(),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
+    const normalizedUrl = normalizeSavedUrl(args.url);
+    const indexedLink = await ctx.db
+      .query('links')
+      .withIndex('by_user_url', (q) =>
+        q.eq('userId', args.userId).eq('normalizedUrl', normalizedUrl),
+      )
+      .first();
+    if (indexedLink) return { linkId: indexedLink._id };
+
+    const legacyLinks = await ctx.db
+      .query('links')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .collect();
+    const legacyMatch = legacyLinks.find(
+      (link) => tryNormalizeSavedUrl(link.url) === normalizedUrl,
+    );
+    return legacyMatch ? { linkId: legacyMatch._id } : null;
   },
 });
 

@@ -33,6 +33,7 @@ export default defineSchema({
 
   links: defineTable({
     url: v.string(),
+    normalizedUrl: v.optional(v.string()),
     title: v.string(),
     description: v.optional(v.string()),
     imgPreview: v.optional(v.string()),
@@ -46,7 +47,8 @@ export default defineSchema({
     isReadLater: v.boolean(),
   })
     .index('by_subCategory', ['subCategoryId'])
-    .index('by_user', ['userId']),
+    .index('by_user', ['userId'])
+    .index('by_user_url', ['userId', 'normalizedUrl']),
 
   tags: defineTable({
     name: v.string(),
