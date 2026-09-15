@@ -21,8 +21,10 @@ Tool: Gitleaks `8.30.1`, default rules, full Git history, secrets fully redacted
 - Sanitized inspection: one JWT; `role=anon`; issuer and project reference are
   present; expiry is in 2035. No token, issuer, or project reference is recorded
   here.
-- Current tree: the hard-coded token is absent; the legacy module reads
-  environment variables.
+- Current tree: the legacy retired-provider auth route and runtime modules have been
+  removed. The one-off migration script still reads service credentials from
+  environment variables; deleting current files does not remove the historical
+  token from Git history.
 - Cross-repository evidence: the backend history contains the same historical
   anon JWT in its old `.env.example`.
 

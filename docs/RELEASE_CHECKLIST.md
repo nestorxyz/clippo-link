@@ -2,7 +2,7 @@
 
 Checklist version: 2026-09-15
 
-Verified web implementation revision: `ad0fa40`
+Verified web implementation revision: `ae09018`
 
 Verified backend implementation revision: `da7c480`
 
@@ -13,7 +13,7 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 ## Automated gates
 
-- [x] Web `npm run check`: 47 tests and 20-route production build passed.
+- [x] Web `npm run check`: 47 tests and 19-route production build passed.
 - [x] Backend `npm run check`: 42 tests and strict TypeScript build passed.
 - [x] Both `npm audit --audit-level=low` runs report zero known vulnerabilities.
 - [x] GitHub Actions passed for web run `34999120018` and backend run
@@ -25,6 +25,10 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 - [x] Web and backend setup/environment documentation matches current runtime
   boundaries.
+- [x] The reachable legacy retired-provider auth callback and unused runtime helpers
+  were removed; only the one-off migration script retains a development SDK.
+- [x] Unreferenced template landing components, including fabricated creator,
+  video-production, sales, ROI, and funding claims, were removed.
 - [x] Exact implementation patches passed redacted Gitleaks scans.
 - [ ] Identify and rotate or decommission the historical retired-provider anonymous JWT
   retained once in each repository's history.
