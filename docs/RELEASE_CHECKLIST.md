@@ -51,6 +51,11 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 - [x] First-save/first-retrieval state logic is fixture tested.
 - [x] Public landing page rendered locally at desktop width.
+- [x] Public landing page rendered through Chrome at a 390×844 viewport; the
+  full page and above-the-fold captures showed no visible horizontal clipping.
+- [ ] Verify matching Clerk publishable/secret configuration for the target
+  environment. The local production server reported a session-refresh redirect
+  loop consistent with mismatched Clerk keys after the public mobile capture.
 - [ ] Complete the full fresh-account activation flow at desktop width.
 - [ ] Complete the same flow at a mobile-sized viewport or physical device.
 - [ ] Capture the final desktop and mobile evidence without private user data.
