@@ -63,7 +63,12 @@ readback. A build, test, or Preview URL does not substitute for another box.
 ## Billing
 
 - [x] The current Lemon Squeezy checkout URL boundary has focused tests.
+- [x] Polar checkout, customer identity, signed webhook, idempotency,
+  out-of-order event, and portal boundaries are implemented behind an explicit
+  provider switch that defaults Polar to sandbox.
 - [ ] Owner approves Polar or explicitly approves retaining Lemon Squeezy.
+- [ ] Owner approves coherent free and premium quotas; current enforcement is
+  500 monthly saves for free and 200 for premium.
 - [ ] Sandbox checkout succeeds with a signed, idempotent webhook readback.
 - [ ] Entitlement and customer-portal state match the sandbox purchase.
 - [ ] Existing subscriber/data obligations are documented before any migration.

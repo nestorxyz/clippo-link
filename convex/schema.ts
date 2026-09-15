@@ -7,10 +7,12 @@ export default defineSchema({
     email: v.optional(v.string()),
     image: v.optional(v.string()),
     tokenIdentifier: v.optional(v.string()),
+    billingExternalId: v.optional(v.string()),
     emailVerificationTime: v.optional(v.number()),
   })
     .index('by_token', ['tokenIdentifier'])
-    .index('by_email', ['email']),
+    .index('by_email', ['email'])
+    .index('by_billing_external_id', ['billingExternalId']),
 
   categories: defineTable({
     name: v.string(),
@@ -86,13 +88,18 @@ export default defineSchema({
 
   subscriptions: defineTable({
     userId: v.id('users'),
-    lemonSubscriptionId: v.string(),
+    provider: v.optional(v.string()),
+    providerSubscriptionId: v.optional(v.string()),
+    providerCustomerId: v.optional(v.string()),
+    lemonSubscriptionId: v.optional(v.string()),
     productId: v.optional(v.string()),
     variantId: v.optional(v.string()),
     customerId: v.optional(v.string()),
     status: v.string(),
     trialEndsAt: v.optional(v.number()),
     renewsAt: v.number(),
+    currentPeriodStart: v.optional(v.number()),
+    providerEventTimestamp: v.optional(v.number()),
     endsAt: v.optional(v.number()),
     cardBrand: v.optional(v.string()),
     cardLastFour: v.optional(v.string()),
@@ -102,16 +109,24 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_user', ['userId'])
-    .index('by_lemon_subscription_id', ['lemonSubscriptionId']),
+    .index('by_lemon_subscription_id', ['lemonSubscriptionId'])
+    .index('by_provider_subscription', [
+      'provider',
+      'providerSubscriptionId',
+    ]),
 
   subscriptionWebhookEvents: defineTable({
+    provider: v.optional(v.string()),
+    providerEventId: v.optional(v.string()),
     eventName: v.string(),
-    lemonObjectType: v.string(),
-    lemonObjectId: v.string(),
+    lemonObjectType: v.optional(v.string()),
+    lemonObjectId: v.optional(v.string()),
     eventKey: v.string(),
     rawPayload: v.any(),
     signature: v.optional(v.string()),
     receivedAt: v.number(),
     duplicate: v.boolean(),
-  }).index('by_event_key', ['eventKey']),
+  })
+    .index('by_event_key', ['eventKey'])
+    .index('by_provider_event', ['provider', 'providerEventId']),
 });

@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query, QueryCtx, MutationCtx } from './_generated/server';
+import { billingExternalIdForClerkUser } from '../shared/billing-customer';
 
 export async function getUserId(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -78,9 +79,15 @@ export const store = mutation({
       .unique();
 
     if (user !== null) {
-      // If we've seen this identity before but the name has changed, patch the value.
-      if (user.name !== identity.name) {
-        await ctx.db.patch(user._id, { name: identity.name });
+      const billingExternalId = billingExternalIdForClerkUser(identity.subject);
+      if (
+        user.name !== identity.name ||
+        user.billingExternalId !== billingExternalId
+      ) {
+        await ctx.db.patch(user._id, {
+          name: identity.name,
+          billingExternalId,
+        });
       }
       return user._id;
     }
@@ -95,6 +102,7 @@ export const store = mutation({
       // Link the new identity to the existing user
       await ctx.db.patch(existingUserByEmail._id, {
         tokenIdentifier: identity.tokenIdentifier,
+        billingExternalId: billingExternalIdForClerkUser(identity.subject),
         name: identity.name,
         // We can update the image too if needed, or keep the old one
         image: identity.pictureUrl || existingUserByEmail.image,
@@ -106,10 +114,10 @@ export const store = mutation({
     return await ctx.db.insert('users', {
       name: identity.name,
       tokenIdentifier: identity.tokenIdentifier,
+      billingExternalId: billingExternalIdForClerkUser(identity.subject),
       email: identity.email,
       image: identity.pictureUrl,
     });
   },
 });
-
 

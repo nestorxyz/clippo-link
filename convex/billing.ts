@@ -24,6 +24,7 @@ export interface UserPlan {
   period: PlanPeriod;
   used: number;
   remaining: number;
+  provider?: string;
   subscriptionId?: string;
   variantId?: string | null;
   managePortalUrl?: string | null;
@@ -76,6 +77,29 @@ export function getPreviousIntervalStart(
   return start.toISOString();
 }
 
+type SubscriptionRecord = {
+  provider?: string;
+  status: string;
+  endsAt?: number;
+};
+
+export function subscriptionIsPremium(
+  subscription: SubscriptionRecord | undefined,
+  now = Date.now(),
+): boolean {
+  if (!subscription) return false;
+
+  const inGrace = subscription.endsAt
+    ? (now - subscription.endsAt) / 1000 / 3600 < GRACE_PERIOD_HOURS
+    : true;
+  const premiumStatuses =
+    subscription.provider === 'polar'
+      ? ['active', 'trialing', 'canceled']
+      : [...PREMIUM_STATUSES, 'cancelled'];
+
+  return premiumStatuses.includes(subscription.status) && inGrace;
+}
+
 export const getPlan = query({
   args: {},
   handler: async (ctx) => {
@@ -114,22 +138,7 @@ export const getPlan = query({
 
     let userPlan: UserPlan;
 
-    const isPremium = (() => {
-      if (!data) return false;
-      const now = Date.now();
-      const endsAt = data.endsAt || 0;
-      // In grace period?
-      const inGrace = endsAt
-        ? (now - endsAt) / 1000 / 3600 < GRACE_PERIOD_HOURS
-        : true;
-
-      const status = data.status;
-      const premiumEligible =
-        (PREMIUM_STATUSES.includes(status) || status === 'cancelled') &&
-        inGrace;
-
-      return premiumEligible;
-    })();
+    const isPremium = subscriptionIsPremium(data);
 
     if (!isPremium || !data) {
       const period = getCalendarMonthPeriodUtc();
@@ -144,7 +153,9 @@ export const getPlan = query({
     } else {
       const renewsAtIso = new Date(data.renewsAt).toISOString();
       const periodEnd = renewsAtIso;
-      const periodStart = getPreviousIntervalStart(data.variantId, renewsAtIso);
+      const periodStart = data.currentPeriodStart
+        ? new Date(data.currentPeriodStart).toISOString()
+        : getPreviousIntervalStart(data.variantId, renewsAtIso);
       const limit = PREMIUM_MONTHLY_LIMIT;
 
       userPlan = {
@@ -154,9 +165,14 @@ export const getPlan = query({
         period: { start: periodStart, end: periodEnd },
         used: 0,
         remaining: limit,
-        subscriptionId: data.lemonSubscriptionId,
+        provider: data.provider ?? 'lemon',
+        subscriptionId:
+          data.providerSubscriptionId ?? data.lemonSubscriptionId,
         variantId: data.variantId,
-        managePortalUrl: data.customerPortalUrl,
+        managePortalUrl:
+          data.provider === 'polar'
+            ? '/api/billing/portal'
+            : data.customerPortalUrl,
         renewsAt: renewsAtIso,
         trialEndsAt: data.trialEndsAt
           ? new Date(data.trialEndsAt).toISOString()
@@ -224,22 +240,7 @@ export const getPlanForBackend = query({
 
     let userPlan: UserPlan; // Use the interface from above
 
-    const isPremium = (() => {
-      if (!data) return false;
-      const now = Date.now();
-      const endsAt = data.endsAt || 0;
-      // In grace period?
-      const inGrace = endsAt
-        ? (now - endsAt) / 1000 / 3600 < GRACE_PERIOD_HOURS
-        : true;
-
-      const status = data.status;
-      const premiumEligible =
-        (PREMIUM_STATUSES.includes(status) || status === 'cancelled') &&
-        inGrace;
-
-      return premiumEligible;
-    })();
+    const isPremium = subscriptionIsPremium(data);
 
     if (!isPremium || !data) {
       const period = getCalendarMonthPeriodUtc();
@@ -254,7 +255,9 @@ export const getPlanForBackend = query({
     } else {
       const renewsAtIso = new Date(data.renewsAt).toISOString();
       const periodEnd = renewsAtIso;
-      const periodStart = getPreviousIntervalStart(data.variantId, renewsAtIso);
+      const periodStart = data.currentPeriodStart
+        ? new Date(data.currentPeriodStart).toISOString()
+        : getPreviousIntervalStart(data.variantId, renewsAtIso);
       const limit = PREMIUM_MONTHLY_LIMIT;
 
       userPlan = {
@@ -264,9 +267,14 @@ export const getPlanForBackend = query({
         period: { start: periodStart, end: periodEnd },
         used: 0,
         remaining: limit,
-        subscriptionId: data.lemonSubscriptionId,
+        provider: data.provider ?? 'lemon',
+        subscriptionId:
+          data.providerSubscriptionId ?? data.lemonSubscriptionId,
         variantId: data.variantId,
-        managePortalUrl: data.customerPortalUrl,
+        managePortalUrl:
+          data.provider === 'polar'
+            ? '/api/billing/portal'
+            : data.customerPortalUrl,
         renewsAt: renewsAtIso,
         trialEndsAt: data.trialEndsAt
           ? new Date(data.trialEndsAt).toISOString()
