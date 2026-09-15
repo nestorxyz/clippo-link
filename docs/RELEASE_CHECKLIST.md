@@ -2,7 +2,7 @@
 
 Checklist version: 2026-09-15
 
-Verified web implementation revision: `4637d29`
+Verified web implementation revision: `ed7fa00`
 
 Verified backend implementation revision: `da7c480`
 
@@ -32,6 +32,9 @@ readback. A build, test, or Preview URL does not substitute for another box.
 - [x] The unreachable legacy drag-and-drop sidebar and management screens, their
   duplicate stylesheet, and nine runtime dependencies were removed; the UI
   generator now targets the stylesheet loaded by the app.
+- [x] Generated UI scaffolding was reduced to the 11 primitives reachable from
+  real app entrypoints; 25 unused direct dependencies and 81 packages from the
+  audited install graph were removed.
 - [x] Exact implementation patches passed redacted Gitleaks scans.
 - [ ] Identify and rotate or decommission the historical retired-provider anonymous JWT
   retained once in each repository's history.
