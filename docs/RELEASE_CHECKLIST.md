@@ -2,7 +2,7 @@
 
 Checklist version: 2026-09-15
 
-Verified web implementation revision: `54fbb1f`
+Verified web implementation revision: `e039b07`
 
 Verified backend implementation revision: `da7c480`
 
@@ -13,7 +13,7 @@ readback. A build, test, or Preview URL does not substitute for another box.
 
 ## Automated gates
 
-- [x] Web `npm run check`: 16 tests and 18-route production build passed.
+- [x] Web `npm run check`: 30 tests and 19-route production build passed.
 - [x] Backend `npm run check`: 42 tests and strict TypeScript build passed.
 - [x] Both `npm audit --audit-level=low` runs report zero known vulnerabilities.
 - [x] GitHub Actions passed for web run `34994109394` and backend run
