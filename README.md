@@ -32,7 +32,7 @@ Fill `.env.local` before starting Next.js. Never commit real values.
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_REDACTED
 NEXT_PUBLIC_CONVEX_URL=https://replace-me.convex.cloud
-CLERK_SECRET_KEY=pk_test_REDACTED
+CLERK_SECRET_KEY=sk_test_REDACTED
 ```
 
 Set `SITE_URL=https://www.doryai.xyz` in production. The apex domain redirects
