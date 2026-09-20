@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 10
     env:
       NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_CONVEX_URL: https://ci-placeholder.convex.cloud
       SKIP_ENV_VALIDATION: "1"
     steps:
