@@ -21,14 +21,15 @@ This checklist prepares the repository; it does not authorize making it public.
 
 ## Required before public visibility
 
-- [ ] Choose and approve an open-source license.
+- [x] Owner selected AGPL-3.0-only on 2026-09-19; canonical `LICENSE` added and
+      package metadata aligned.
 - [ ] Extend focused web tests to critical onboarding, chat, and link-management
       behavior.
 - [ ] Remove the retired provider reference from Git history and rerun Gitleaks
       to zero unresolved findings.
 - [x] Inventory transitive dependency licenses, fonts, and repository assets in
       `docs/PUBLICATION_RIGHTS_REVIEW.md`.
-- [ ] Owner confirms rights to the listed DoryAI images or replaces them.
+- [x] Owner confirmed DoryAI owns the listed images on 2026-09-19.
 - [x] Remove retired migration code and duplicate landing components.
 - [ ] Replace hard-coded billing product URLs/IDs with a reviewed configuration
       boundary before the provider migration.

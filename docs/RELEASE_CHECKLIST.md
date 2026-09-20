@@ -39,7 +39,8 @@ readback. A build, test, or Preview URL does not substitute for another box.
 - [ ] Rewrite the retired provider reference from both repositories' history,
   then rerun the full-history secret scan.
 - [ ] Review transitive dependency and bundled asset rights.
-- [ ] Obtain owner approval for a license and apply it.
+- [x] Owner selected AGPL-3.0-only and confirmed DoryAI owns its repository
+  images on 2026-09-19; canonical license and package metadata are applied.
 - [x] Owner approved changing both repositories to public on 2026-09-15.
 
 ## Core save and find flow

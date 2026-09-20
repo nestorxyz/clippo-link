@@ -16,7 +16,7 @@ known vulnerabilities.
 
 ## Repository assets
 
-Owner confirmation is still required for the publication rights of:
+On 2026-09-19 the owner confirmed DoryAI owns the publication rights for:
 
 - `public/isologo-black.png`, `public/isologo.png`, and `public/logo.png`
 - `public/product.png`
@@ -28,6 +28,6 @@ required notice should remain available in distributed artifacts.
 
 ## Release gate
 
-Do not change repository visibility until the owner confirms the listed images
-are owned by DoryAI or replaces/removes them, chooses the repository license,
-and the full-history credential finding is resolved.
+The owner selected AGPL-3.0-only on 2026-09-19. Do not change repository
+visibility until the full-history credential finding is resolved and the clean
+public-clone readback passes.

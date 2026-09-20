@@ -87,6 +87,7 @@ or the rendered desktop/mobile experience.
 
 ## Publication
 
-The owner approved public visibility and production deployment on 2026-09-15.
-Publication still waits for the selected license, asset review, clean history
-scan, and release readbacks.
+The owner approved public visibility and production deployment on 2026-09-15,
+then selected AGPL-3.0-only and confirmed DoryAI asset ownership on 2026-09-19.
+Publication still waits for the approved history cleanup, clean scan, and
+release readbacks.
