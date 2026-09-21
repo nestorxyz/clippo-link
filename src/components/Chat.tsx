@@ -8,7 +8,7 @@ import {
 } from 'react';
 import {
   Send,
-  RefreshCw,
+  Trash2,
   Link as LinkIcon,
   Folder,
 } from 'lucide-react';
@@ -23,6 +23,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQuery, useMutation, useAction } from 'convex/react';
@@ -102,6 +111,8 @@ const Chat = () => {
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
     null,
   );
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
   const getOrCreateSession = useMutation(api.chat.getOrCreateSession);
   const clearHistory = useMutation(api.chat.clearHistory);
   const processMessage = useAction(api.ai.processChatMessage);
@@ -210,14 +221,21 @@ const Chat = () => {
   };
 
   const handleClearChat = async () => {
-    if (!sessionId) return;
-    if (confirm('Are you sure you want to clear the chat history?')) {
-      try {
-        await clearHistory({ sessionId });
-        toast.success('Chat history cleared');
-      } catch {
-        toast.error('Failed to clear history');
-      }
+    if (!sessionId || isClearingHistory) return;
+
+    setIsClearingHistory(true);
+    try {
+      const result = await clearHistory({ sessionId });
+      setClearDialogOpen(false);
+      toast.success(
+        result.deletedCount === 1
+          ? '1 chat message cleared'
+          : `${result.deletedCount} chat messages cleared`,
+      );
+    } catch {
+      toast.error('Failed to clear history');
+    } finally {
+      setIsClearingHistory(false);
     }
   };
 
@@ -298,12 +316,16 @@ const Chat = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleClearChat}
+                    type="button"
+                    onClick={() => setClearDialogOpen(true)}
                     disabled={
-                      !sessionId || messages.length === 0 || isBotTyping
+                      !sessionId ||
+                      messages.length === 0 ||
+                      isBotTyping ||
+                      isClearingHistory
                     }
                   >
-                    <RefreshCw className="h-5 w-5" />
+                    <Trash2 className="h-5 w-5" />
                     <span className="sr-only">Clear chat history</span>
                   </Button>
                 </TooltipTrigger>
@@ -313,6 +335,36 @@ const Chat = () => {
               </Tooltip>
             </div>
           </header>
+          <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+            <DialogContent className="sm:max-w-md rounded-xl border border-[#2A2A2A] bg-[#1D1D1D] text-[#E5E5E5]">
+              <DialogHeader>
+                <DialogTitle>Clear chat history?</DialogTitle>
+                <DialogDescription className="text-[#A5A5A5]">
+                  This permanently removes this conversation. Your saved links
+                  will not be affected.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:space-x-0">
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isClearingHistory}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isClearingHistory}
+                  onClick={() => void handleClearChat()}
+                >
+                  {isClearingHistory ? 'Clearing…' : 'Clear history'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <div className="flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-[720px] px-4 py-6">
               <MessageList

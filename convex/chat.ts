@@ -149,6 +149,7 @@ export const clearHistory = mutation({
       .collect();
 
     await Promise.all(messages.map((msg) => ctx.db.delete(msg._id)));
+    return { deletedCount: messages.length };
   },
 });
 
@@ -170,4 +171,3 @@ export const getMessagesForBackend = query({
     return messages;
   },
 });
-
