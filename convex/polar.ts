@@ -1,17 +1,8 @@
-import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks';
+import { WebhookVerificationError } from 'standardwebhooks';
 import { internalMutation, httpAction } from './_generated/server';
 import { internal } from './_generated/api';
 import { v } from 'convex/values';
-
-const SUBSCRIPTION_EVENT_TYPES = new Set([
-  'subscription.created',
-  'subscription.updated',
-  'subscription.active',
-  'subscription.canceled',
-  'subscription.uncanceled',
-  'subscription.revoked',
-  'subscription.past_due',
-]);
+import { verifyPolarSubscriptionWebhook } from './lib/polarWebhook';
 
 export const processWebhook = httpAction(async (ctx, request) => {
   const secret = process.env.POLAR_WEBHOOK_SECRET;
@@ -28,9 +19,10 @@ export const processWebhook = httpAction(async (ctx, request) => {
 
   let event;
   try {
-    event = validateEvent(rawBody, headers, secret);
+    event = verifyPolarSubscriptionWebhook(rawBody, headers, secret);
   } catch (error) {
     if (error instanceof WebhookVerificationError) {
+      console.error('Unable to verify Polar webhook', error.message);
       return new Response('Invalid signature', { status: 403 });
     }
     console.error('Unable to parse Polar webhook', error);
@@ -42,15 +34,11 @@ export const processWebhook = httpAction(async (ctx, request) => {
     return new Response('Missing webhook ID', { status: 400 });
   }
 
-  if (!SUBSCRIPTION_EVENT_TYPES.has(event.type)) {
+  if (!event.data) {
     return Response.json({ success: true, ignored: true });
   }
 
   const subscription = event.data;
-  if (!('customer' in subscription)) {
-    return new Response('Invalid subscription payload', { status: 400 });
-  }
-
   const externalCustomerId = subscription.customer.externalId;
   if (!externalCustomerId) {
     return new Response('Missing external customer ID', { status: 400 });
