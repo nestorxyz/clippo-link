@@ -433,7 +433,9 @@ export const findLinkByUrlForBackend = query({
         q.eq('userId', args.userId).eq('normalizedUrl', normalizedUrl),
       )
       .first();
-    if (indexedLink) return { linkId: indexedLink._id };
+    if (indexedLink) {
+      return { linkId: indexedLink._id, hasContent: Boolean(indexedLink.content) };
+    }
 
     const legacyLinks = await ctx.db
       .query('links')
@@ -442,7 +444,36 @@ export const findLinkByUrlForBackend = query({
     const legacyMatch = legacyLinks.find(
       (link) => tryNormalizeSavedUrl(link.url) === normalizedUrl,
     );
-    return legacyMatch ? { linkId: legacyMatch._id } : null;
+    return legacyMatch
+      ? { linkId: legacyMatch._id, hasContent: Boolean(legacyMatch.content) }
+      : null;
+  },
+});
+
+export const enrichLinkContentForBackend = mutation({
+  args: {
+    userId: v.id('users'),
+    linkId: v.id('links'),
+    content: v.string(),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+
+    const link = await ctx.db.get(args.linkId);
+    if (!link || link.userId !== args.userId) {
+      throw new Error('Link not found or unauthorized');
+    }
+    if (link.content?.trim()) {
+      return { success: true, enriched: false };
+    }
+
+    const content = args.content.trim();
+    if (!content) throw new Error('Content is required');
+    await ctx.db.patch(link._id, { content, updatedAt: Date.now() });
+    return { success: true, enriched: true };
   },
 });
 
