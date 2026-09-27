@@ -89,5 +89,10 @@ or the rendered desktop/mobile experience.
 
 The owner approved public visibility and production deployment on 2026-09-15,
 then selected AGPL-3.0-only and confirmed DoryAI asset ownership on 2026-09-19.
-Publication still waits for the approved history cleanup, clean scan, and
-release readbacks.
+Both implementation repositories are public under AGPL-3.0-only after the
+approved history cleanup and clean scan. On 2026-09-27, web/Convex revision
+`8f1d53b` passed main CI `36348168474` and Vercel Production deployment
+`6697487569`; `https://www.doryai.xyz` returned HTTP 200 and production Convex
+exposes `links:enrichLinkContentForBackend`. Authenticated production source,
+billing, and mobile acceptance are separate from this deployment and remain
+open in the DoryAI project packet.
