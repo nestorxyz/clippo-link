@@ -1,6 +1,13 @@
 import { v } from 'convex/values';
-import type { Id } from './_generated/dataModel';
-import { mutation, query, type MutationCtx } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from './_generated/server';
+import { buildLinkSearchText } from './lib/linkSearch';
 import {
   normalizeSavedUrl,
   tryNormalizeSavedUrl,
@@ -31,6 +38,40 @@ const findExistingLinkByUrl = async (
     await ctx.db.patch(legacyMatch._id, { normalizedUrl });
   }
   return legacyMatch ?? null;
+};
+
+const refreshSearchText = async (ctx: MutationCtx, linkId: Id<'links'>) => {
+  const link = await ctx.db.get(linkId);
+  if (!link) return false;
+  const searchText = buildLinkSearchText({
+    title: link.title,
+    description: link.description,
+    content: link.content,
+    url: link.url,
+    source: link.source,
+  });
+  if (link.searchText === searchText) return false;
+  await ctx.db.patch(linkId, { searchText });
+  return true;
+};
+
+const enrichLinkForBackend = async (ctx: QueryCtx, link: Doc<'links'>) => {
+  const linkForBackend = { ...link };
+  delete linkForBackend.searchText;
+  const subCategory = link.subCategoryId
+    ? await ctx.db.get(link.subCategoryId)
+    : null;
+  const category = subCategory
+    ? await ctx.db.get(subCategory.categoryId)
+    : null;
+  const linkTags = await ctx.db
+    .query('linkTags')
+    .withIndex('by_link', (q) => q.eq('linkId', link._id))
+    .collect();
+  const tags = (
+    await Promise.all(linkTags.map(({ tagId }) => ctx.db.get(tagId)))
+  ).filter((tag) => tag !== null);
+  return { ...linkForBackend, subCategory, category, tags };
 };
 
 export const create = mutation({
@@ -79,6 +120,8 @@ export const create = mutation({
         ),
       );
     }
+
+    await refreshSearchText(ctx, linkId);
 
     return linkId;
   },
@@ -141,6 +184,8 @@ export const update = mutation({
         ),
       );
     }
+
+    await refreshSearchText(ctx, args.id);
 
     return args.id;
   },
@@ -294,6 +339,8 @@ export const registerLinkForBackend = mutation({
       }
     }
 
+    await refreshSearchText(ctx, linkId);
+
     return { success: true, linkId, duplicate: false };
   },
 });
@@ -415,6 +462,8 @@ export const register = mutation({
       }
     }
 
+    await refreshSearchText(ctx, linkId);
+
     return { success: true, linkId, duplicate: false };
   },
 });
@@ -454,6 +503,128 @@ export const findLinkByUrlForBackend = query({
   },
 });
 
+export const searchLinksForBackend = query({
+  args: {
+    userId: v.id('users'),
+    queryText: v.string(),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+    const queryText = args.queryText.trim();
+    if (!queryText) return [];
+
+    const links = await ctx.db
+      .query('links')
+      .withSearchIndex('by_search_text', (q) =>
+        q.search('searchText', queryText).eq('userId', args.userId),
+      )
+      .take(100);
+
+    return Promise.all(links.map((link) => enrichLinkForBackend(ctx, link)));
+  },
+});
+
+export const getLinkContentForBackend = query({
+  args: {
+    userId: v.id('users'),
+    linkId: v.id('links'),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+    const link = await ctx.db.get(args.linkId);
+    if (!link || link.userId !== args.userId) return null;
+    return {
+      id: link._id,
+      url: link.url,
+      title: link.title,
+      description: link.description,
+      content: link.content,
+      contentScope: link.contentScope,
+      source: link.source,
+    };
+  },
+});
+
+export const listLinkMetadataForBackend = query({
+  args: {
+    userId: v.id('users'),
+    cursor: v.optional(v.string()),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+    const page = await ctx.db
+      .query('links')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .paginate({ cursor: args.cursor ?? null, numItems: 100 });
+    const links = await Promise.all(
+      page.page.map(async (link) => {
+        const subCategory = link.subCategoryId
+          ? await ctx.db.get(link.subCategoryId)
+          : null;
+        const category = subCategory
+          ? await ctx.db.get(subCategory.categoryId)
+          : null;
+        const linkTags = await ctx.db
+          .query('linkTags')
+          .withIndex('by_link', (q) => q.eq('linkId', link._id))
+          .collect();
+        const tags = (
+          await Promise.all(linkTags.map(({ tagId }) => ctx.db.get(tagId)))
+        ).filter((tag) => tag !== null);
+        return {
+          _id: link._id,
+          url: link.url,
+          title: link.title,
+          description: link.description,
+          source: link.source,
+          createdAt: link.createdAt,
+          updatedAt: link.updatedAt,
+          contentScope: link.contentScope,
+          subCategory,
+          category,
+          tags,
+        };
+      }),
+    );
+    return {
+      links,
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+    };
+  },
+});
+
+// Run in bounded batches after deploying the index. Do not run against
+// production without a separately approved data migration.
+export const backfillSearchText = internalMutation({
+  args: { cursor: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const page = await ctx.db.query('links').paginate({
+      cursor: args.cursor ?? null,
+      numItems: 25,
+    });
+    let updated = 0;
+    for (const link of page.page) {
+      if (await refreshSearchText(ctx, link._id)) updated += 1;
+    }
+    return {
+      updated,
+      scanned: page.page.length,
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+    };
+  },
+});
+
 export const enrichLinkContentForBackend = mutation({
   args: {
     userId: v.id('users'),
@@ -484,6 +655,7 @@ export const enrichLinkContentForBackend = mutation({
       contentScope: args.contentScope,
       updatedAt: Date.now(),
     });
+    await refreshSearchText(ctx, link._id);
     return { success: true, enriched: true };
   },
 });
@@ -506,36 +678,7 @@ export const getRecentLinksForUser = query({
       .order('desc')
       .take(args.limit);
 
-    const enrichedLinks = await Promise.all(
-      links.map(async (link) => {
-        let subCategory = null;
-        let category = null;
-
-        if (link.subCategoryId) {
-          subCategory = await ctx.db.get(link.subCategoryId);
-          if (subCategory && subCategory.categoryId) {
-            category = await ctx.db.get(subCategory.categoryId);
-          }
-        }
-
-        const linkTags = await ctx.db
-          .query('linkTags')
-          .withIndex('by_link', (q) => q.eq('linkId', link._id))
-          .collect();
-        const tags = (
-          await Promise.all(linkTags.map(({ tagId }) => ctx.db.get(tagId)))
-        ).filter((tag) => tag !== null);
-
-        return {
-          ...link,
-          subCategory,
-          category,
-          tags,
-        };
-      }),
-    );
-
-    return enrichedLinks;
+    return Promise.all(links.map((link) => enrichLinkForBackend(ctx, link)));
   },
 });
 

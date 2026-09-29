@@ -48,6 +48,9 @@ billing webhook secrets, migration service keys, or provider credentials. The
 backend secret authenticates the service boundary but does not replace user
 scope: privileged calls still carry and validate the intended user/session.
 
+The development search path, backfill gate, and evaluation requirements are
+documented in [SEARCH.md](SEARCH.md). It is not a production release.
+
 ## Data ownership
 
 - Convex owns current users, links, categories, subcategories, tags, chat

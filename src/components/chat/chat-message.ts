@@ -5,6 +5,14 @@ export interface ChatRecord {
 
 export type ActivationStep = 'save' | 'retrieve' | 'complete';
 
+export interface SearchResultPreview {
+  id: string;
+  title: string;
+  url: string;
+  excerpt?: string;
+  contentScope?: 'partial-preview' | 'metadata-only';
+}
+
 type FunctionResponse = {
   name?: unknown;
   response?: Record<string, unknown>;
@@ -38,10 +46,65 @@ const responseStatus = ({ name, response = {} }: FunctionResponse): string => {
     return 'Link analyzed.';
   }
   if (name === 'get_links') {
+    if (response.error) return 'Could not search saved links. Please try again.';
     const links = Array.isArray(response.links) ? response.links : [];
-    return `Found ${links.length} saved ${links.length === 1 ? 'link' : 'links'}.`;
+    return links.length === 0
+      ? 'No saved links matched that search.'
+      : `Found ${links.length} saved ${links.length === 1 ? 'link' : 'links'}.`;
+  }
+  if (name === 'get_link') {
+    return response.success === true
+      ? 'Read saved link content.'
+      : 'Could not read that saved link.';
   }
   return '';
+};
+
+export const getSearchResultPreviews = (
+  record: ChatRecord,
+): SearchResultPreview[] => {
+  if (!Array.isArray(record.parts)) return [];
+  const previews: SearchResultPreview[] = [];
+  for (const part of record.parts) {
+    if (!part || typeof part !== 'object') continue;
+    const responsePart = (part as Record<string, unknown>).functionResponse;
+    if (!responsePart || typeof responsePart !== 'object') continue;
+    const { name, response } = responsePart as FunctionResponse;
+    if (name !== 'get_links' || !Array.isArray(response?.links)) continue;
+
+    for (const candidate of response.links.slice(0, 5)) {
+      if (!candidate || typeof candidate !== 'object') continue;
+      const link = candidate as Record<string, unknown>;
+      if (
+        typeof link.id !== 'string' ||
+        typeof link.title !== 'string' ||
+        typeof link.url !== 'string'
+      ) continue;
+      try {
+        const url = new URL(link.url);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
+      } catch {
+        continue;
+      }
+      previews.push({
+        id: link.id,
+        title: link.title,
+        url: link.url,
+        excerpt:
+          typeof link.contentExcerpt === 'string'
+            ? link.contentExcerpt.slice(0, 160)
+            : typeof link.description === 'string'
+              ? link.description.slice(0, 160)
+              : undefined,
+        contentScope:
+          link.contentScope === 'partial-preview' ||
+          link.contentScope === 'metadata-only'
+            ? link.contentScope
+            : undefined,
+      });
+    }
+  }
+  return previews;
 };
 
 export const formatChatRecord = (record: ChatRecord): string => {

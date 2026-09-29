@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatChatRecord, getActivationStep } from './chat-message';
+import {
+  formatChatRecord,
+  getActivationStep,
+  getSearchResultPreviews,
+} from './chat-message';
 
 describe('chat message status', () => {
   it('renders successful and duplicate link outcomes', () => {
@@ -142,5 +146,38 @@ describe('first-run activation', () => {
         response('get_links', { links: [{ id: 'saved-link' }] }),
       ]),
     ).toBe('complete');
+  });
+});
+
+describe('saved search results', () => {
+  it('renders an honest empty state and a selected-link read status', () => {
+    expect(formatChatRecord({
+      role: 'function',
+      parts: [{ functionResponse: { name: 'get_links', response: { links: [] } } }],
+    })).toBe('No saved links matched that search.');
+    expect(formatChatRecord({
+      role: 'function',
+      parts: [{ functionResponse: { name: 'get_link', response: { success: true } } }],
+    })).toBe('Read saved link content.');
+  });
+
+  it('shows only safe saved URLs and labels partial previews', () => {
+    const previews = getSearchResultPreviews({
+      role: 'function',
+      parts: [{ functionResponse: {
+        name: 'get_links',
+        response: { links: [
+          { id: 'a', title: 'Founder story', url: 'https://example.com/a', contentExcerpt: 'The story text', contentScope: 'partial-preview' },
+          { id: 'b', title: 'Unsafe', url: 'javascript:alert(1)' },
+        ] },
+      } }],
+    });
+    expect(previews).toEqual([{
+      id: 'a',
+      title: 'Founder story',
+      url: 'https://example.com/a',
+      excerpt: 'The story text',
+      contentScope: 'partial-preview',
+    }]);
   });
 });

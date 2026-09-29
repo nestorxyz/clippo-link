@@ -11,9 +11,14 @@ import {
   Trash2,
   Link as LinkIcon,
   Folder,
+  ExternalLink,
 } from 'lucide-react';
 import { Message } from '@/lib/types';
-import { formatChatRecord, getActivationStep } from './chat/chat-message';
+import {
+  formatChatRecord,
+  getActivationStep,
+  getSearchResultPreviews,
+} from './chat/chat-message';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -39,6 +44,49 @@ import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
 import { extractSharedHttpUrl } from '@/lib/share-target';
+
+const SearchResultCards = memo(({ message }: { message: Message }) => {
+  const results = getSearchResultPreviews({
+    role: message.role ?? '',
+    parts: message.parts,
+  });
+  if (results.length === 0) return null;
+
+  return (
+    <div className="mt-3 space-y-2" aria-label="Saved link search results">
+      <p className="text-xs text-muted-foreground">Top matches</p>
+      {results.map((result) => (
+        <a
+          key={result.id}
+          href={result.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl border border-white/15 bg-[#141414] px-4 py-3 transition-colors hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          <span className="flex items-start justify-between gap-3 text-sm font-medium text-white">
+            <span className="min-w-0 break-words">{result.title}</span>
+            <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </span>
+          <span className="mt-1 block truncate text-xs text-muted-foreground">
+            {new URL(result.url).hostname}
+          </span>
+          {result.excerpt ? (
+            <span className="mt-2 line-clamp-2 block text-sm text-[#B8B8B8]">
+              {result.excerpt}
+            </span>
+          ) : null}
+          {result.contentScope ? (
+            <span className="mt-2 inline-block text-xs text-amber-300">
+              {result.contentScope === 'partial-preview'
+                ? 'Partial preview'
+                : 'Metadata only'}
+            </span>
+          ) : null}
+        </a>
+      ))}
+    </div>
+  );
+});
 
 // Memoized list to avoid re-rendering the whole chat on each keystroke
 const MessageList = memo(
@@ -83,6 +131,7 @@ const MessageList = memo(
                 </p>
               )}
             </div>
+            <SearchResultCards message={message} />
           </div>
         ))}
         {isBotTyping && (

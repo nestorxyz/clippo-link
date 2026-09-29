@@ -14,6 +14,7 @@ import type * as categories from "../categories.js";
 import type * as chat from "../chat.js";
 import type * as http from "../http.js";
 import type * as import_data from "../import_data.js";
+import type * as lib_linkSearch from "../lib/linkSearch.js";
 import type * as lib_normalizeSavedUrl from "../lib/normalizeSavedUrl.js";
 import type * as lib_polarWebhook from "../lib/polarWebhook.js";
 import type * as links from "../links.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   http: typeof http;
   import_data: typeof import_data;
+  "lib/linkSearch": typeof lib_linkSearch;
   "lib/normalizeSavedUrl": typeof lib_normalizeSavedUrl;
   "lib/polarWebhook": typeof lib_polarWebhook;
   links: typeof links;

@@ -51,6 +51,8 @@ export const get = query({
 
             const linksWithTags = await Promise.all(
               links.map(async (link) => {
+                const linkForClient = { ...link };
+                delete linkForClient.searchText;
                 const linkTags = await ctx.db
                   .query('linkTags')
                   .withIndex('by_link', (q) => q.eq('linkId', link._id))
@@ -64,7 +66,7 @@ export const get = query({
                 );
 
                 return {
-                  ...link,
+                  ...linkForClient,
                   id: link._id,
                   tags: tags.filter((t) => t !== null),
                 };

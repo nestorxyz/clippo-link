@@ -52,6 +52,7 @@ export default defineSchema({
     updatedAt: v.number(),
     source: v.optional(v.string()),
     content: v.optional(v.string()),
+    searchText: v.optional(v.string()),
     contentScope: v.optional(
       v.union(v.literal('partial-preview'), v.literal('metadata-only')),
     ),
@@ -60,7 +61,11 @@ export default defineSchema({
   })
     .index('by_subCategory', ['subCategoryId'])
     .index('by_user', ['userId'])
-    .index('by_user_url', ['userId', 'normalizedUrl']),
+    .index('by_user_url', ['userId', 'normalizedUrl'])
+    .searchIndex('by_search_text', {
+      searchField: 'searchText',
+      filterFields: ['userId'],
+    }),
 
   tags: defineTable({
     name: v.string(),
