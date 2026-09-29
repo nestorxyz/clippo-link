@@ -18,6 +18,7 @@ import type * as lib_normalizeSavedUrl from "../lib/normalizeSavedUrl.js";
 import type * as lib_polarWebhook from "../lib/polarWebhook.js";
 import type * as links from "../links.js";
 import type * as migrations from "../migrations.js";
+import type * as ownerPremium from "../ownerPremium.js";
 import type * as polar from "../polar.js";
 import type * as storage from "../storage.js";
 import type * as subCategories from "../subCategories.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "lib/polarWebhook": typeof lib_polarWebhook;
   links: typeof links;
   migrations: typeof migrations;
+  ownerPremium: typeof ownerPremium;
   polar: typeof polar;
   storage: typeof storage;
   subCategories: typeof subCategories;

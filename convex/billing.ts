@@ -15,7 +15,7 @@ export interface PlanPeriod {
 
 export interface UserPlan {
   plan: 'free' | 'premium';
-  status: string | null; // subscription status or 'free'
+  status: string | null; // subscription status, 'owner_grant', or 'free'
   limit: number;
   period: PlanPeriod;
   used: number;
@@ -61,6 +61,20 @@ type SubscriptionRecord = {
   endsAt?: number;
 };
 
+type OwnerPremiumAccess = {
+  grantedAt: number;
+  expiresAt?: number;
+  revokedAt?: number;
+};
+
+type BillingSubscriptionRecord = SubscriptionRecord & {
+  renewsAt: number;
+  currentPeriodStart?: number;
+  providerSubscriptionId?: string;
+  variantId?: string;
+  trialEndsAt?: number;
+};
+
 export function subscriptionIsPremium(
   subscription: SubscriptionRecord | undefined,
   now = Date.now(),
@@ -75,6 +89,67 @@ export function subscriptionIsPremium(
     PREMIUM_STATUSES.includes(subscription.status) &&
     inGrace
   );
+}
+
+export function ownerGrantIsPremium(
+  access: OwnerPremiumAccess | undefined,
+  now = Date.now(),
+): boolean {
+  return !!access && access.grantedAt <= now && access.revokedAt === undefined &&
+    (access.expiresAt === undefined || access.expiresAt > now);
+}
+
+export function resolveUserPlan(
+  subscription: BillingSubscriptionRecord | undefined,
+  ownerAccess: OwnerPremiumAccess | undefined,
+  now = Date.now(),
+): UserPlan {
+  if (subscriptionIsPremium(subscription, now) && subscription) {
+    const renewsAtIso = new Date(subscription.renewsAt).toISOString();
+    const periodStart = subscription.currentPeriodStart
+      ? new Date(subscription.currentPeriodStart).toISOString()
+      : getPreviousIntervalStart(renewsAtIso);
+    const limit = PREMIUM_MONTHLY_LIMIT;
+
+    return {
+      plan: 'premium',
+      status: subscription.status,
+      limit,
+      period: { start: periodStart, end: renewsAtIso },
+      used: 0,
+      remaining: limit,
+      provider: 'polar',
+      subscriptionId: subscription.providerSubscriptionId,
+      variantId: subscription.variantId,
+      managePortalUrl: '/api/billing/portal',
+      renewsAt: renewsAtIso,
+      trialEndsAt: subscription.trialEndsAt
+        ? new Date(subscription.trialEndsAt).toISOString()
+        : null,
+    };
+  }
+
+  const period = getCalendarMonthPeriodUtc(new Date(now));
+  if (ownerGrantIsPremium(ownerAccess, now)) {
+    return {
+      plan: 'premium',
+      status: 'owner_grant',
+      limit: PREMIUM_MONTHLY_LIMIT,
+      period,
+      used: 0,
+      remaining: PREMIUM_MONTHLY_LIMIT,
+      provider: 'owner',
+    };
+  }
+
+  return {
+    plan: 'free',
+    status: 'free',
+    limit: FREE_MONTHLY_LIMIT,
+    period,
+    used: 0,
+    remaining: FREE_MONTHLY_LIMIT,
+  };
 }
 
 export const getPlan = query({
@@ -113,45 +188,7 @@ export const getPlan = query({
 
     const data = sub[0]; // "maybeSingle" equivalent of the top one
 
-    let userPlan: UserPlan;
-
-    const isPremium = subscriptionIsPremium(data);
-
-    if (!isPremium || !data) {
-      const period = getCalendarMonthPeriodUtc();
-      userPlan = {
-        plan: 'free',
-        status: 'free',
-        limit: FREE_MONTHLY_LIMIT,
-        period,
-        used: 0,
-        remaining: FREE_MONTHLY_LIMIT,
-      };
-    } else {
-      const renewsAtIso = new Date(data.renewsAt).toISOString();
-      const periodEnd = renewsAtIso;
-      const periodStart = data.currentPeriodStart
-        ? new Date(data.currentPeriodStart).toISOString()
-        : getPreviousIntervalStart(renewsAtIso);
-      const limit = PREMIUM_MONTHLY_LIMIT;
-
-      userPlan = {
-        plan: 'premium',
-        status: data.status,
-        limit,
-        period: { start: periodStart, end: periodEnd },
-        used: 0,
-        remaining: limit,
-        provider: 'polar',
-        subscriptionId: data.providerSubscriptionId,
-        variantId: data.variantId,
-        managePortalUrl: '/api/billing/portal',
-        renewsAt: renewsAtIso,
-        trialEndsAt: data.trialEndsAt
-          ? new Date(data.trialEndsAt).toISOString()
-          : null,
-      };
-    }
+    const userPlan = resolveUserPlan(data, user.ownerPremiumAccess);
 
     // Calculate usage
     // "links" table, "created_at" is periodStartIso <= created_at < periodEndIso
@@ -200,6 +237,11 @@ export const getPlanForBackend = query({
 
     const { userId } = args;
 
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
     // Get Active Subscription Logic
     const sub = await ctx.db
       .query('subscriptions')
@@ -211,45 +253,7 @@ export const getPlanForBackend = query({
 
     const data = sub[0];
 
-    let userPlan: UserPlan; // Use the interface from above
-
-    const isPremium = subscriptionIsPremium(data);
-
-    if (!isPremium || !data) {
-      const period = getCalendarMonthPeriodUtc();
-      userPlan = {
-        plan: 'free',
-        status: 'free',
-        limit: FREE_MONTHLY_LIMIT,
-        period,
-        used: 0,
-        remaining: FREE_MONTHLY_LIMIT,
-      };
-    } else {
-      const renewsAtIso = new Date(data.renewsAt).toISOString();
-      const periodEnd = renewsAtIso;
-      const periodStart = data.currentPeriodStart
-        ? new Date(data.currentPeriodStart).toISOString()
-        : getPreviousIntervalStart(renewsAtIso);
-      const limit = PREMIUM_MONTHLY_LIMIT;
-
-      userPlan = {
-        plan: 'premium',
-        status: data.status,
-        limit,
-        period: { start: periodStart, end: periodEnd },
-        used: 0,
-        remaining: limit,
-        provider: 'polar',
-        subscriptionId: data.providerSubscriptionId,
-        variantId: data.variantId,
-        managePortalUrl: '/api/billing/portal',
-        renewsAt: renewsAtIso,
-        trialEndsAt: data.trialEndsAt
-          ? new Date(data.trialEndsAt).toISOString()
-          : null,
-      };
-    }
+    const userPlan = resolveUserPlan(data, user.ownerPremiumAccess);
 
     // Calculate usage
     const startMs = new Date(userPlan.period.start).getTime();

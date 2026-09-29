@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
@@ -65,17 +64,17 @@ const MobileHeader: React.FC<MobileHeaderProps> = () => {
               {email}
             </div>
             <DropdownMenuSeparator />
-            {plan?.plan === 'premium' ? (
+            {plan?.plan === 'premium' && plan.managePortalUrl ? (
               <DropdownMenuItem
                 onClick={() => {
-                  const url = plan?.managePortalUrl;
-                  if (url) window.location.href = url;
-                  else toast.error('No portal URL available');
+                  window.location.href = plan.managePortalUrl!;
                 }}
                 className="cursor-pointer"
               >
                 <span>Billing</span>
               </DropdownMenuItem>
+            ) : plan?.provider === 'owner' ? (
+              <DropdownMenuItem disabled>Owner Premium</DropdownMenuItem>
             ) : (
               <DropdownMenuItem
                 onClick={() => {

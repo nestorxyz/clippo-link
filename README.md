@@ -56,6 +56,14 @@ Polar is the only billing provider. Use sandbox products and
 `POLAR_SERVER=sandbox` outside production. The matching Convex deployment needs
 `POLAR_WEBHOOK_SECRET`; never copy sandbox billing data into production.
 
+Complimentary owner Premium access is an entitlement, not a Polar subscription.
+It is stored on the exact Convex user as `ownerPremiumAccess`, grants the normal
+500-link monthly limit without a billing portal, and is managed only through
+the internal `ownerPremium:grant` and `ownerPremium:revoke` functions by a
+deployment administrator. Both functions require the user ID and matching email
+as a safety check. Do not insert a fake `subscriptions` row or use this grant for
+ordinary customer billing.
+
 ## Commands
 
 ```sh

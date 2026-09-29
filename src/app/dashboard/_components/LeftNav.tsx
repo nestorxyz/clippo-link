@@ -24,7 +24,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogOut, Settings, Sparkles, Inbox, Star, Clock } from 'lucide-react';
 import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
 import { usePlan } from '@/hooks/usePlan';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from 'convex/_generated/api';
@@ -219,17 +218,17 @@ const LeftNav: React.FC<LeftNavProps> = ({
                 {email}
               </div>
               <DropdownMenuSeparator className="bg-[#2A2A2A]" />
-              {plan?.plan === 'premium' ? (
+              {plan?.plan === 'premium' && plan.managePortalUrl ? (
                 <DropdownMenuItem
                   onClick={() => {
-                  const url = plan?.managePortalUrl;
-                  if (url) window.location.href = url;
-                  else toast.error('No portal URL available');
-                }}
+                    window.location.href = plan.managePortalUrl!;
+                  }}
                   className="cursor-pointer focus:bg-[#2A2A2A]"
                 >
                   <span>Billing</span>
                 </DropdownMenuItem>
+              ) : plan?.provider === 'owner' ? (
+                <DropdownMenuItem disabled>Owner Premium</DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
                   onClick={() => {

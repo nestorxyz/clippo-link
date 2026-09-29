@@ -9,6 +9,13 @@ export default defineSchema({
     tokenIdentifier: v.optional(v.string()),
     billingExternalId: v.optional(v.string()),
     emailVerificationTime: v.optional(v.number()),
+    ownerPremiumAccess: v.optional(
+      v.object({
+        grantedAt: v.number(),
+        expiresAt: v.optional(v.number()),
+        revokedAt: v.optional(v.number()),
+      }),
+    ),
   })
     .index('by_token', ['tokenIdentifier'])
     .index('by_email', ['email'])

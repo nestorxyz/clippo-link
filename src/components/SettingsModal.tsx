@@ -178,11 +178,19 @@ export default function SettingsModal() {
                         <div>
                           <div className="text-base font-medium">Your Plan</div>
                           <div className="text-sm text-muted-foreground">
-                            {planLabel === 'premium' ? 'Premium' : 'Free'}
+                            {plan?.provider === 'owner'
+                              ? 'Owner Premium'
+                              : planLabel === 'premium'
+                                ? 'Premium'
+                                : 'Free'}
                           </div>
                         </div>
                       </div>
-                      {plan?.plan === 'premium' && (
+                      {plan?.provider === 'owner' ? (
+                        <div className="text-sm text-muted-foreground mt-2">
+                          Complimentary owner access · 500 links per month
+                        </div>
+                      ) : plan?.plan === 'premium' ? (
                         <div className="text-sm text-muted-foreground mt-2">
                           {plan.trialEndsAt
                             ? `Trial ends on ${new Date(
@@ -194,19 +202,21 @@ export default function SettingsModal() {
                                 ).toLocaleDateString()}`
                               : null}
                         </div>
-                      )}
+                      ) : null}
                     </div>
-                    <div className="flex gap-2">
-                      <PortalButton />
-                      <Button
-                        variant="secondary"
-                        onClick={() =>
-                          window.dispatchEvent(new CustomEvent('open-pricing'))
-                        }
-                      >
-                        {planLabel === 'premium' ? 'Change plan' : 'Upgrade'}
-                      </Button>
-                    </div>
+                    {plan?.provider === 'owner' ? null : (
+                      <div className="flex gap-2">
+                        <PortalButton />
+                        <Button
+                          variant="secondary"
+                          onClick={() =>
+                            window.dispatchEvent(new CustomEvent('open-pricing'))
+                          }
+                        >
+                          {planLabel === 'premium' ? 'Change plan' : 'Upgrade'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
