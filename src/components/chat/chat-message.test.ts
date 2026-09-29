@@ -46,6 +46,50 @@ describe('chat message status', () => {
       }),
     ).toBe('Could not analyze the link: Page blocked');
   });
+
+  it('labels LinkedIn previews and metadata-only saves without claiming full text', () => {
+    expect(
+      formatChatRecord({
+        role: 'function',
+        parts: [
+          {
+            functionResponse: {
+              name: 'get_url_info',
+              response: { success: true, contentScope: 'partial-preview' },
+            },
+          },
+          {
+            functionResponse: {
+              name: 'register_link',
+              response: {
+                success: true,
+                data: { duplicate: false, contentScope: 'partial-preview' },
+              },
+            },
+          },
+        ],
+      }),
+    ).toBe(
+      'LinkedIn preview analyzed (may be incomplete).\nLink saved (partial LinkedIn preview; may be incomplete).',
+    );
+
+    expect(
+      formatChatRecord({
+        role: 'function',
+        parts: [
+          {
+            functionResponse: {
+              name: 'register_link',
+              response: {
+                success: true,
+                data: { duplicate: false, contentScope: 'metadata-only' },
+              },
+            },
+          },
+        ],
+      }),
+    ).toBe('Link saved (LinkedIn metadata only; post text unavailable).');
+  });
 });
 
 describe('first-run activation', () => {

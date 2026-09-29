@@ -45,6 +45,9 @@ export default defineSchema({
     updatedAt: v.number(),
     source: v.optional(v.string()),
     content: v.optional(v.string()),
+    contentScope: v.optional(
+      v.union(v.literal('partial-preview'), v.literal('metadata-only')),
+    ),
     isFavorite: v.boolean(),
     isReadLater: v.boolean(),
   })

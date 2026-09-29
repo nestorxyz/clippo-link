@@ -16,12 +16,26 @@ const responseStatus = ({ name, response = {} }: FunctionResponse): string => {
       return `Could not save the link: ${String(response.message ?? response.error ?? 'unknown error')}`;
     }
     const data = response.data as Record<string, unknown> | undefined;
-    return data?.duplicate === true ? 'Link was already saved.' : 'Link saved.';
+    if (data?.duplicate === true) return 'Link was already saved.';
+    if (data?.contentScope === 'partial-preview') {
+      return 'Link saved (partial LinkedIn preview; may be incomplete).';
+    }
+    if (data?.contentScope === 'metadata-only') {
+      return 'Link saved (LinkedIn metadata only; post text unavailable).';
+    }
+    return 'Link saved.';
   }
   if (name === 'get_url_info') {
-    return response.success === true
-      ? 'Link analyzed.'
-      : `Could not analyze the link: ${String(response.error ?? 'unknown error')}`;
+    if (response.success !== true) {
+      return `Could not analyze the link: ${String(response.error ?? 'unknown error')}`;
+    }
+    if (response.contentScope === 'partial-preview') {
+      return 'LinkedIn preview analyzed (may be incomplete).';
+    }
+    if (response.contentScope === 'metadata-only') {
+      return 'LinkedIn metadata analyzed (post text unavailable).';
+    }
+    return 'Link analyzed.';
   }
   if (name === 'get_links') {
     const links = Array.isArray(response.links) ? response.links : [];

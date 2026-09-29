@@ -180,6 +180,9 @@ export const registerLinkForBackend = mutation({
     source: v.optional(v.string()),
     imgPreview: v.optional(v.string()),
     content: v.optional(v.string()),
+    contentScope: v.optional(
+      v.union(v.literal('partial-preview'), v.literal('metadata-only')),
+    ),
     secret: v.string(),
   },
   handler: async (ctx, args) => {
@@ -255,6 +258,7 @@ export const registerLinkForBackend = mutation({
       updatedAt: Date.now(),
       source: args.source,
       content: args.content,
+      contentScope: args.contentScope,
     });
 
     // 4. Handle Tags
@@ -455,6 +459,9 @@ export const enrichLinkContentForBackend = mutation({
     userId: v.id('users'),
     linkId: v.id('links'),
     content: v.string(),
+    contentScope: v.optional(
+      v.union(v.literal('partial-preview'), v.literal('metadata-only')),
+    ),
     secret: v.string(),
   },
   handler: async (ctx, args) => {
@@ -472,7 +479,11 @@ export const enrichLinkContentForBackend = mutation({
 
     const content = args.content.trim();
     if (!content) throw new Error('Content is required');
-    await ctx.db.patch(link._id, { content, updatedAt: Date.now() });
+    await ctx.db.patch(link._id, {
+      content,
+      contentScope: args.contentScope,
+      updatedAt: Date.now(),
+    });
     return { success: true, enriched: true };
   },
 });
