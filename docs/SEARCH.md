@@ -49,6 +49,12 @@ not a complete release.
   `AI` query returned seven links, and a selected detail read returned an
   825-character `partial-preview` record. These are integration checks, not an
   authenticated end-to-end chat or visual QA of result cards.
+- Branch CI passed for web `195c158` and backend `1ac243c`. Railway dev
+  deployment `1d7f4aa5-1b3c-457a-8f3b-6e56816822ad` reached `SUCCESS` and
+  its health endpoint returned HTTP 200. Vercel Preview for the web branch
+  failed at its Convex deploy step because Preview has no `CONVEX_DEPLOY_KEY`.
+  Configure only a development-scoped key before retesting; never copy the
+  production key into Preview.
 - Before promotion, run the affected tests/builds, a live authenticated
   Preview save/search/detail test, a >200-link corpus test in an isolated test
   environment, negative/cross-tenant read tests, and a mobile-width visual
