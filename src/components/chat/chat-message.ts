@@ -9,6 +9,7 @@ export interface SearchResultPreview {
   id: string;
   title: string;
   url: string;
+  imgPreview?: string;
   excerpt?: string;
   contentScope?: 'partial-preview' | 'metadata-only';
 }
@@ -16,6 +17,18 @@ export interface SearchResultPreview {
 type FunctionResponse = {
   name?: unknown;
   response?: Record<string, unknown>;
+};
+
+const safePreviewImage = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const responseStatus = ({ name, response = {} }: FunctionResponse): string => {
@@ -90,6 +103,7 @@ export const getSearchResultPreviews = (
         id: link.id,
         title: link.title,
         url: link.url,
+        imgPreview: safePreviewImage(link.imgPreview),
         excerpt:
           typeof link.contentExcerpt === 'string'
             ? link.contentExcerpt.slice(0, 160)

@@ -167,7 +167,7 @@ describe('saved search results', () => {
       parts: [{ functionResponse: {
         name: 'get_links',
         response: { links: [
-          { id: 'a', title: 'Founder story', url: 'https://example.com/a', contentExcerpt: 'The story text', contentScope: 'partial-preview' },
+          { id: 'a', title: 'Founder story', url: 'https://example.com/a', imgPreview: 'https://cdn.example.com/a.jpg', contentExcerpt: 'The story text', contentScope: 'partial-preview' },
           { id: 'b', title: 'Unsafe', url: 'javascript:alert(1)' },
         ] },
       } }],
@@ -176,8 +176,23 @@ describe('saved search results', () => {
       id: 'a',
       title: 'Founder story',
       url: 'https://example.com/a',
+      imgPreview: 'https://cdn.example.com/a.jpg',
       excerpt: 'The story text',
       contentScope: 'partial-preview',
     }]);
+  });
+
+  it('ignores unsafe or malformed preview images without hiding a saved result', () => {
+    const previews = getSearchResultPreviews({
+      role: 'function',
+      parts: [{ functionResponse: {
+        name: 'get_links',
+        response: { links: [
+          { id: 'a', title: 'First', url: 'https://example.com/a', imgPreview: 'javascript:alert(1)' },
+          { id: 'b', title: 'Second', url: 'https://example.com/b', imgPreview: 'not a url' },
+        ] },
+      } }],
+    });
+    expect(previews.map(({ imgPreview }) => imgPreview)).toEqual([undefined, undefined]);
   });
 });

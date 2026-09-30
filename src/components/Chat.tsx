@@ -18,6 +18,7 @@ import {
   formatChatRecord,
   getActivationStep,
   getSearchResultPreviews,
+  type SearchResultPreview,
 } from './chat/chat-message';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,6 +46,57 @@ import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
 import { extractSharedHttpUrl } from '@/lib/share-target';
 
+const SearchResultCard = ({ result }: { result: SearchResultPreview }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+  return (
+    <a
+      href={result.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-white/15 bg-[#141414] transition-colors hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+    >
+      <span className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-[#202020] text-muted-foreground">
+        {result.imgPreview && !imageFailed ? (
+          // Saved preview URLs can come from any public host, so Next image optimization cannot be scoped safely.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={result.imgPreview}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setImageFailed(true)}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <LinkIcon className="h-8 w-8" aria-hidden="true" />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col px-4 py-3">
+        <span className="flex items-start justify-between gap-3 text-sm font-medium text-white">
+          <span className="min-w-0 break-words line-clamp-2">{result.title}</span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </span>
+        <span className="mt-1 block truncate text-xs text-muted-foreground">
+          {new URL(result.url).hostname}
+        </span>
+        {result.excerpt ? (
+          <span className="mt-2 line-clamp-2 block text-sm text-[#B8B8B8]">
+            {result.excerpt}
+          </span>
+        ) : null}
+        {result.contentScope ? (
+          <span className="mt-2 block text-xs text-amber-300">
+            {result.contentScope === 'partial-preview'
+              ? 'Partial preview'
+              : 'Metadata only'}
+          </span>
+        ) : null}
+      </span>
+    </a>
+  );
+};
+
 const SearchResultCards = memo(({ message }: { message: Message }) => {
   const results = getSearchResultPreviews({
     role: message.role ?? '',
@@ -53,37 +105,13 @@ const SearchResultCards = memo(({ message }: { message: Message }) => {
   if (results.length === 0) return null;
 
   return (
-    <div className="mt-3 space-y-2" aria-label="Saved link search results">
-      <p className="text-xs text-muted-foreground">Top matches</p>
-      {results.map((result) => (
-        <a
-          key={result.id}
-          href={result.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl border border-white/15 bg-[#141414] px-4 py-3 transition-colors hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-        >
-          <span className="flex items-start justify-between gap-3 text-sm font-medium text-white">
-            <span className="min-w-0 break-words">{result.title}</span>
-            <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          </span>
-          <span className="mt-1 block truncate text-xs text-muted-foreground">
-            {new URL(result.url).hostname}
-          </span>
-          {result.excerpt ? (
-            <span className="mt-2 line-clamp-2 block text-sm text-[#B8B8B8]">
-              {result.excerpt}
-            </span>
-          ) : null}
-          {result.contentScope ? (
-            <span className="mt-2 inline-block text-xs text-amber-300">
-              {result.contentScope === 'partial-preview'
-                ? 'Partial preview'
-                : 'Metadata only'}
-            </span>
-          ) : null}
-        </a>
-      ))}
+    <div className="mt-3" aria-label="Saved link search results">
+      <p className="mb-2 text-xs text-muted-foreground">Top matches</p>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-3">
+        {results.map((result) => (
+          <SearchResultCard key={result.id} result={result} />
+        ))}
+      </div>
     </div>
   );
 });

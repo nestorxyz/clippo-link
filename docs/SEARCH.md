@@ -23,8 +23,10 @@ after the backend and index are available.
    current result set and Convex independently verifies its `userId` before
    returning the saved content. The model must cite the saved URL and disclose
    `partial-preview` or `metadata-only` scope.
-4. The chat displays up to five linked result cards with excerpts and scope
-   labels. A no-match is explicit. Search does not recrawl saved URLs or call
+4. The chat displays up to five linked result cards in a width-responsive
+   grid, using the image already saved in `imgPreview` when available. Missing
+   or broken images fall back to a link icon. Cards retain excerpts and scope
+   labels; a no-match is explicit. Search does not recrawl saved URLs or call
    Firecrawl; Firecrawl remains a save-time extractor for general webpages.
 
 ## Existing-link backfill
