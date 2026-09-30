@@ -585,6 +585,7 @@ export const listLinkMetadataForBackend = query({
           url: link.url,
           title: link.title,
           description: link.description,
+          imgPreview: link.imgPreview,
           source: link.source,
           createdAt: link.createdAt,
           updatedAt: link.updatedAt,

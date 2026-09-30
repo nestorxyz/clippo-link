@@ -45,53 +45,33 @@ import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import Image from 'next/image';
 import { extractSharedHttpUrl } from '@/lib/share-target';
+import { LinkPreviewArtwork } from '@/components/LinkPreviewArtwork';
 
 const SearchResultCard = ({ result }: { result: SearchResultPreview }) => {
-  const [imageFailed, setImageFailed] = useState(false);
   return (
     <a
       href={result.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-white/15 bg-[#141414] transition-colors hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      className="group relative flex h-36 min-w-0 flex-col overflow-hidden rounded-xl border border-white/15 bg-[#141414] transition-colors hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-40"
     >
-      <span className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-[#202020] text-muted-foreground">
-        {result.imgPreview && !imageFailed ? (
-          // Saved preview URLs can come from any public host, so Next image optimization cannot be scoped safely.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={result.imgPreview}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-            onError={() => setImageFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <LinkIcon className="h-8 w-8" aria-hidden="true" />
-        )}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col px-4 py-3">
-        <span className="flex items-start justify-between gap-3 text-sm font-medium text-white">
-          <span className="min-w-0 break-words line-clamp-2">{result.title}</span>
+      <LinkPreviewArtwork url={result.url} imgPreview={result.imgPreview} />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-black/95 via-black/65 to-transparent" />
+      {result.contentScope ? (
+        <span className="relative z-10 m-2 self-start rounded bg-black/70 px-2 py-0.5 text-[10px] text-amber-200">
+          {result.contentScope === 'partial-preview'
+            ? 'Partial preview'
+            : 'Metadata only'}
+        </span>
+      ) : null}
+      <span className="relative z-10 mt-auto flex min-w-0 flex-col px-3 pb-3">
+        <span className="flex items-start justify-between gap-2 text-sm font-semibold text-white">
+          <span className="min-w-0 line-clamp-2 break-words">{result.title}</span>
           <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         </span>
-        <span className="mt-1 block truncate text-xs text-muted-foreground">
+        <span className="mt-1 block truncate text-xs text-gray-300">
           {new URL(result.url).hostname}
         </span>
-        {result.excerpt ? (
-          <span className="mt-2 line-clamp-2 block text-sm text-[#B8B8B8]">
-            {result.excerpt}
-          </span>
-        ) : null}
-        {result.contentScope ? (
-          <span className="mt-2 block text-xs text-amber-300">
-            {result.contentScope === 'partial-preview'
-              ? 'Partial preview'
-              : 'Metadata only'}
-          </span>
-        ) : null}
       </span>
     </a>
   );

@@ -23,11 +23,22 @@ after the backend and index are available.
    current result set and Convex independently verifies its `userId` before
    returning the saved content. The model must cite the saved URL and disclose
    `partial-preview` or `metadata-only` scope.
-4. The chat displays up to five linked result cards in a width-responsive
-   grid, using the image already saved in `imgPreview` when available. Missing
-   or broken images fall back to a link icon. Cards retain excerpts and scope
-   labels; a no-match is explicit. Search does not recrawl saved URLs or call
-   Firecrawl; Firecrawl remains a save-time extractor for general webpages.
+4. The chat displays up to five compact linked cards in a width-responsive
+   grid. Each card shares the library's image-overlay treatment, truncates the
+   title after two lines, and keeps a visible partial/metadata-only label.
+   Both views use the saved `imgPreview` when available. Older YouTube links
+   can display a video-ID thumbnail, and absent or broken images fall back to
+   the existing platform artwork. A no-match is explicit. Search does not
+   recrawl saved URLs or call Firecrawl; Firecrawl remains a save-time
+   extractor for general webpages.
+
+The backend now copies the validated image URL returned by `get_url_info` into
+new registrations even when the model omits `img_preview`. Filter-only
+paginated searches include stored `imgPreview`; indexed and recent-link
+searches already did. Old chat tool responses are immutable and may still lack
+image data. A branded fallback is not proof that a real source image was
+extracted, especially for Instagram/TikTok pages that block public access.
+No existing Convex link was recrawled or migrated by this change.
 
 ## Existing-link backfill
 

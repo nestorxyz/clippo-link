@@ -1,3 +1,5 @@
+import { safePreviewImage } from '../../lib/link-preview';
+
 export interface ChatRecord {
   role: string;
   parts: unknown;
@@ -17,18 +19,6 @@ export interface SearchResultPreview {
 type FunctionResponse = {
   name?: unknown;
   response?: Record<string, unknown>;
-};
-
-const safePreviewImage = (value: unknown): string | undefined => {
-  if (typeof value !== 'string') return undefined;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:'
-      ? url.toString()
-      : undefined;
-  } catch {
-    return undefined;
-  }
 };
 
 const responseStatus = ({ name, response = {} }: FunctionResponse): string => {

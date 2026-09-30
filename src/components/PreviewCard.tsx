@@ -1,27 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from '@/lib/types';
 import { Star, Clock } from 'lucide-react';
 import { useConvexMutation } from '@/hooks/use-convex-mutation';
 import { api } from 'convex/_generated/api';
 import { cn, domainFromUrl } from '@/lib/utils';
-import { getPlatformByUrl } from '@/lib/social-platforms';
+import { LinkPreviewArtwork } from '@/components/LinkPreviewArtwork';
 
 interface PreviewCardProps {
   link: Link;
 }
 
 export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
-  const [hideImage, setHideImage] = useState(false);
   const { mutate: toggleFavorite } = useConvexMutation(
     api.links.toggleFavorite,
   );
   const { mutate: toggleReadLater } = useConvexMutation(
     api.links.toggleReadLater,
   );
-
-  const imageOpacity = 'opacity-80';
-  const platform = React.useMemo(() => getPlatformByUrl(link.url), [link.url]);
-  const showPlatformFallback = (!link.imgPreview || hideImage) && platform;
 
   return (
     <a
@@ -76,28 +71,7 @@ export const PreviewCard: React.FC<PreviewCardProps> = ({ link }) => {
         </div>
       </div>
 
-      {link.imgPreview && !hideImage ? (
-        <img
-          src={link.imgPreview}
-          alt={link.title || 'Preview Image'}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setHideImage(true)}
-          className={cn(
-            'absolute block inset-0 h-full w-full object-cover z-0 pointer-events-none transform-gpu transition-transform duration-500 ease-in-out group-hover:scale-110',
-            imageOpacity,
-          )}
-        />
-      ) : showPlatformFallback ? (
-        <div
-          className={cn(
-            'absolute inset-0 flex items-center justify-center z-0 transition-transform duration-500 ease-in-out group-hover:scale-110',
-            platform?.color,
-          )}
-        >
-          <div className="transform scale-150 opacity-50">{platform?.icon}</div>
-        </div>
-      ) : null}
+      <LinkPreviewArtwork url={link.url} imgPreview={link.imgPreview} />
     </a>
   );
 };
