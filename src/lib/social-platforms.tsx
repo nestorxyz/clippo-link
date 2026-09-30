@@ -1,5 +1,5 @@
 import React from 'react';
-import { domainFromUrl } from '@/lib/utils';
+import { domainFromUrl } from './utils';
 
 export interface SocialPlatform {
   name: string;
@@ -89,6 +89,7 @@ export const SOCIAL_PLATFORMS: SocialPlatform[] = [
 
 export const getPlatformByUrl = (url: string): SocialPlatform | undefined => {
   const domain = domainFromUrl(url);
+  if (domain === 'youtu.be') return SOCIAL_PLATFORMS[0];
   return SOCIAL_PLATFORMS.find((platform) => {
     return domain === platform.domain || domain.endsWith(`.${platform.domain}`);
   });
