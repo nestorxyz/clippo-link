@@ -51,10 +51,20 @@ not a complete release.
   authenticated end-to-end chat or visual QA of result cards.
 - Branch CI passed for web `195c158` and backend `1ac243c`. Railway dev
   deployment `1d7f4aa5-1b3c-457a-8f3b-6e56816822ad` reached `SUCCESS` and
-  its health endpoint returned HTTP 200. Vercel Preview for the web branch
-  failed at its Convex deploy step because Preview has no `CONVEX_DEPLOY_KEY`.
-  Configure only a development-scoped key before retesting; never copy the
-  production key into Preview.
+  its health endpoint returned HTTP 200. The first web Preview failed because
+  that branch lacked a Convex deploy key. With owner approval, a new key scoped
+  to the existing Convex dev deployment was stored as a Vercel Secret for
+  Preview branch `codex/search-v2` only; the unused first attempt was revoked.
+  The same branch has public test URLs for the Convex dev deployment and
+  Railway dev backend, plus the Clerk test publishable key. No production
+  credential was copied.
+- Vercel Preview `dpl_AGECWARj3QF9pCjW1zyiU6VexZ1W` rebuilt web commit
+  `12e7579` and reached `Ready`. Build logs confirm the Convex schema and
+  functions were pushed; the `/dashboard` route redirected to the rendered
+  sign-in page. The Convex dev `BACKEND_URL` equals Railway dev, Railway dev
+  points to the same Convex dev URL, and their backend secrets match (values
+  were compared without printing them). This verifies wiring, not a signed-in
+  save/search/detail conversation or visual acceptance.
 - Before promotion, run the affected tests/builds, a live authenticated
   Preview save/search/detail test, a >200-link corpus test in an isolated test
   environment, negative/cross-tenant read tests, and a mobile-width visual
