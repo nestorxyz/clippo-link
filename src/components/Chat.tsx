@@ -85,9 +85,9 @@ const SearchResultCards = memo(({ message }: { message: Message }) => {
   if (results.length === 0) return null;
 
   return (
-    <div className="mt-3" aria-label="Saved link search results">
+    <div className="saved-link-results mt-3" aria-label="Saved link search results">
       <p className="mb-2 text-xs text-muted-foreground">Top matches</p>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-3">
+      <div className="saved-link-results-grid">
         {results.map((result) => (
           <SearchResultCard key={result.id} result={result} />
         ))}
