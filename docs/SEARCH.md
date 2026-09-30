@@ -1,9 +1,9 @@
-# Saved-link search V2 (development)
+# Saved-link search V2
 
-This design is implemented locally and in the Convex development deployment.
-It is not a production release. The corresponding backend changes must be
-deployed together with these Convex functions; the browser cards can deploy
-after the backend and index are available.
+The Convex functions and backend must deploy together. Existing records do not
+need a write migration: the backend searches the new index, then reads older
+records through a tenant-scoped, paginated compatibility query. The browser
+cards display the combined ranked results.
 
 ## Request path
 
@@ -14,9 +14,14 @@ after the backend and index are available.
    leave stale terms in the text index. Deleting a link deletes its projection.
 2. The `links.by_search_text` index searches this projection with `userId` as
    an equality filter. `searchLinksForBackend` returns up to 100 candidates to
-   the trusted backend, omitting `searchText` from its response. For filter-only
-   searches, `listLinkMetadataForBackend` pages through the user's link
-   metadata; an empty search still returns recent links.
+   the trusted backend, omitting `searchText` from its response. A read-only
+   `searchUnindexedLinksForBackend` query pages through that user's older links
+   (100 per page) and returns word-matched records lacking `searchText`.
+   Backend deduplicates and ranks both sets. The compatibility scan is bounded
+   at 50 pages and fails explicitly if that limit is exceeded; it never
+   silently returns partial results. For filter-only searches,
+   `listLinkMetadataForBackend` pages through the user's link metadata; an
+   empty search still returns recent links.
 3. Backend `retrieveLinks` applies deterministic ranking and explicit filters,
    returning at most 20 concise results. A detail question may call `get_link`
    once using an ID from those results. The backend checks that ID against the
@@ -40,16 +45,18 @@ image data. A branded fallback is not proof that a real source image was
 extracted, especially for Instagram/TikTok pages that block public access.
 No existing Convex link was recrawled or migrated by this change.
 
-## Existing-link backfill
+## Existing links and optional backfill
 
 `links:backfillSearchText` is an internal, idempotent 25-row batch mutation. A
 deployment administrator must call it repeatedly with the returned cursor
 until `isDone`, then verify a sample of old links and query results. It was run
 only against the development deployment during implementation. **Do not run
 the production backfill without explicit approval for that data migration.**
-Until production backfill completes, old records lacking `searchText` will not
-appear in indexed text searches. Deploying code without backfill is therefore
-not a complete release.
+The production release does not call this mutation. Older links are included
+through the read-only compatibility path above. This avoids changing existing
+records but adds read/query cost proportional to a user's library size. A
+future backfill would be a separate approval-gated optimization, not a
+requirement for search correctness.
 
 ## Evaluation and remaining work
 

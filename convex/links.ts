@@ -7,7 +7,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from './_generated/server';
-import { buildLinkSearchText } from './lib/linkSearch';
+import { buildLinkSearchText, matchesLegacyLinkQuery } from './lib/linkSearch';
 import {
   normalizeSavedUrl,
   tryNormalizeSavedUrl,
@@ -524,6 +524,47 @@ export const searchLinksForBackend = query({
       .take(100);
 
     return Promise.all(links.map((link) => enrichLinkForBackend(ctx, link)));
+  },
+});
+
+// Read-only compatibility for links saved before searchText existed. The
+// caller pages through this tenant's links; no production backfill is needed.
+export const searchUnindexedLinksForBackend = query({
+  args: {
+    userId: v.id('users'),
+    queryText: v.string(),
+    cursor: v.optional(v.string()),
+    secret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CONVEX_BACKEND_SECRET) {
+      throw new Error('Unauthorized: Invalid Secret');
+    }
+    const page = await ctx.db
+      .query('links')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .paginate({ cursor: args.cursor ?? null, numItems: 100 });
+    const matches = page.page.filter(
+      (link) =>
+        !link.searchText &&
+        matchesLegacyLinkQuery(
+          {
+            title: link.title,
+            description: link.description,
+            content: link.content,
+            url: link.url,
+            source: link.source,
+          },
+          args.queryText,
+        ),
+    );
+    return {
+      links: await Promise.all(
+        matches.map((link) => enrichLinkForBackend(ctx, link)),
+      ),
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+    };
   },
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLinkSearchText } from './linkSearch';
+import { buildLinkSearchText, matchesLegacyLinkQuery } from './linkSearch';
 
 describe('buildLinkSearchText', () => {
   it('includes saved content so search is not title-only', () => {
@@ -32,5 +32,26 @@ describe('buildLinkSearchText', () => {
       title: 'Síndrome del impostor',
       url: 'https://example.com',
     })).toContain('sindrome del impostor');
+  });
+});
+
+describe('matchesLegacyLinkQuery', () => {
+  const link = {
+    title: 'Una guía breve',
+    content: 'Usa lo que tienes antes de buscar inversión.',
+    url: 'https://example.com/guide',
+  };
+
+  it('matches an accent-folded word from saved content', () => {
+    expect(matchesLegacyLinkQuery(link, 'inversion')).toBe(true);
+  });
+
+  it('does not match a word fragment or an unrelated query', () => {
+    expect(matchesLegacyLinkQuery(link, 'version')).toBe(false);
+    expect(matchesLegacyLinkQuery(link, 'youtube')).toBe(false);
+  });
+
+  it('requires at least one searchable term', () => {
+    expect(matchesLegacyLinkQuery(link, '---')).toBe(false);
   });
 });
