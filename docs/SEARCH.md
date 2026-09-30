@@ -85,13 +85,20 @@ requirement for search correctness.
   points to the same Convex dev URL, and their backend secrets match (values
   were compared without printing them). This verifies wiring, not a signed-in
   save/search/detail conversation or visual acceptance.
-- Before promotion, run the affected tests/builds, a live authenticated
-  Preview save/search/detail test, a >200-link corpus test in an isolated test
-  environment, negative/cross-tenant read tests, and a mobile-width visual
-  check. Record recall@5, MRR@5, grounding, latency, and provider cost against
-  a fixed evaluation set. Do not claim semantic paraphrase coverage from this
-  lexical implementation; embeddings remain a separate, measurement-gated
-  phase.
+- Production promotion on 2026-09-30 used web/Convex `77870e2` and backend
+  `579f1f4` without a backfill. Branch and main CI, Vercel Production,
+  Railway production, public health, and the dashboard passed. An
+  authenticated exact-title search returned an older saved YouTube link as
+  the first compact image card and chat cited its URL. A broader request for
+  the same video missed it and answered incorrectly, so natural-language
+  query formulation and relevance remain unresolved. Existing YouTube cards
+  loaded a stored image and a video-ID thumbnail fallback.
+- Remaining: a live authenticated Preview save/search/detail check, a
+  >200-link isolated corpus, negative/cross-tenant search checks, and a
+  mobile-width visual check. Record recall@5, MRR@5, grounding, latency, and
+  provider cost against a fixed evaluation set. Do not claim semantic
+  paraphrase coverage from this lexical implementation; embeddings remain a
+  separate, measurement-gated phase.
 
 The existing X/LinkedIn stored-content policy risks still apply to search and
 chat copies of saved text. Do not present this technical work as provider
