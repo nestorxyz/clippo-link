@@ -724,6 +724,19 @@ export const getRecentLinksForUser = query({
   },
 });
 
+export const hasSavedLinks = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return false;
+    const link = await ctx.db
+      .query('links')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first();
+    return link !== null;
+  },
+});
+
 export const toggleFavorite = mutation({
   args: { linkId: v.id('links') },
   handler: async (ctx, args) => {

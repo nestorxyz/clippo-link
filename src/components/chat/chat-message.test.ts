@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   formatChatRecord,
   getActivationStep,
+  getSavedLinkPreview,
   getSearchResultPreviews,
+  suggestedSavedLinkQuestion,
 } from './chat-message';
 
 describe('chat message status', () => {
@@ -107,6 +109,7 @@ describe('first-run activation', () => {
 
   it('starts with saving and advances only after a new link is saved', () => {
     expect(getActivationStep([])).toBe('save');
+    expect(getActivationStep([], true)).toBe('ready');
     expect(
       getActivationStep([
         response('register_link', {
@@ -119,16 +122,16 @@ describe('first-run activation', () => {
       getActivationStep([
         response('register_link', {
           success: true,
-          data: { duplicate: false },
+          data: { id: 'saved-link', duplicate: false },
         }),
       ]),
     ).toBe('retrieve');
   });
 
-  it('completes only when a later retrieval returns a saved link', () => {
+  it('completes only when a later answer follows retrieval of the newly saved link', () => {
     const saved = response('register_link', {
       success: true,
-      data: { duplicate: false },
+      data: { id: 'saved-link', duplicate: false },
     });
 
     expect(
@@ -143,9 +146,103 @@ describe('first-run activation', () => {
     expect(
       getActivationStep([
         saved,
+        response('get_links', { links: [{ id: 'different-link' }] }),
+      ]),
+    ).toBe('retrieve');
+    expect(
+      getActivationStep([
+        saved,
         response('get_links', { links: [{ id: 'saved-link' }] }),
       ]),
-    ).toBe('complete');
+    ).toBe('retrieve');
+    expect(getActivationStep([
+      saved,
+      response('get_links', { links: [{ id: 'saved-link' }] }),
+      { role: 'model', parts: [{ text: 'Here is what your link says.' }] },
+    ])).toBe('complete');
+    expect(getActivationStep([
+      saved,
+      response('get_links', { links: [{ id: 'saved-link' }] }),
+      { role: 'user', parts: [{ text: 'New question' }] },
+      { role: 'model', parts: [{ text: 'An unrelated answer.' }] },
+    ])).toBe('retrieve');
+  });
+});
+
+describe('post-save onboarding', () => {
+  const record = (payload: Record<string, unknown>) => ({
+    role: 'function',
+    parts: [{ functionResponse: { name: 'register_link', response: payload } }],
+  });
+
+  it('shows only a newly persisted, safe link and a bounded description', () => {
+    const saved = getSavedLinkPreview(record({
+      success: true,
+      data: {
+        id: 'link-1',
+        duplicate: false,
+        title: 'Starting a business',
+        url: 'https://example.com/guide',
+        description: 'A'.repeat(300),
+        img_preview: 'https://cdn.example.com/thumb.jpg',
+        content: 'Full source text',
+      },
+    }));
+    expect(saved).toEqual({
+      id: 'link-1',
+      title: 'Starting a business',
+      url: 'https://example.com/guide',
+      description: 'A'.repeat(240),
+      imgPreview: 'https://cdn.example.com/thumb.jpg',
+      hasContent: true,
+      contentScope: undefined,
+    });
+    expect(suggestedSavedLinkQuestion(saved!)).toContain('"Starting a business"');
+    expect(suggestedSavedLinkQuestion(saved!)).not.toContain('https://');
+  });
+
+  it('never shows a duplicate, failed save, or unsafe URL as a new save', () => {
+    const base = { id: 'link-1', title: 'A link', url: 'https://example.com' };
+    expect(getSavedLinkPreview(record({ success: false, data: base }))).toBeNull();
+    expect(getSavedLinkPreview(record({
+      success: true,
+      data: { ...base, duplicate: true },
+    }))).toBeNull();
+    expect(getSavedLinkPreview(record({
+      success: true,
+      data: { ...base, url: 'javascript:alert(1)' },
+    }))).toBeNull();
+    expect(getSavedLinkPreview(record({
+      success: true,
+      data: { ...base, url: 'https://user:pass@example.com' },
+    }))).toBeNull();
+  });
+
+  it('keeps honest partial-content labels and rejects unsafe images', () => {
+    expect(getSavedLinkPreview(record({
+      success: true,
+      data: {
+        id: 'link-2',
+        duplicate: false,
+        title: 'A LinkedIn post',
+        url: 'https://www.linkedin.com/posts/example',
+        img_preview: 'javascript:alert(1)',
+        contentScope: 'partial-preview',
+      },
+    }))).toMatchObject({
+      contentScope: 'partial-preview',
+      hasContent: false,
+      imgPreview: undefined,
+    });
+  });
+
+  it('does not put an untrusted URL from the title into the question', () => {
+    expect(suggestedSavedLinkQuestion({
+      id: 'link-3',
+      title: 'https://example.com/post',
+      url: 'https://example.com/post',
+      hasContent: false,
+    })).not.toContain('https://');
   });
 });
 

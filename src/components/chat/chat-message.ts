@@ -5,7 +5,7 @@ export interface ChatRecord {
   parts: unknown;
 }
 
-export type ActivationStep = 'save' | 'retrieve' | 'complete';
+export type ActivationStep = 'save' | 'ready' | 'retrieve' | 'complete';
 
 export interface SearchResultPreview {
   id: string;
@@ -13,6 +13,16 @@ export interface SearchResultPreview {
   url: string;
   imgPreview?: string;
   excerpt?: string;
+  contentScope?: 'partial-preview' | 'metadata-only';
+}
+
+export interface SavedLinkPreview {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  imgPreview?: string;
+  hasContent: boolean;
   contentScope?: 'partial-preview' | 'metadata-only';
 }
 
@@ -111,6 +121,67 @@ export const getSearchResultPreviews = (
   return previews;
 };
 
+export const getSavedLinkPreview = (
+  record: ChatRecord,
+): SavedLinkPreview | null => {
+  if (!Array.isArray(record.parts)) return null;
+  for (const part of record.parts) {
+    if (!part || typeof part !== 'object') continue;
+    const responsePart = (part as Record<string, unknown>).functionResponse;
+    if (!responsePart || typeof responsePart !== 'object') continue;
+    const { name, response } = responsePart as FunctionResponse;
+    if (name !== 'register_link' || response?.success !== true) continue;
+    const data = response.data;
+    if (!data || typeof data !== 'object') continue;
+    const saved = data as Record<string, unknown>;
+    if (
+      saved.duplicate === true ||
+      typeof saved.id !== 'string' ||
+      typeof saved.url !== 'string'
+    ) continue;
+    let url: URL;
+    try {
+      url = new URL(saved.url);
+    } catch {
+      continue;
+    }
+    if (
+      !['http:', 'https:'].includes(url.protocol) ||
+      url.username ||
+      url.password
+    ) continue;
+    const title = typeof saved.title === 'string' && saved.title.trim()
+      ? saved.title.trim().slice(0, 180)
+      : url.hostname;
+    return {
+      id: saved.id,
+      title,
+      url: url.toString(),
+      description: typeof saved.description === 'string'
+        ? saved.description.trim().slice(0, 240) || undefined
+        : undefined,
+      imgPreview: safePreviewImage(saved.img_preview),
+      hasContent: typeof saved.content === 'string' && Boolean(saved.content.trim()),
+      contentScope: saved.contentScope === 'partial-preview' ||
+        saved.contentScope === 'metadata-only'
+        ? saved.contentScope
+        : undefined,
+    };
+  }
+  return null;
+};
+
+export const suggestedSavedLinkQuestion = ({
+  title,
+}: SavedLinkPreview): string => {
+  const safeTitle = title.replace(/[\s\u0000-\u001f]+/g, ' ')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/["“”]/g, '')
+    .trim()
+    .slice(0, 120) || 'the link I just saved';
+  return `Find my saved link titled "${safeTitle}" and tell me what it says. If you only saved a partial preview or metadata, say so.`;
+};
+
 export const formatChatRecord = (record: ChatRecord): string => {
   if (!Array.isArray(record.parts)) return '';
 
@@ -128,15 +199,26 @@ export const formatChatRecord = (record: ChatRecord): string => {
     .join('\n');
 };
 
-export const getActivationStep = (records: ChatRecord[]): ActivationStep => {
-  let saved = false;
+export const getActivationStep = (
+  records: ChatRecord[],
+  hasSavedLinks = false,
+): ActivationStep => {
+  const newlySavedIds = new Set<string>();
+  let foundNewlySavedLink = false;
 
   for (const record of records) {
+    if (record.role === 'user') foundNewlySavedLink = false;
     if (!Array.isArray(record.parts)) continue;
 
     for (const part of record.parts) {
       if (!part || typeof part !== 'object') continue;
       const value = part as Record<string, unknown>;
+      if (
+        foundNewlySavedLink &&
+        record.role === 'model' &&
+        typeof value.text === 'string' &&
+        value.text.trim()
+      ) return 'complete';
       if (!value.functionResponse || typeof value.functionResponse !== 'object') {
         continue;
       }
@@ -145,19 +227,23 @@ export const getActivationStep = (records: ChatRecord[]): ActivationStep => {
         value.functionResponse as FunctionResponse;
       if (name === 'register_link' && response.success === true) {
         const data = response.data as Record<string, unknown> | undefined;
-        if (data?.duplicate !== true) saved = true;
+        if (data?.duplicate !== true && typeof data?.id === 'string') {
+          newlySavedIds.add(data.id);
+        }
       }
 
       if (
-        saved &&
+        newlySavedIds.size > 0 &&
         name === 'get_links' &&
         Array.isArray(response.links) &&
-        response.links.length > 0
+        response.links.some((link) => link && typeof link === 'object' &&
+          newlySavedIds.has((link as Record<string, unknown>).id as string))
       ) {
-        return 'complete';
+        foundNewlySavedLink = true;
       }
     }
   }
 
-  return saved ? 'retrieve' : 'save';
+  if (newlySavedIds.size > 0) return 'retrieve';
+  return hasSavedLinks ? 'ready' : 'save';
 };

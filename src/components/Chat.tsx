@@ -5,19 +5,22 @@ import {
   memo,
   useDeferredValue,
   useMemo,
+  useCallback,
 } from 'react';
 import {
   Send,
   Trash2,
   Link as LinkIcon,
-  Folder,
   ExternalLink,
+  ArrowRight,
 } from 'lucide-react';
 import { Message } from '@/lib/types';
 import {
   formatChatRecord,
   getActivationStep,
+  getSavedLinkPreview,
   getSearchResultPreviews,
+  suggestedSavedLinkQuestion,
   type SearchResultPreview,
 } from './chat/chat-message';
 import { Button } from '@/components/ui/button';
@@ -96,16 +99,86 @@ const SearchResultCards = memo(({ message }: { message: Message }) => {
   );
 });
 
+const SavedLinkMoment = ({
+  message,
+  onAsk,
+  disabled,
+}: {
+  message: Message;
+  onAsk: (question: string) => void;
+  disabled: boolean;
+}) => {
+  const saved = getSavedLinkPreview({
+    role: message.role ?? '',
+    parts: message.parts,
+  });
+  if (!saved) return null;
+
+  const captureStatus = saved.contentScope === 'metadata-only'
+    ? 'Only the title and metadata were available.'
+    : saved.contentScope === 'partial-preview'
+      ? 'A public preview was saved; the full post may be unavailable.'
+      : saved.hasContent
+        ? 'Text was saved for later questions.'
+        : 'Title and description saved; source text was unavailable.';
+
+  return (
+    <section
+      className="mt-3 overflow-hidden rounded-2xl border border-white/15 bg-[#171717]"
+      aria-label="Newly saved link"
+    >
+      <div className="flex flex-col sm:flex-row">
+        <div className="group relative h-28 shrink-0 overflow-hidden sm:h-auto sm:w-36" aria-hidden="true">
+          <LinkPreviewArtwork url={saved.url} imgPreview={saved.imgPreview} />
+        </div>
+        <div className="min-w-0 flex-1 p-4">
+          <p className="text-xs font-medium text-emerald-300">Saved to your library</p>
+          <a
+            href={saved.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 block line-clamp-2 font-semibold text-white underline-offset-2 hover:underline focus-visible:underline"
+          >
+            {saved.title}
+          </a>
+          {saved.description ? (
+            <p className="mt-2 line-clamp-2 text-sm text-gray-300">
+              {saved.description}
+            </p>
+          ) : null}
+          <p className="mt-2 text-xs text-gray-400">{captureStatus}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
+        <p className="text-xs text-gray-400">Try asking about what you saved.</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          onClick={() => onAsk(suggestedSavedLinkQuestion(saved))}
+          className="gap-2"
+        >
+          Ask about this link
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </section>
+  );
+};
+
 // Memoized list to avoid re-rendering the whole chat on each keystroke
 const MessageList = memo(
   ({
     messages,
     isBotTyping,
     messagesEndRef,
+    onAskSavedLink,
   }: {
     messages: Message[];
     isBotTyping: boolean;
     messagesEndRef: React.RefObject<HTMLDivElement>;
+    onAskSavedLink: (question: string) => void;
   }) => {
     return (
       <div className="space-y-6">
@@ -140,6 +213,11 @@ const MessageList = memo(
               )}
             </div>
             <SearchResultCards message={message} />
+            <SavedLinkMoment
+              message={message}
+              onAsk={onAskSavedLink}
+              disabled={isBotTyping}
+            />
           </div>
         ))}
         {isBotTyping && (
@@ -194,6 +272,7 @@ const Chat = () => {
     api.chat.getMessages,
     sessionId ? { sessionId } : 'skip',
   );
+  const hasSavedLinks = useQuery(api.links.hasSavedLinks);
 
   // Convert Convex messages to UI Message type
   const messages = useMemo<Message[]>(
@@ -220,12 +299,17 @@ const Chat = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const deferredMessages = useDeferredValue(messages);
   const activationStep = useMemo(
-    () => getActivationStep(rawMessages ?? []),
-    [rawMessages],
+    () => getActivationStep(rawMessages ?? [], hasSavedLinks === true),
+    [rawMessages, hasSavedLinks],
   );
 
   const startFirstSave = () => {
     setInput('Save this link: ');
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const startFirstSearch = () => {
+    setInput('Find my saved link about ');
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
@@ -252,15 +336,13 @@ const Chat = () => {
     });
   }, [messages, isBotTyping]);
 
-  const handleSendMessage = async (customInput?: string) => {
-    const messageToSend = customInput || input;
-
+  const sendMessage = useCallback(async (messageToSend: string, clearInput: boolean) => {
     if (!messageToSend.trim() || isBotTyping || !sessionId) return;
 
     setIsBotTyping(true);
     setRequestError(null);
     setLastFailedMessage(null);
-    if (!customInput) setInput('');
+    if (clearInput) setInput('');
 
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -275,7 +357,14 @@ const Chat = () => {
     } finally {
       setIsBotTyping(false);
     }
-  };
+  }, [isBotTyping, processMessage, sessionId]);
+
+  const handleSendMessage = (customInput?: string) =>
+    sendMessage(customInput ?? input, customInput === undefined);
+
+  const handleAskSavedLink = useCallback((question: string) => {
+    void sendMessage(question, false);
+  }, [sendMessage]);
 
   const handleClearChat = async () => {
     if (!sessionId || isClearingHistory) return;
@@ -312,47 +401,53 @@ const Chat = () => {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-semibold text-white mb-2 text-center">
-            Save your first link
+            {hasSavedLinks === undefined
+              ? 'Getting your library ready…'
+              : hasSavedLinks
+                ? 'Your saved links are ready'
+                : 'Save a link you want to remember'}
           </h1>
           <p className="max-w-xl text-[#A5A5A5] text-base md:text-lg mb-6 text-center">
-            Paste any useful webpage or supported social link. DoryAI will
-            analyze and organize it, then you can ask for it in your own words.
+            {hasSavedLinks
+              ? 'Ask DoryAI to find or explain something you saved, or add another link.'
+              : 'Add a useful webpage, video, or supported post. DoryAI will show what it saved, then you can ask about it in your own words.'}
           </p>
 
-          <ol
-            className="mb-8 flex items-center gap-3 text-sm text-[#A5A5A5]"
-            aria-label="Getting started"
-          >
-            <li className="rounded-full border border-white/20 px-3 py-1 text-white">
-              1. Save
-            </li>
-            <li aria-hidden="true">→</li>
-            <li className="rounded-full border border-white/20 px-3 py-1">
-              2. Find it
-            </li>
-          </ol>
+          {hasSavedLinks === false ? (
+            <ol
+              className="mb-8 flex items-center gap-3 text-sm text-[#A5A5A5]"
+              aria-label="Getting started"
+            >
+              <li className="rounded-full border border-white/20 px-3 py-1 text-white">
+                1. Save
+              </li>
+              <li aria-hidden="true">→</li>
+              <li className="rounded-full border border-white/20 px-3 py-1">
+                2. Find it
+              </li>
+            </ol>
+          ) : null}
 
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap justify-center gap-3">
+            {hasSavedLinks ? (
+              <Button
+                type="button"
+                onClick={startFirstSearch}
+                disabled={!sessionId || isBotTyping}
+                className="rounded-full h-10 px-6"
+              >
+                Find a saved link
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               type="button"
               className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
               onClick={startFirstSave}
-              disabled={!sessionId || isBotTyping}
+              disabled={hasSavedLinks === undefined || !sessionId || isBotTyping}
             >
               <LinkIcon className="h-4 w-4" />
-              Paste your first link
-            </Button>
-
-            <Button
-              variant="outline"
-              type="button"
-              className="bg-[#141414] border-[#1D1D1D] hover:bg-[#1D1D1D] text-[#A5A5A5] hover:text-white rounded-full h-10 px-6 gap-2"
-              onClick={() => handleSendMessage('How does DoryAI work?')}
-              disabled={!sessionId || isBotTyping}
-            >
-              <Folder className="h-4 w-4" />
-              See how it works
+              {hasSavedLinks ? 'Add another link' : 'Add a link'}
             </Button>
           </div>
         </div>
@@ -363,6 +458,8 @@ const Chat = () => {
               <p className="text-xs text-[#A5A5A5]" role="status">
                 {activationStep === 'save' &&
                   'Step 1 of 2: send a link to save it.'}
+                {activationStep === 'ready' &&
+                  'Ask DoryAI about any link you saved.'}
                 {activationStep === 'retrieve' &&
                   'Step 2 of 2: ask DoryAI to find that link.'}
                 {activationStep === 'complete' &&
@@ -428,6 +525,7 @@ const Chat = () => {
                 messages={deferredMessages}
                 isBotTyping={isBotTyping}
                 messagesEndRef={messagesEndRef}
+                onAskSavedLink={handleAskSavedLink}
               />
             </div>
           </div>
