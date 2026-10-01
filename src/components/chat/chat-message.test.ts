@@ -3,6 +3,7 @@ import {
   formatChatRecord,
   getActivationStep,
   getSavedLinkPreview,
+  getSavedLinkPreviewsById,
   getSearchResultPreviews,
   suggestedSavedLinkQuestion,
 } from './chat-message';
@@ -167,6 +168,29 @@ describe('first-run activation', () => {
       { role: 'model', parts: [{ text: 'An unrelated answer.' }] },
     ])).toBe('retrieve');
   });
+
+  it('completes a focused saved-link answer without searching other links', () => {
+    const saved = response('register_link', {
+      success: true,
+      data: { id: 'saved-link', duplicate: false },
+    });
+    const exactQuestion = {
+      role: 'user',
+      contextLinkId: 'saved-link',
+      parts: [{ text: 'What does this saved link say?' }],
+    };
+    expect(getActivationStep([saved, exactQuestion])).toBe('retrieve');
+    expect(getActivationStep([
+      saved,
+      { ...exactQuestion, contextLinkId: 'another-link' },
+      { role: 'model', parts: [{ text: 'An unrelated answer.' }] },
+    ])).toBe('retrieve');
+    expect(getActivationStep([
+      saved,
+      exactQuestion,
+      { role: 'model', parts: [{ text: 'Here is what was saved.' }] },
+    ])).toBe('complete');
+  });
 });
 
 describe('post-save onboarding', () => {
@@ -197,8 +221,8 @@ describe('post-save onboarding', () => {
       hasContent: true,
       contentScope: undefined,
     });
-    expect(suggestedSavedLinkQuestion(saved!)).toContain('"Starting a business"');
-    expect(suggestedSavedLinkQuestion(saved!)).not.toContain('https://');
+    expect(suggestedSavedLinkQuestion()).toContain('this saved link');
+    expect(suggestedSavedLinkQuestion()).not.toContain('https://');
   });
 
   it('never shows a duplicate, failed save, or unsafe URL as a new save', () => {
@@ -236,13 +260,20 @@ describe('post-save onboarding', () => {
     });
   });
 
-  it('does not put an untrusted URL from the title into the question', () => {
-    expect(suggestedSavedLinkQuestion({
-      id: 'link-3',
-      title: 'https://example.com/post',
-      url: 'https://example.com/post',
-      hasContent: false,
-    })).not.toContain('https://');
+  it('keeps the guided question short and displays only the selected saved link', () => {
+    const records = [
+      record({ success: true, data: {
+        id: 'first', title: 'First', url: 'https://example.com/first',
+      } }),
+      record({ success: true, data: {
+        id: 'second', title: 'Second', url: 'https://example.com/second',
+      } }),
+    ];
+    const savedLinks = getSavedLinkPreviewsById(records);
+    expect(savedLinks.get('second')?.title).toBe('Second');
+    expect(savedLinks.get('unrelated')).toBeUndefined();
+    expect(suggestedSavedLinkQuestion()).not.toContain('First');
+    expect(suggestedSavedLinkQuestion()).not.toContain('Second');
   });
 });
 

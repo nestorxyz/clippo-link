@@ -3,6 +3,7 @@ import { safePreviewImage } from '../../lib/link-preview';
 export interface ChatRecord {
   role: string;
   parts: unknown;
+  contextLinkId?: string;
 }
 
 export type ActivationStep = 'save' | 'ready' | 'retrieve' | 'complete';
@@ -171,15 +172,18 @@ export const getSavedLinkPreview = (
   return null;
 };
 
-export const suggestedSavedLinkQuestion = ({
-  title,
-}: SavedLinkPreview): string => {
-  const safeTitle = title.replace(/[\s\u0000-\u001f]+/g, ' ')
-    .replace(/https?:\/\/\S+/gi, '')
-    .replace(/["“”]/g, '')
-    .trim()
-    .slice(0, 120) || 'the link I just saved';
-  return `Find my saved link titled "${safeTitle}" and tell me what it says. If you only saved a partial preview or metadata, say so.`;
+export const suggestedSavedLinkQuestion = (): string =>
+  'What does this saved link say? If you only saved a partial preview or metadata, say so.';
+
+export const getSavedLinkPreviewsById = (
+  records: ChatRecord[],
+): Map<string, SavedLinkPreview> => {
+  const savedLinks = new Map<string, SavedLinkPreview>();
+  for (const record of records) {
+    const saved = getSavedLinkPreview(record);
+    if (saved) savedLinks.set(saved.id, saved);
+  }
+  return savedLinks;
 };
 
 export const formatChatRecord = (record: ChatRecord): string => {
@@ -207,7 +211,11 @@ export const getActivationStep = (
   let foundNewlySavedLink = false;
 
   for (const record of records) {
-    if (record.role === 'user') foundNewlySavedLink = false;
+    if (record.role === 'user') {
+      foundNewlySavedLink = Boolean(
+        record.contextLinkId && newlySavedIds.has(record.contextLinkId),
+      );
+    }
     if (!Array.isArray(record.parts)) continue;
 
     for (const part of record.parts) {

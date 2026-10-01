@@ -87,6 +87,16 @@ export const getMessages = query({
   },
 });
 
+export const isSessionOwner = query({
+  args: { sessionId: v.id('chatSessions') },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return false;
+    const session = await ctx.db.get(args.sessionId);
+    return session?.userId === userId;
+  },
+});
+
 export const addMessage = mutation({
   args: {
     sessionId: v.id('chatSessions'),
@@ -114,6 +124,7 @@ export const saveMessage = mutation({
     sessionId: v.id('chatSessions'),
     role: v.string(),
     parts: v.any(),
+    contextLinkId: v.optional(v.id('links')),
     secret: v.string(),
   },
   handler: async (ctx, args) => {
@@ -124,11 +135,18 @@ export const saveMessage = mutation({
 
     const session = await ctx.db.get(args.sessionId);
     if (!session) throw new Error('Session not found');
+    if (args.contextLinkId) {
+      const link = await ctx.db.get(args.contextLinkId);
+      if (args.role !== 'user' || !link || link.userId !== session.userId) {
+        throw new Error('Invalid saved link context');
+      }
+    }
 
     await ctx.db.insert('chatMessages', {
       sessionId: args.sessionId,
       role: args.role,
       parts: args.parts,
+      ...(args.contextLinkId ? { contextLinkId: args.contextLinkId } : {}),
       createdAt: Date.now(),
     });
   },

@@ -96,6 +96,7 @@ export default defineSchema({
     sessionId: v.id('chatSessions'),
     role: v.string(),
     parts: v.any(), // JSON content
+    contextLinkId: v.optional(v.id('links')),
     createdAt: v.number(),
   }).index('by_session', ['sessionId']),
 

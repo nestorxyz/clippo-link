@@ -63,5 +63,6 @@ export interface Message {
   sender: 'user' | 'bot';
   role?: 'user' | 'model' | 'function';
   parts?: MessagePart[];
+  contextLinkId?: string;
   createdAt?: string;
 }

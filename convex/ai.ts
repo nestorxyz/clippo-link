@@ -7,6 +7,7 @@ export const processChatMessage = action({
     message: v.string(),
     sessionId: v.id('chatSessions'),
     timeZone: v.optional(v.string()),
+    savedLinkId: v.optional(v.id('links')),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -18,6 +19,9 @@ export const processChatMessage = action({
     const user = await ctx.runQuery(api.users.current);
     if (!user) throw new Error('Unauthorized');
     const userId = user._id;
+    if (!await ctx.runQuery(api.chat.isSessionOwner, { sessionId: args.sessionId })) {
+      throw new Error('Unauthorized or invalid session');
+    }
 
     const backendUrl = process.env.BACKEND_URL;
     if (!backendUrl) throw new Error('BACKEND_URL is not set');
@@ -37,6 +41,7 @@ export const processChatMessage = action({
           sessionId: args.sessionId,
           timeZone: args.timeZone,
           userId: userId,
+          savedLinkId: args.savedLinkId,
         }),
       });
 

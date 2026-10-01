@@ -19,6 +19,7 @@ import {
   formatChatRecord,
   getActivationStep,
   getSavedLinkPreview,
+  getSavedLinkPreviewsById,
   getSearchResultPreviews,
   suggestedSavedLinkQuestion,
   type SearchResultPreview,
@@ -105,7 +106,7 @@ const SavedLinkMoment = ({
   disabled,
 }: {
   message: Message;
-  onAsk: (question: string) => void;
+  onAsk: (question: string, savedLinkId: string) => void;
   disabled: boolean;
 }) => {
   const saved = getSavedLinkPreview({
@@ -156,7 +157,7 @@ const SavedLinkMoment = ({
           variant="outline"
           size="sm"
           disabled={disabled}
-          onClick={() => onAsk(suggestedSavedLinkQuestion(saved))}
+          onClick={() => onAsk(suggestedSavedLinkQuestion(), saved.id)}
           className="gap-2"
         >
           Ask about this link
@@ -178,8 +179,15 @@ const MessageList = memo(
     messages: Message[];
     isBotTyping: boolean;
     messagesEndRef: React.RefObject<HTMLDivElement>;
-    onAskSavedLink: (question: string) => void;
+    onAskSavedLink: (question: string, savedLinkId: string) => void;
   }) => {
+    const savedLinks = useMemo(
+      () => getSavedLinkPreviewsById(messages.map((message) => ({
+        role: message.role ?? '',
+        parts: message.parts,
+      }))),
+      [messages],
+    );
     return (
       <div className="space-y-6">
         {messages.map((message) => (
@@ -212,6 +220,15 @@ const MessageList = memo(
                 </p>
               )}
             </div>
+            {message.role === 'user' && message.contextLinkId &&
+              savedLinks.has(message.contextLinkId) ? (
+              <div className="saved-link-results mt-3" aria-label="Selected saved link">
+                <p className="mb-2 text-xs text-muted-foreground">This saved link</p>
+                <div className="saved-link-results-grid">
+                  <SearchResultCard result={savedLinks.get(message.contextLinkId)!} />
+                </div>
+              </div>
+            ) : null}
             <SearchResultCards message={message} />
             <SavedLinkMoment
               message={message}
@@ -243,7 +260,10 @@ const Chat = () => {
   const [sessionError, setSessionError] = useState(false);
   const [sessionAttempt, setSessionAttempt] = useState(0);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
+  const [lastFailedMessage, setLastFailedMessage] = useState<{
+    text: string;
+    savedLinkId?: string;
+  } | null>(
     null,
   );
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -287,6 +307,7 @@ const Chat = () => {
           parts: message.parts as any,
           sender: message.role === 'user' ? 'user' : 'bot',
           role: message.role as any,
+          contextLinkId: message.contextLinkId,
         });
       }
       return formattedMessages;
@@ -336,7 +357,11 @@ const Chat = () => {
     });
   }, [messages, isBotTyping]);
 
-  const sendMessage = useCallback(async (messageToSend: string, clearInput: boolean) => {
+  const sendMessage = useCallback(async (
+    messageToSend: string,
+    clearInput: boolean,
+    savedLinkId?: string,
+  ) => {
     if (!messageToSend.trim() || isBotTyping || !sessionId) return;
 
     setIsBotTyping(true);
@@ -350,10 +375,11 @@ const Chat = () => {
         message: messageToSend,
         sessionId,
         timeZone,
+        ...(savedLinkId ? { savedLinkId: savedLinkId as Id<'links'> } : {}),
       });
     } catch {
       setRequestError("DoryAI couldn't finish that request.");
-      setLastFailedMessage(messageToSend);
+      setLastFailedMessage({ text: messageToSend, savedLinkId });
     } finally {
       setIsBotTyping(false);
     }
@@ -362,8 +388,8 @@ const Chat = () => {
   const handleSendMessage = (customInput?: string) =>
     sendMessage(customInput ?? input, customInput === undefined);
 
-  const handleAskSavedLink = useCallback((question: string) => {
-    void sendMessage(question, false);
+  const handleAskSavedLink = useCallback((question: string, savedLinkId: string) => {
+    void sendMessage(question, false, savedLinkId);
   }, [sendMessage]);
 
   const handleClearChat = async () => {
@@ -558,7 +584,11 @@ const Chat = () => {
                   variant="outline"
                   size="sm"
                   disabled={isBotTyping || !sessionId}
-                  onClick={() => void handleSendMessage(lastFailedMessage)}
+                  onClick={() => void sendMessage(
+                    lastFailedMessage.text,
+                    false,
+                    lastFailedMessage.savedLinkId,
+                  )}
                 >
                   Try again
                 </Button>
